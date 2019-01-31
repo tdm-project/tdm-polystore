@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+
+  tiledb:
+    image: tdm/tiledb
+    ports:
+      - "8888:8888"
+    volumes:
+      - "/home/zag/Work/ours/elzaggo_tdm-polystore/notebooks:/home/jupyter/notebooks"
+
+  hdfs:
+    image: tdm/hdfs
+    ports:
+      - "8020:8020"
+      - "8042:8042"
+      - "8088:8088"
+      - "9000:9000"
+      - "10020:10020"
+      - "19888:19888"
+      - "9866:9866"
+      - "9867:9867"
+      - "9870:9870"
+      - "9864:9864"
+      - "9868:9868"
+  

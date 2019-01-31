@@ -1,0 +1,5 @@
+FROM crs4/hadoop:latest
+# LABEL maintainer="gianluigi.zanetti@crs4.it"
+
+
+COPY entrypoint.sh /

@@ -1,0 +1,166 @@
+id,name,note,station_id,sensor_type,latitude,longitude,station_name
+1,S1,Viale Marconi ingresso Viale Marconi ingr dx,1,4,39.239952772,9.14736801385,MARCONI_I
+2,S2,Viale Marconi ingresso Viale Marconi ingr sx,1,4,39.239952772,9.14736801385,MARCONI_I
+3,S3,Viale Marconi uscita Viale Marconi uscita dx,2,4,39.2399100739,9.14742141869,MARCONI_U
+4,S4,Viale Marconi uscita Viale Marconi uscita sx,2,4,39.2399100739,9.14742141869,MARCONI_U
+5,S5,Circonvallazione Pirri - Via Quasimodo IN Circonvallazione Pirri - Via Quasimodo,3,4,39.2531666371,9.11308806904,PIRRI_I
+6,S6,Circonvallazione Pirri - Via Quasimodo IN Circonvallazione Pirri - Via Quasimodo,3,4,39.2531666371,9.11308806904,PIRRI_I
+7,S7,Circonvallazione Pirri - Via Quasimodo OUT Circonvallazione Pirri - Via Quasimodo,4,4,39.2531847009,9.11319092524,PIRRI_U
+8,S8,Circonvallazione Pirri - Via Quasimodo OUT Circonvallazione Pirri - Via Quasimodo,4,4,39.2531847009,9.11319092524,PIRRI_U
+9,S9,Viale Monastir IN SS 131 Ingresso dx,5,4,39.2573849327,9.08907706359,MONASTIR_I
+10,S10,Viale Monastir IN SS 131 Ingresso sx,5,4,39.2573849327,9.08907706359,MONASTIR_I
+11,S11,Viale Monastir OUT SS131 Uscita sx,6,4,39.2574054688,9.0891398738,MONASTIR_U
+12,S12,Viale Monastir OUT SS131 Uscita dx,6,4,39.2574054688,9.0891398738,MONASTIR_U
+13,S13,Viale Elmas SS 130 Civ 154 IN Viale Elmas SS 130 Civ 154,7,4,39.2483116151,9.0861730106,ELMAS_I
+14,S14,Viale Elmas SS 130 Civ 154 IN Viale Elmas SS 130 Civ 154,7,4,39.2483116151,9.0861730106,ELMAS_I
+15,S15,Viale Elmas SS 130 Civ 154 OUT Viale Elmas SS 130 Civ 154,8,4,39.248337441,9.08623359568,ELMAS_U
+16,S16,Viale Elmas SS 130 Civ 154 OUT Viale Elmas SS 130 Civ 154,8,4,39.248337441,9.08623359568,ELMAS_U
+17,S17,Direzione Cagliari SS 195 Raccordo,9,4,39.2421944445,9.08645277742,SS195 Raccordo_I
+18,S18,Direzione Cagliari SS 195 Raccordo,9,4,39.2421944445,9.08645277742,SS195 Raccordo_I
+19,S19,Direzione Elmas SS 195 Raccordo,10,4,39.2422250001,9.08655555547,SS195 Raccordo_U
+20,S20,Direzione Elmas SS 195 Raccordo,10,4,39.2422250001,9.08655555547,SS195 Raccordo_U
+21,S21,SS 195 Distributore AGIP IN SS 195 Distributore AGIP,11,4,39.2246138889,9.06482222214,AGIP_I
+22,S22,SS 195 Distributore AGIP IN SS 195 Distributore AGIP,11,4,39.2246138889,9.06482222214,AGIP_I
+23,S23,SS 195 Distributore AGIP OUT SS 195 Distributore AGIP,12,4,39.2247055556,9.06479722202,AGIP_U
+24,S24,SS 195 Distributore AGIP OUT SS 195 Distributore AGIP,12,4,39.2247055556,9.06479722202,AGIP_U
+25,S25,Viale Italia ingr Viale Italia  > CA dx,13,4,39.2517869688,9.13463004864,ITALIA_I
+26,S26,Viale Italia ingr Viale Italia  > CA sx,13,4,39.2517869688,9.13463004864,ITALIA_I
+27,S27,Via Vesalio Ingresso Via Vesalio,15,4,39.240976632,9.13529464834,VESALIO_I
+28,S28,Via Vesalio Ingresso Via Vesalio,15,4,39.240976632,9.13529464834,VESALIO_I
+29,S29,Asse mediano -> Amsicora Asse mediano,17,4,39.2248681503,9.13825796589,MEDIANO_I
+30,S30,Asse mediano -> Amsicora Asse mediano,17,4,39.2248681503,9.13825796589,MEDIANO_I
+31,S31,Asse mediano - > Pirri Asse mediano,18,4,39.224891776,9.13836453662,MEDIANO_U
+32,S32,Asse mediano - > Pirri Asse mediano,18,4,39.224891776,9.13836453662,MEDIANO_U
+33,S33,Via Vesalio Uscita Via Vesalio,16,4,39.2409041402,9.13536134017,VESALIO_U
+34,S34,Via Vesalio Uscita Via Vesalio,16,4,39.2409041402,9.13536134017,VESALIO_U
+35,S35,Viale Italia uscita Viale Italia  > Monserrato dx,14,4,39.2517489338,9.1346959221,ITALIA_U
+36,S36,Viale Italia uscita Viale Italia  > Monserrato sx,14,4,39.2517489338,9.1346959221,ITALIA_U
+37,S37,via Torricelli > via Vesalio via Torricelli > Vesalio Dx,20,4,39.2367982682,9.13031983579,TORRICELLI_U
+38,S38,via Torricelli > via Vesalio via Torricelli > Vesalio Sx,20,4,39.2367982682,9.13031983579,TORRICELLI_U
+39,S39,via Torricelli  > via Chiabrera via Torricelli > Chiabrera Sx,19,4,39.2368300709,9.13021954967,TORRICELLI_I
+40,S40,via Torricelli  > via Chiabrera via Torricelli > Chiabrera Dx,19,4,39.2368300709,9.13021954967,TORRICELLI_I
+41,S41,Via Dante > Piazza Giovanni Via Dante > Piazza Giovanni dx,21,4,39.2218694444,9.12511388851,VIA DANTE
+42,S42,Via Dante > Piazza Giovanni Via Dante > Piazza Giovanni sx,21,4,39.2218694444,9.12511388851,VIA DANTE
+43,S43,Via Scano > Piazza Amsicora Via Scano > Piazza Amsicora dx,22,4,39.2150023557,9.13023863797,SCANO DIR AMSICORA
+44,S44,Via Scano > Piazza Amsicora Via Scano > Piazza Amsicora sx,22,4,39.2150023557,9.13023863797,SCANO DIR AMSICORA
+45,S45,Via Scano > Piazza Repubblica Via Scano > Piazza Repubblica sx,23,4,39.2150032737,9.13035496261,SCANO DIR REPUBBLICA
+46,s46,Via Scano > Piazza Repubblica Via Scano > Piazza Repubblica dx,23,4,39.2150032737,9.13035496261,SCANO DIR REPUBBLICA
+47,S47,Via Sonnino > via Roma via Sonnino > via Roma Dx,24,4,39.2183769299,9.1216800442,SONNINO
+48,S48,Via Sonnino > via Roma via Sonnino > via Roma Sx,24,4,39.2183769299,9.1216800442,SONNINO
+49,S49,vle S.Avendrace > vle Trieste vle S.Avendrace > vle Trieste,25,4,39.2335164318,9.09740734604,AVENDRACE DIR TRIESTE
+50,S50,vle S.avendrace > via S.Michele vle S.Avendrace > via S.Michele,26,4,39.2335222223,9.09746944478,AVENDRACE DIR S.MICHELE
+51,S51,Via dei Giudicati  > Via Bacaredda via Giudicati > via Bacaredda Dx,27,4,39.2286574373,9.12039292279,GIUDICATI
+52,S52,Via dei Giudicati  > Via Bacaredda via Giudicati > via Bacaredda centro Dx,27,4,39.2286574373,9.12039292279,GIUDICATI
+53,S53,Via dei Giudicati  > Via Bacaredda via Giudicati > via Bacaredda centro Sx,27,4,39.2286574373,9.12039292279,GIUDICATI
+54,S54,Via dei Giudicati  > Via Bacaredda via Giudicati > via Bacaredda Sx,27,4,39.2286574373,9.12039292279,GIUDICATI
+55,S55,Via Santa Maria Chiara > Cagliari Santa Maria Chiara > Cagliari,28,4,39.2416277781,9.12139444462,SANTA MARIA CHIARA IN
+56,S56,Via Santa Maria chiara > Pirri Via Santa Maria Chiara > Pirri,29,4,39.2416194446,9.121430556,SANTA MARIA CHIARA OUT
+57,S57,Marconi Mediano > Quartu Viale Marconi > Quartu dx,31,4,39.2312494778,9.13450618085,MARCONI-MED OUT
+58,S58,Marconi Mediano > Quartu Viale Marconi > Quartu sx,31,4,39.2312494778,9.13450618085,MARCONI-MED OUT
+59,S59,Marconi Mediano > cagliari Viale Marconi > Cagliari sx,30,4,39.2312735927,9.13445758289,MARCONI-MED IN
+60,S60,Marconi Mediano > cagliari Viale Marconi > Cagliari dx,30,4,39.2312735927,9.13445758289,MARCONI-MED IN
+61,S61,Ciusa > Bacaredda Ciusa > Bacaredda dx,32,4,39.2319164309,9.12146106189,CIUSA IN
+62,S62,Ciusa > Bacaredda Ciusa > Bacaredda sx,32,4,39.2319164309,9.12146106189,CIUSA IN
+63,S63,Ciusa > Pirri Ciusa > Pirri,33,4,39.2318785882,9.1215275498,CIUSA OUT
+64,S64,Bacaredda > Sonnino Bacaredda > Sonnino dx,34,4,39.2257969209,9.12057268826,BACAREDDA
+65,S65,Bacaredda > Sonnino Bacaredda > Sonnino sx,34,4,39.2257969209,9.12057268826,BACAREDDA
+66,S66,Via Italia > Monserrato Via Italia > Monserrato,35,4,39.2511210888,9.13405042418,ITALIA-PISANO OUT
+67,S67,VIa Italia > Cagliari Via Italia > Cagliari,36,4,39.2511532788,9.1339855766,ITALIA-PISANO IN
+68,S68,Via Po > avendrace Via Po > Avendrace dx,37,4,39.2329149573,9.09574726299,PO DIR. AVENDRACE
+69,S69,Via Po > avendrace Via Po > avendrace sx,37,4,39.2329149573,9.09574726299,PO DIR. AVENDRACE
+70,S70,Via Po > Brenta Via Po > Brenta sx,38,4,39.232989917,9.09568070411,PO DIR. BRENTA
+71,S71,Via Po > Brenta Via Po > Brenta dx,38,4,39.232989917,9.09568070411,PO DIR. BRENTA
+72,S72,Via Dei Valenzani > Viale Ciusa Via Dei Valenzani dx,39,4,39.2321184872,9.12058304494,VALENZANI
+73,S73,Via Dei Valenzani > Viale Ciusa Via Dei Valenzani sx,39,4,39.2321184872,9.12058304494,VALENZANI
+74,S74,Via Peretti > Brotzu Peretti > Brotzu dx,41,4,39.2518931631,9.10190422432,PERETTI DIR BROTZU
+75,S75,Via Peretti > Brotzu Peretti > Brotzu sx,41,4,39.2518931631,9.10190422432,PERETTI DIR BROTZU
+76,S76,VIa Peretti > SS131 Peretti > SS131,40,4,39.2519972223,9.10192499965,PERETTI DIR SS 131
+77,S77,Riva di Ponente > Roma Riva di Ponente > Roma Dx,44,4,39.2148253338,9.10173374294,RIVA DI PONENTE_IN
+78,S78,Riva di Ponente > Roma Riva di Ponente > Roma Sx,44,4,39.2148253338,9.10173374294,RIVA DI PONENTE_IN
+79,S79,Riva di Ponente  > SS195 Riva di Ponente > SS195 Sx,45,4,39.2148957597,9.10177538524,RIVA DI PONENTE_OUT
+80,S80,Riva di Ponente  > SS195 Riva di Ponente > SS195 Dx,45,4,39.2148957597,9.10177538524,RIVA DI PONENTE_OUT
+81,S81,Mediano/P.Vittorio > Ferrara Mediano/P.Vittorio > Ferrara Dx,46,4,39.2031499997,9.14017777794,A.MEDIANO/ P.VITTORIO _IN
+82,S82,Mediano/P.Vittorio > Ferrara Mediano/P.Vittorio > Ferrara Sx,46,4,39.2031499997,9.14017777794,A.MEDIANO/ P.VITTORIO _IN
+83,S83,Mediano/P.Vittorio > Tramontana Mediano/P.Vittorio > Tramontana Sx,47,4,39.2030722223,9.14023333335,A.MEDIANO /P.VITTORIO_OUT
+84,S84,Mediano/P.Vittorio > Tramontana Mediano /P.Vittorio >Tramontana Dx,47,4,39.2030722223,9.14023333335,A.MEDIANO /P.VITTORIO_OUT
+85,S85,Mediano/Tramontana > Ferrara Mediano/Tramontana >Ferrara Dx,48,4,39.205968329,9.14331920176,MEDIANO/TRAMONTANA_IN
+86,S86,Mediano/Tramontana > Ferrara Mediano/Tramontana > Ferrara Sx,48,4,39.205968329,9.14331920176,MEDIANO/TRAMONTANA_IN
+87,S87,Mediano/Tramont > Conversi Mediano/Tramontana > Conversi Sx,49,4,39.2059669723,9.14341911508,MEDIANO/TRAMONTANA_OUT
+88,S88,Mediano/Tramont > Conversi Mediano/Tramontana > Conversi Dx,49,4,39.2059669723,9.14341911508,MEDIANO/TRAMONTANA_OUT
+89,S90,Tramontana >Asse Mediano Mediano/Tramontana >Immissione,50,4,39.2058749999,9.14348888902,MEDIANO/TRAMONT_Immissione
+90,S91,Viale Colombo > Poetto Colombo > Poetto Dx,42,4,39.2074769921,9.12250969137,COLOMBO DIR POETTO
+91,S92,Viale Colombo > Poetto Colombo > Poetto Sx,42,4,39.2074769921,9.12250969137,COLOMBO DIR POETTO
+92,S93,Viale Colombo > Via Roma Colombo > Roma Sx,43,4,39.2075925891,9.12260107159,COLOMBO DIR ROMA
+93,S94,Viale Colombo > Via Roma Colombo > Roma Dx,43,4,39.2075925891,9.12260107159,COLOMBO DIR ROMA
+96,S97,via Stamira > Asse Mediano via Stamira > Asse Mediano,53,4,39.2493713505,9.11591706073,STAMIRA_OUT
+97,S98,via Stamira > via Balilla via Stamira > via Balilla,54,4,39.249313,9.115741,STAMIRA_IN
+98,S99,Mediano/Valenz Ingresso Mediano/Valenz Ingresso Dx,55,4,39.2373005858,9.12010045504,MEDIANO/VALENZANI_IN
+99,S100,Mediano/Valenz Ingresso Mediano/Valenz Ingresso Sx,55,4,39.2373005858,9.12010045504,MEDIANO/VALENZANI_IN
+100,S101,Mediano/Valenz Uscita Mediano/Valenz Uscita Sx,56,4,39.237029,9.120459,MEDIANO/VALENZANI_OUT
+101,S102,Mediano/Valenz Uscita Mediano/Valenz Uscita Dx,56,4,39.237029,9.120459,MEDIANO/VALENZANI_OUT
+102,S103,Via S.benedetto -> genneruxi San Benedetto > Genneruxi,78,4,39.2248790191,9.12913553031,SAN BENEDETTO DIR GENNERUXI
+103,S104,Via San Benedetto -> Ariosto San Benedetto > Ariosto,79,4,39.2248576349,9.12919073902,SAN BENEDETTO DIR ARIOSTO
+104,S105,Via Berlino -> Abbazia Berlino > Abbazia DX,64,4,39.2239470501,9.13640749892,BERLINO DIR ABBAZIA
+105,S106,Via Berlino -> Abbazia Berlino > Abbazia SX,64,4,39.2239470501,9.13640749892,BERLINO DIR ABBAZIA
+106,S107,Via Berlino -> Asse Mediano Berlino > Mediano DX,65,4,39.2238952337,9.13644147351,BERLINO DIR MEDIANO
+107,S108,Via Berlino -> Asse Mediano Berlino > Mediano SX,65,4,39.2238952337,9.13644147351,BERLINO DIR MEDIANO
+108,S109,Via Castiglione -> Via Salvemini Via Castiglione > Salvemini,68,4,39.2300310255,9.12935841204,CASTIGLIONE DIR SALVEMINI
+109,S110,Via Castiglione dir Mediano Via Castiglione > Asse Mediano,69,4,39.2299923721,9.12931647466,CASTIGLIONE DIR MEDIANO
+110,S111,VIa Is Mirrionis -> Via Campania Via Is Mirrionis > Campania DX,59,4,39.2365039304,9.10695417315,MIRRIONIS DIR CAMPANIA
+111,S112,VIa Is Mirrionis -> Via Campania Via Is Mirrionis > Campania SX,59,4,39.2365039304,9.10695417315,MIRRIONIS DIR CAMPANIA
+112,S113,Via Is Mirrionis -> S.Michele Via Is Mirrionis > San Michele DX,60,4,39.2365853415,9.10701256698,MIRRIONIS DIR S.MICHELE
+113,S114,Via Is Mirrionis -> S.Michele Via Is Mirrionis > San Michele SX,60,4,39.2365853415,9.10701256698,MIRRIONIS DIR S.MICHELE
+114,S115,Via Cornalias -> Via MAttei Via Cornalias > Mattei DX,73,4,39.2422692924,9.10572824427,CORNALIAS DIR METTEI
+115,S116,Via Cornalias -> Via MAttei Via Cornalias > Mattei SX,73,4,39.2422692924,9.10572824427,CORNALIAS DIR METTEI
+116,S117,Via Cornalias -> P.DellaFrancesca Via Cornalias > P.D.Francesca DX,74,4,39.2422972495,9.10582379781,CORNALIAS DIR P.D.FRANCESCA
+117,S118,Via Cornalias -> P.DellaFrancesca Via Cornalias > P.D.Francesca SX,74,4,39.2422972495,9.10582379781,CORNALIAS DIR P.D.FRANCESCA
+118,S119,Via Is Maglias -> Via Merello Via Is Maglias > Via Merello,71,4,39.2315717405,9.10457030761,MAGLIAS DIR MERELLO
+119,S120,Via Is Maglias -> Via Asiago Via Is Maglias > Asiago,72,4,39.2315371999,9.10453739472,MAGLIAS DIR ASIAGO
+120,S121,Viale S.Vincenzo -> Via R.Elena San Vincenzo > Regina Elena,80,4,39.2277638502,9.11249695889,SAN VINCENZO DIR R.ELENA
+121,S122,Viale San Vicenzo -> P.Armi San Vincenzo > Armi,81,4,39.2277284854,9.11247041624,SAN VINCENZO DIR ARMI
+122,S123,Via Vesalio -> Torricelli Via Vesalio > Torricelli DX,66,4,39.2389999995,9.13163888895,VESALIO DIR TORRICELLI
+123,S124,Via Vesalio -> Torricelli Via Vesalio > Torricelli SX,66,4,39.2389999995,9.13163888895,VESALIO DIR TORRICELLI
+124,S125,Via Vesalio -> Via Risorgimento Via Vesalio > Risorgimento DX,67,4,39.2389564172,9.13171214666,VESALIO DIR RISORGIMENTO
+125,S126,Via Vesalio -> Via Risorgimento Via Vesalio > Risorgimento SX,67,4,39.2389564172,9.13171214666,VESALIO DIR RISORGIMENTO
+126,S127,Via Liguria -> p.Maremma Via Liguria > Maremma DX,62,4,39.2307833502,9.1158388156,LIGURIA DIR MAREMMA
+127,S128,Via Liguria -> p.Maremma Via Liguria > Maremma SX,62,4,39.2307833502,9.1158388156,LIGURIA DIR MAREMMA
+128,S129,Via Liguria -> Via Campania Via Liguria > Campania SX,63,4,39.2308507872,9.11592587548,LIGURIA DIR CAMPANIA
+129,S130,Via Liguria -> Via Campania Via Liguria > Campania DX,63,4,39.2308507872,9.11592587548,LIGURIA DIR CAMPANIA
+130,S131,Via Dante altezza Repubblica Via Dante/Repubblica DX,75,4,39.2168063788,9.12488888891,DANTE/REPUBBLICA
+131,S132,Via Dante altezza Repubblica Via Dante/Repubblica SX,75,4,39.2168063788,9.12488888891,DANTE/REPUBBLICA
+132,S133,Via Del Fangario -> Viale Elmas Via Del Fangario DX,70,4,39.2430277785,9.09591666685,FANGARIO
+133,S134,Via Del Fangario -> Viale Elmas Via Del Fangario SX,70,4,39.2430277785,9.09591666685,FANGARIO
+134,S135,Viale Trieste -> Avendrace Via Trieste > Avendrace DX,57,4,39.2218611109,9.10244444458,TRIESTE DIR AVENDRACE
+135,S136,Viale Trieste -> Avendrace Via Trieste > Avendrace SX,57,4,39.2218611109,9.10244444458,TRIESTE DIR AVENDRACE
+136,S137,Viale Trieste -> Roma Viale Trieste > Roma SX,58,4,39.2218413707,9.10236813446,TRIESTE DIR ROMA
+137,S138,Viale Trieste -> Roma Viale Trieste > Roma DX,58,4,39.2218413707,9.10236813446,TRIESTE DIR ROMA
+138,S139,Strada Arginale Strada Arginale DX,61,4,39.2365345863,9.14401964145,STRADA ARGINALE
+139,S140,Strada Arginale Strada Arginale SX,61,4,39.2365345863,9.14401964145,STRADA ARGINALE
+140,S141,Via Dei Conversi -> Via Tuver Conversi > Tuveri DX,76,4,39.2202963197,9.13240162945,CONVERSI DIR TUVERI
+141,S142,Via Dei Conversi -> Via Tuver Conversi  > Tuveri SX,76,4,39.2202963197,9.13240162945,CONVERSI DIR TUVERI
+142,S143,via dei conversi -> abbazia Conversi > Abbazia,77,4,39.2202247599,9.13242392527,CONVERSI DIR ABBAZIA
+143,S144,QSE Leonardo da Vinci -> Via Fiume QUARTU Da Vinci > Fiume,82,4,39.230468,9.222626,QSE DA VINCI DIR FIUME
+144,S145,QSE Leonardo da Vinci -> Via Antas QUARTU Da Vinci > Via Antas DX,83,4,39.230369,9.222555,QSE DA VINCI DIR ANTAS
+145,S146,QSE Leonardo da Vinci -> Via Antas QUARTU Da Vinci > Via Antas SX,83,4,39.230369,9.222555,QSE DA VINCI DIR ANTAS
+146,S147,QSE Via Fiume -> Via San Benedetto QUARTU Via Fiume > Via S Benedetto,84,4,39.235959,9.200665,QSE FIUME DIR S.BENEDETTO
+147,S148,QSE Via Fiume -> Poetto QUARTU Via Fiume > Poetto,85,4,39.235875,9.200617,QSE FIUME DIR POETTO
+148,S149,QSE Viale Colombo -> Via Madrid QUARTU Viale Colombo > Via Madrid,86,4,39.229102,9.190641,QSE COLOMBO DIR MADRID
+149,S150,QSE Viale Colombo -> Poetto QUARTU Viale Colombo > Poetto,87,4,39.22906,9.190566,QSE COLOMBO DIR POETTO
+150,S151,QSE Viale Lungomare -> Cagliari QUARTU Lungomare > Cagliari DX,88,4,39.222867,9.192523,QSE LUNGOMARE DIR CAGLIARI
+151,S152,QSE Viale Lungomare -> Cagliari QUARTU Lungomare > Cagliari SX,88,4,39.222867,9.192523,QSE LUNGOMARE DIR CAGLIARI
+152,S153,QSE Viale Lungomare -> Quartu QUARTU Lungomare > Quartu DX,89,4,39.222763,9.192573,QSE LUNGOMARE DIR QUARTU
+153,S154,QSE Viale Lungomare -> Quartu QUARTU Lungomare > Quartu SX,89,4,39.222763,9.192573,QSE LUNGOMARE DIR QUARTU
+154,S155,QSE Via Siena -> Via Zara QUARTU Via Siena > Via Zara,90,4,39.245319,9.1799,QSE SIENA DIR ZARA
+155,S156,QSE Via Siena -> Via Br.Sassari QUARTU Siena > Via B.Sassari,91,4,39.245347,9.17985,QSE SIENA DIR BR.SASSARI
+156,S157,QSE Via Pitz e Serra  > Via Danimarca QUARTU Pitz Serra > Danimarca,92,4,39.240366,9.208662,QSE PITSERRA DIR DANIMARCA
+157,S158,QSE via Pitz'e Serra > via Europa QUARTU Pitz Serra > Europa,93,4,39.240301,9.208664,QSE PITSERRA DIR EUROPA
+158,S159,SEL via Roma SELARGIUS Roma > Trieste,96,4,39.261662,9.174213,SEL VIA ROMA
+159,S160,SEL via Roma SELARGIUS Roma > del Lavoro,96,4,39.261662,9.174213,SEL VIA ROMA
+160,S161,ASS via Carmine ASSEMINI Carmine > Sardegna,94,4,39.278928,9.022822,ASS CARMINE
+161,S162,ASS via Carmine ASSEMINI Carmine > Sulcitana,94,4,39.278928,9.022822,ASS CARMINE
+162,S163,ASS via Sardegna ASSEMINI Sardegna > Carmine,95,4,39.290312,9.012701,ASS VIA SARDEGNA
+163,S164,ASS via Sardegna ASSEMINI Sardegna > SS130,95,4,39.290312,9.012701,ASS VIA SARDEGNA
+164,S165,via Cadello > via SM Chiara Cadello > SM Chiara Dx,97,4,39.238911,9.117881,CADELLO_OUT
+165,S166,via Cadello > via SM Chiara Cadello > SM Chiara Sx,97,4,39.238911,9.117881,CADELLO_OUT
+166,S167,via Cadello > via Is Mirrionis Cadello > Is Mirrionis Sx,98,4,39.238859,9.117545,CADELLO_IN
+167,S168,via Cadello > via Is Mirrionis Cadello > Is Mirrionis Dx,98,4,39.238859,9.117545,CADELLO_IN
