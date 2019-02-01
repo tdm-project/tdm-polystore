@@ -10,7 +10,7 @@ services:
       - "/home/zag/Work/ours/elzaggo_tdm-polystore/notebooks:/home/jupyter/notebooks"
 
   hdfs:
-    image: tdm/hdfs
+    image: crs4/hadoop
     ports:
       - "8020:8020"
       - "8042:8042"
