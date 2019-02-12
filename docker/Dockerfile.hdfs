@@ -1,4 +1,4 @@
-FROM crs4/hadoop:latest
+FROM crs4/hadoop:3
 # LABEL maintainer="gianluigi.zanetti@crs4.it"
 
 

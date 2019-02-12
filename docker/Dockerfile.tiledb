@@ -1,12 +1,28 @@
-FROM crs4/pydoop-client:latest
+FROM crs4/hadoop:3
+
+#FROM hd311
 # LABEL maintainer="gianluigi.zanetti@crs4.it"
 
+RUN yum install https://centos7.iuscommunity.org/ius-release.rpm
+
+# Copied from crs4/python-client, probably an overkill
 
 RUN yum install \
-        openssl-devel \
-        which \
-        unzip \
-        wget
+      gcc \
+      gcc-c++ \
+      make \
+      openssl-devel \
+      python36u-devel \
+      python36u-pip \
+      unzip \
+      wget \
+      which \
+      zip && \
+    yum clean all && \
+    ln -rs /usr/bin/python3.6 /usr/bin/python3 && \
+    ln -rs /usr/bin/pip3.6 /usr/bin/pip3 && \
+    /usr/bin/pip3 install --no-cache-dir --upgrade pip
+
 
 RUN wget https://cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz && \
     tar xvf cmake-3.3.2-Linux-x86_64.tar.gz   && \
@@ -23,27 +39,34 @@ RUN wget https://github.com/TileDB-Inc/TileDB/archive/1.4.1.tar.gz && \
     cd TileDB-1.4.1/ && \
     mkdir build && \
     cd build && \
-    ../bootstrap --prefix=/usr --enable-hdfs && \
+    ../bootstrap --prefix=/usr --enable-hdfs --enable-verbose && \
     make  && \
     make install-tiledb && \
-    cd .. && \
-    rm -rf TileDB-1.4.1/
+    cd ..
 
-RUN pip3 install --upgrade pip && \
-    pip3 install tiledb
 
-RUN ldconfig /opt/hadoop/lib/native && \
-    ldconfig /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.191.b12-1.el7_6.x86_64/jre/lib/amd64/server && \
-    CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
-    echo "export CLASSPATH=\"${CLASSPATH}\"" >> /etc/profile.d/hadoop.sh
+RUN wget http://download.osgeo.org/gdal/CURRENT/gdal-2.4.0.tar.gz && \
+    zcat gdal-2.4.0.tar.gz | tar xvf - && \
+    cd gdal-2.4.0 && ./configure && make && make install && \
+    pip3 install --no-cache-dir gdal && \
+    echo "/usr/local/lib" > /etc/ld.so.conf.d/libgdal-x86_64.conf && \
+    ldconfig
 
-RUN useradd -m jupyter && \
-    pip install --no-cache-dir \
-        wget \
-        ckanapi \
-        jupyter \
-        matplotlib
 
+RUN pip3 install --no-cache-dir tiledb jupyter
+
+RUN pip3 install --no-cache-dir xarray
+
+RUN pip3 install --no-cache-dir psycopg2
+
+
+RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
+    echo "export CLASSPATH=\"${CLASSPATH}\"" >> /etc/profile.d/hadoop.sh && \
+    echo "export HADOOP_HOME=/opt/hadoop" >> /etc/profile.d/hadoop.sh && \
+    echo  /usr/lib/jvm/jre/lib/amd64/server > /etc/ld.so.conf.d/jvm.conf && \
+    ldconfig
+
+RUN useradd -m jupyter
 
 COPY core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 
@@ -51,9 +74,8 @@ WORKDIR /home/jupyter
 USER jupyter
 RUN mkdir .jupyter notebooks
 COPY --chown=jupyter jupyter_notebook_config.py .jupyter/
-#COPY jupyter_notebook_config.py .jupyter/
 
 WORKDIR notebooks
 
 EXPOSE 8888
-ENTRYPOINT ["/bin/bash", "-c", "jupyter notebook"]
+ENTRYPOINT ["/bin/bash", "-l", "-c", "jupyter notebook"]

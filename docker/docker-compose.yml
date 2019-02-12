@@ -2,6 +2,13 @@ version: "3"
 
 services:
 
+  timescaledb:
+    image: timescale/timescaledb-postgis
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=foobar
+
   tiledb:
     image: tdm/tiledb
     ports:
@@ -10,7 +17,7 @@ services:
       - "/home/zag/Work/ours/elzaggo_tdm-polystore/notebooks:/home/jupyter/notebooks"
 
   hdfs:
-    image: crs4/hadoop
+    image: tdm/hdfs
     ports:
       - "8020:8020"
       - "8042:8042"
