@@ -10,6 +10,7 @@ RUN yum install https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum install \
       gcc \
       gcc-c++ \
+      git \
       make \
       openssl-devel \
       python36u-devel \
@@ -21,7 +22,8 @@ RUN yum install \
     yum clean all && \
     ln -rs /usr/bin/python3.6 /usr/bin/python3 && \
     ln -rs /usr/bin/pip3.6 /usr/bin/pip3 && \
-    /usr/bin/pip3 install --no-cache-dir --upgrade pip
+    /usr/bin/pip3 install --no-cache-dir --upgrade pip && \
+    /usr/bin/pip3 install --no-cache-dir --upgrade setuptools
 
 
 RUN wget https://cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz && \
@@ -33,10 +35,9 @@ RUN wget https://cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz && \
     rm cmake-3.3.2-Linux-x86_64.tar.gz  && \
     rm -rf cmake-3.3.2-Linux-x86_64
 
-RUN wget https://github.com/TileDB-Inc/TileDB/archive/1.4.1.tar.gz && \
-    tar xvf 1.4.1.tar.gz && \
-    rm 1.4.1.tar.gz && \
-    cd TileDB-1.4.1/ && \
+RUN git clone https://github.com/TileDB-Inc/TileDB.git && \
+    cd TileDB && \
+    git checkout backport-1.4.2 && \        
     mkdir build && \
     cd build && \
     ../bootstrap --prefix=/usr --enable-hdfs --enable-verbose && \
@@ -44,6 +45,13 @@ RUN wget https://github.com/TileDB-Inc/TileDB/archive/1.4.1.tar.gz && \
     make install-tiledb && \
     cd ..
 
+RUN git clone https://github.com/TileDB-Inc/TileDB-Py.git && \
+    cd TileDB-Py && \
+    git checkout dev && \
+    pip3 install --no-cache-dir -r requirements_dev.txt && \
+    python3 setup.py build_ext --inplace && \
+    python3 setup.py install && \
+    cd ..
 
 RUN wget http://download.osgeo.org/gdal/CURRENT/gdal-2.4.0.tar.gz && \
     zcat gdal-2.4.0.tar.gz | tar xvf - && \
@@ -53,18 +61,25 @@ RUN wget http://download.osgeo.org/gdal/CURRENT/gdal-2.4.0.tar.gz && \
     ldconfig
 
 
-RUN pip3 install --no-cache-dir tiledb jupyter
+RUN pip3 install --no-cache-dir jupyter
 
 RUN pip3 install --no-cache-dir xarray
 
 RUN pip3 install --no-cache-dir psycopg2
 
+RUN yum install proj && \
+    ln -s /usr/lib64/libproj.so.0 /usr/lib64/libproj.so
+
+RUN pip3 install --no-cache-dir  pyproj
+
+RUN pip3 install --no-cache-dir  folium
 
 RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
     echo "export CLASSPATH=\"${CLASSPATH}\"" >> /etc/profile.d/hadoop.sh && \
     echo "export HADOOP_HOME=/opt/hadoop" >> /etc/profile.d/hadoop.sh && \
     echo  /usr/lib/jvm/jre/lib/amd64/server > /etc/ld.so.conf.d/jvm.conf && \
     ldconfig
+
 
 RUN useradd -m jupyter
 
