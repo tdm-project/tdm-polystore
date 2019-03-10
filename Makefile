@@ -6,6 +6,9 @@ images:
 	docker build -f docker/Dockerfile.hdfs -t tdm/hdfs docker
 	docker build -f docker/Dockerfile.tiledb -t tdm/tiledb docker
 
-run:
-	docker run -d --name timescaledb \
-                   -p 5432:5432 -e POSTGRES_PASSWORD=${PSWD} ${IMAGE}
+run: images clean
+	docker-compose -f ./docker/docker-compose.yml up
+
+clean:
+	docker-compose -f ./docker/docker-compose.yml down
+
