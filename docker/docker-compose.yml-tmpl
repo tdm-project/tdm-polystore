@@ -14,7 +14,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - "/home/zag/Work/ours/elzaggo_tdm-polystore/notebooks:/home/jupyter/notebooks"
+      - "LOCAL_PATH/notebooks:/home/jupyter/notebooks"
 
   hdfs:
     image: tdm/hdfs
