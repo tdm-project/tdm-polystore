@@ -10,6 +10,7 @@ General idea:
    * plus annotations and provenance information;
    * a geometrical footprint can go from a point to a volume;
  * use timescaledb + postgis to hold ghosts of the datasets
+ * single shot events are 
 
 
 Datacube query interface
