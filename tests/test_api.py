@@ -3,21 +3,49 @@ class FakeDB:
     def __init__(self):
         self.initialized = False
         self.called = {}
-        self.sensor_types = [[1, 'uuid00', 'aaa', {'key1': 'value1'}],
-                             [2, 'uuid01', 'bbb', {'key1': 'value1'}]]
-        self.sensors_no_args = {'uuid00': 1, 'uuid01': 1}
-        self.sensors = [{'sid': 1,
-                         'uuid': 'uuid02',
-                         'stype': 'uuid00',
-                         'geom': 'POINT(9.3 30.2)',
-                         'description': {'key1': 'value1'}},
-                        {'sid': 2,
-                         'uuid': 'uuid03',
-                         'stype': 'uuid01',
-                         'geom': 'POINT(9.2 30.5)',
-                         'description': {'key1': 'value1'}}]
-        self.timeseries = [[0.22 * _ for _ in range(20)],
-                           [0.10 * _ for _ in range(20)]]
+        self.sensor_types = [{'code': 1,
+                              'description': {
+                                  "id": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
+                                  "type": "TemperatureSensorModel",
+                                  "name": "temperature sensor in DHT11",
+                                  "brandName": "Acme",
+                                  "modelName": "Acme multisensor DHT11",
+                                  "manufacturerName": "Acme Inc.",
+                                  "category": ["sensor"],
+                                  "function": ["sensing"],
+                                  "controlledProperty": ["temperature"]},
+                              },
+                             {"code": 2,
+                              "description": {
+                                  "id": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
+                                  "type": "HumiditySensorModel",
+                                  "name": "Humidity sensor in DHT11",
+                                  "brandName": "Acme",
+                                  "modelName": "Acme multisensor DHT11",
+                                  "manufacturerName": "Acme Inc.",
+                                  "category": ["sensor"],
+                                  "function": ["sensing"],
+                                  "controlledProperty": ["humidity"]}
+                              }
+                             ]
+        self.sensors_no_args = {"0fd67c67-c9be-45c6-9719-4c4eada4be65": 1,
+                                "0fd67c67-c9be-45c6-9719-4c4eada4bebe": 1}
+        self.sensors = [
+            {"code": 1,
+             "stypecode": 1,
+             "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
+             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc"}
+             },
+            {"code": 2,
+             "stypecode": 2,
+             "geometry": {"type": "Point", "coordinates": [9.2, 31.0]},
+             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4beff"}
+             },
+        ]
+        self.timeseries = [[[0.11, 0.22, 0.33, 0.44],
+                            [12000, 12100, 12200, 12300]],
+                           [[1.11, 1.22, 1.33, 1.44],
+                            [12000, 12100, 12200, 12300]]]
 
     def init(self):
         self.initialized = True
@@ -33,14 +61,14 @@ class FakeDB:
         else:
             return self.sensors_no_args
 
-    def get_sensor(self, sid):
-        self.called['get_sensor'] = {'sid': sid}
-        return self.sensors[sid - 1]
+    def get_sensor(self, code):
+        self.called['get_sensor'] = {'code': code}
+        return self.sensors[code - 1]
 
-    def get_timeseries(self, sid, args):
-        args['sid'] = sid
+    def get_timeseries(self, code, args):
+        args['code'] = code
         self.called['get_timeseries'] = args
-        return self.timeseries[sid - 1]
+        return self.timeseries[code - 1]
 
 
 def test_sensor_types(client, monkeypatch):
@@ -66,17 +94,17 @@ def test_sensors_no_args(client, monkeypatch):
 def test_sensors(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.list_sensors', fakedb.list_sensors)
-    center, radius = 'POINT(9.2 33)', 1000
+    footprint = 'circle((9.2 33), 1000)'
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
     selector = "sensor_type.category=meteo"
-    q = 'center={}&radius={}&after={}&before={}&selector={}'.format(
-        center, radius, after, before, selector)
+    q = 'footprint={}&after={}&before={}&selector={}'.format(
+        footprint, after, before, selector)
     response = client.get('/sensors?{}'.format(q))
     assert 'list_sensors' in fakedb.called
     assert response.status == '200 OK'
     assert response.is_json
     args = fakedb.called['list_sensors']
-    assert args['center'] == center and args['radius'] == radius
+    assert args['footprint'] == footprint
     assert args['after'] == after and args['before'] == before
     assert args['selector'] == selector
     assert response.get_json() == fakedb.sensors
@@ -85,29 +113,29 @@ def test_sensors(client, monkeypatch):
 def test_sensor(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.get_sensor', fakedb.get_sensor)
-    sid = 1
-    response = client.get('/sensors/{}'.format(sid))
+    code = 1
+    response = client.get('/sensors/{}'.format(code))
     assert 'get_sensor' in fakedb.called
     assert response.status == '200 OK'
     assert response.is_json
     args = fakedb.called['get_sensor']
-    assert args['sid'] == sid
-    assert response.get_json() == fakedb.sensors[sid - 1]
+    assert args['code'] == code
+    assert response.get_json() == fakedb.sensors[code - 1]
 
 
 def test_timeseries(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.get_timeseries', fakedb.get_timeseries)
-    sid = 1
+    code = 1
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
     bucket, op = '20 min', 'sum'
     q = 'after={}&before={}&bucket={}&op={}'.format(after, before, bucket, op)
-    response = client.get('/sensors/{}/timeseries?{}'.format(sid, q))
+    response = client.get('/sensors/{}/timeseries?{}'.format(code, q))
     assert 'get_timeseries' in fakedb.called
     assert response.status == '200 OK'
     assert response.is_json
     args = fakedb.called['get_timeseries']
-    assert args['sid'] == sid
+    assert args['code'] == code
     assert args['after'] == after and args['before'] == before
     assert args['bucket'] == bucket and args['op'] == op
-    assert response.get_json() == fakedb.timeseries[sid - 1]
+    assert response.get_json() == fakedb.timeseries[code - 1]

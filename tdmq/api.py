@@ -13,33 +13,221 @@ def add_routes(app):
 
     @app.route('/sensor_types')
     def sensor_types():
+        """Return known sensor types.
+
+        .. :quickref: Get collection of sensor types.
+        
+        **Example request**:
+
+        .. sourcecode:: http
+
+          GET /sensor_types/ HTTP/1.1
+          Host: example.com
+          Accept: application/json
+
+        **Example response**:
+
+        .. sourcecode:: http
+
+          HTTP/1.1 200 OK
+          Vary: Accept
+          Content-Type: application/json
+
+          [
+            {
+              "code": 1,
+              "description": {
+                   "id": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
+                   "type": "TemperatureSensorDTH11",
+                   "name": "temperature sensor in DHT11",
+                   "brandName": "Acme",
+                   "modelName": "Acme multisensor DHT11",
+                   "manufacturerName": "Acme Inc.",
+                   "category": ["sensor"],
+                   "function": ["sensing"],
+                   "controlledProperty": ["temperature"]
+                  }
+            },
+            {
+              "code": 2,
+              "description": {
+                   "id": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
+                   "type": "HumiditySensorDHT11",
+                   "name": "Humidity sensor in DHT11",
+                   "brandName": "Acme",
+                   "modelName": "Acme multisensor DHT11",
+                   "manufacturerName": "Acme Inc.",
+                   "category": ["sensor"],
+                   "function": ["sensing"],
+                   "controlledProperty": ["humidity"]
+                  }
+            },
+          ]
+        :resheader Content-Type: application/json
+        :status 200: list[SensorType] found
+        :returns: :class:`list[tdmq.objects.SensorType]`
+        """
         res = db.list_sensor_types()
         return jsonify(res)
 
     @app.route('/sensors')
     def sensors():
+        """Return the collection of sensor that have reported an event in a
+           given spatio-temporal region.
+
+           The spatio-temporal domain is expressed as a cylinder with
+           a given geometrical footprint and a time interval.
+
+           Calling withour arguments will return number of sensors
+           available by SensorType id.
+
+
+        .. :quickref: Get collection of reporting sensors.
+
+        **Example request**:
+
+        .. sourcecode:: http
+
+          GET /sensors?footprint=circle((9.2 33.0), 1000) HTTP/1.1
+          Host: example.com
+          Accept: application/json
+
+
+        **Example response**:
+
+        .. sourcecode:: http
+
+          HTTP/1.1 200 OK
+          Vary: Accept
+          Content-Type: application/json
+
+          [
+            {"code": 1,
+             "stypecode": 1,
+             "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
+             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc"}
+             },
+            {"code": 2,
+             "stypecode": 2,
+             "geometry": {"type": "Point", "coordinates": [9.2, 31.0]},
+             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4beff"}
+             },
+          ]
+
+        :resheader Content-Type: application/json
+
+        :query footprint: consider only sensors within footprint
+                          e.g., 'circle((9.3, 32), 1000)'
+
+        :query after: consider only sensors reporting strictly after
+                      this time, e.g., '2019-02-21T11:03:25Z'
+
+        :query before: consider only sensors reporting strictly before
+                      this time, e.g., '2019-02-22T11:03:25Z'
+
+        :query selector: consider only sensors such that this
+                         predicate is true,
+                         e.g., 'temperature in sensor_type.controlledProperty'
+
+        :status 200: list[Sensor] found
+        :returns: :class:`list[tdmq.objects.Sensor]`
+
+        """
         rargs = request.args
         if not rargs:
             args = None
         else:
             args = dict((k, rargs.get(k, None))
-                        for k in ['center', 'radius', 'after', 'before',
-                                  'selector'])
-            args['radius'] = int(args['radius'])
+                        for k in ['footprint', 'after', 'before', 'selector'])
         res = db.list_sensors(args)
         return jsonify(res)
 
-    @app.route('/sensors/<int:sid>')
-    def sensor(sid):
-        res = db.get_sensor(sid)
+    @app.route('/sensors/<int:code>')
+    def sensor(code):
+        """Return description of sensor with code code
+
+        .. :quickref: Get description of sensor[code]
+
+        **Example request**:
+
+        .. sourcecode:: http
+
+          GET /sensors/1 HTTP/1.1
+          Host: example.com
+          Accept: application/json
+
+
+        **Example response**:
+
+        .. sourcecode:: http
+
+          HTTP/1.1 200 OK
+          Vary: Accept
+          Content-Type: application/json
+
+          {"code": 1,
+             "stypecode": 1,
+             "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
+             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc"}
+          }
+
+        :resheader Content-Type: application/json
+        :status 200: Sensor[code] found
+        :returns: :class:`tdmq.objects.Sensor`
+
+        """
+        res = db.get_sensor(code)
         return jsonify(res)
 
-    @app.route('/sensors/<int:sid>/timeseries')
-    def timeseries(sid):
+    @app.route('/sensors/<int:code>/timeseries')
+    def timeseries(code):
+        """Return timeseries for sensor[code].
+
+        Will return the measures and the related timedeltas array, the
+        latter expressed as seconds from the `after` time, if `after`
+        is defined, otherwise as FIXME ISO-XX datetime.
+
+        .. :quickref: Get time series of data of sensor[code].
+
+
+        **Example request**:
+
+        .. sourcecode:: http
+
+          GET /sensors/1/timeseries?after=2019-02-21T11:03:25Z HTTP/1.1
+          Host: example.com
+          Accept: application/json
+
+
+        **Example response**:
+
+        .. sourcecode:: http
+
+          HTTP/1.1 200 OK
+          Vary: Accept
+          Content-Type: application/json
+
+          [[0.11, 0.22, 0.33, 0.44], [12000, 12100, 12200, 12300]]
+
+        :resheader Content-Type: application/json
+
+        :query after: consider only sensors reporting strictly after
+                      this time, e.g., '2019-02-21T11:03:25Z'
+
+        :query before: consider only sensors reporting strictly before
+                      this time, e.g., '2019-02-22T11:03:25Z'
+
+        :query bucket: time bucket for data aggregation, e.g., '20 min'
+
+        :query op: aggregation operation on data contained in bucket,
+                   e.g., `sum`,  `average`, `count` FIXME.
+
+        :status 200: list[Sensor] found
+        :returns: :class:`list[tdmq.objects.Sensor]`
+
+        """
         rargs = request.args
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'op'])
-        res = db.get_timeseries(sid, args)
+        res = db.get_timeseries(code, args)
         return jsonify(res)
-
-
