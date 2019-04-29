@@ -3,13 +3,17 @@ import os
 import pytest
 from tdmq import create_app
 
+
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
     app = create_app({
         'TESTING': True,
+        'DB_HOST': 'localhost',
+        'DB_NAME': 'tdmqtest',
+        'DB_USER': 'postgres',
+        'DB_PASSWORD': 'foobar',
     })
-
     yield app
 
 
