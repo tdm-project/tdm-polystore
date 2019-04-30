@@ -1,74 +1,53 @@
+import json
+from collections import Counter
+from collections import OrderedDict
+
+import os
+root = os.path.dirname(os.path.abspath(__file__))
+sensor_types_fname = os.path.join(root, 'data/sensor_types.json')
+sensors_fname = os.path.join(root, 'data/sensors.json')
+
 # FIXME move it to a fixture?
 class FakeDB:
     def __init__(self):
         self.initialized = False
         self.called = {}
-        self.sensor_types = [{'code': 1,
-                              'description': {
-                                  "id": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
-                                  "type": "TemperatureSensorModel",
-                                  "name": "temperature sensor in DHT11",
-                                  "brandName": "Acme",
-                                  "modelName": "Acme multisensor DHT11",
-                                  "manufacturerName": "Acme Inc.",
-                                  "category": ["sensor"],
-                                  "function": ["sensing"],
-                                  "controlledProperty": ["temperature"]},
-                              },
-                             {"code": 2,
-                              "description": {
-                                  "id": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
-                                  "type": "HumiditySensorModel",
-                                  "name": "Humidity sensor in DHT11",
-                                  "brandName": "Acme",
-                                  "modelName": "Acme multisensor DHT11",
-                                  "manufacturerName": "Acme Inc.",
-                                  "category": ["sensor"],
-                                  "function": ["sensing"],
-                                  "controlledProperty": ["humidity"]}
-                              }
-                             ]
-        self.sensors_no_args = {"0fd67c67-c9be-45c6-9719-4c4eada4be65": 1,
-                                "0fd67c67-c9be-45c6-9719-4c4eada4bebe": 1}
-        self.sensors = [
-            {"code": 1,
-             "stypecode": 1,
-             "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
-             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc"}
-             },
-            {"code": 2,
-             "stypecode": 2,
-             "geometry": {"type": "Point", "coordinates": [9.2, 31.0]},
-             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4beff"}
-             },
-        ]
-        self.timeseries = [[[0.11, 0.22, 0.33, 0.44],
-                            [12000, 12100, 12200, 12300]],
-                           [[1.11, 1.22, 1.33, 1.44],
-                            [12000, 12100, 12200, 12300]]]
+        self.sensor_types = OrderedDict(
+            (_['uuid'], _) for _ in json.load(
+                open(os.path.join(root, 'data/sensors.json'))))
+        self.sensors = OrderedDict(
+            (_['uuid'], _) for _ in json.load(
+                open(os.path.join(root, './data/sensors.json'))))
+        self.sensors_no_args = dict(Counter(
+            _['stypecode'] for _ in self.sensors.values()
+        ))
+        self.timeseries = dict(
+            (_['uuid'], {'timedelta': [0.11, 0.22, 0.33, 0.44],
+                         'data': [12000, 12100, 12200, 12300]})
+            for _ in self.sensors.values())
 
     def init(self):
         self.initialized = True
 
     def list_sensor_types(self):
         self.called['list_sensor_types'] = True
-        return self.sensor_types
+        return [_ for _ in self.sensor_types.values()]
 
     def list_sensors(self, args):
         self.called['list_sensors'] = args
         if args:
-            return self.sensors
+            return [_ for _ in self.sensors.values()]
         else:
             return self.sensors_no_args
 
     def get_sensor(self, code):
         self.called['get_sensor'] = {'code': code}
-        return self.sensors[code - 1]
+        return self.sensors[code]
 
     def get_timeseries(self, code, args):
         args['code'] = code
         self.called['get_timeseries'] = args
-        return self.timeseries[code - 1]
+        return self.timeseries[code]
 
 
 def test_sensor_types(client, monkeypatch):
@@ -78,7 +57,7 @@ def test_sensor_types(client, monkeypatch):
     assert 'list_sensor_types' in fakedb.called
     assert response.status == '200 OK'
     assert response.is_json
-    assert response.get_json() == fakedb.sensor_types
+    assert response.get_json() == fakedb.list_sensor_types()
 
 
 def test_sensors_no_args(client, monkeypatch):
@@ -107,26 +86,26 @@ def test_sensors(client, monkeypatch):
     assert args['footprint'] == footprint
     assert args['after'] == after and args['before'] == before
     assert args['selector'] == selector
-    assert response.get_json() == fakedb.sensors
+    assert response.get_json() == fakedb.list_sensors(args)
 
 
 def test_sensor(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.get_sensor', fakedb.get_sensor)
-    code = 1
+    code = list(fakedb.sensors.keys())[0]
     response = client.get('/sensors/{}'.format(code))
     assert 'get_sensor' in fakedb.called
     assert response.status == '200 OK'
     assert response.is_json
     args = fakedb.called['get_sensor']
     assert args['code'] == code
-    assert response.get_json() == fakedb.sensors[code - 1]
+    assert response.get_json() == fakedb.get_sensor(code)
 
 
 def test_timeseries(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.get_timeseries', fakedb.get_timeseries)
-    code = 1
+    code = list(fakedb.sensors.keys())[0]    
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
     bucket, op = '20 min', 'sum'
     q = 'after={}&before={}&bucket={}&op={}'.format(after, before, bucket, op)
@@ -138,4 +117,4 @@ def test_timeseries(client, monkeypatch):
     assert args['code'] == code
     assert args['after'] == after and args['before'] == before
     assert args['bucket'] == bucket and args['op'] == op
-    assert response.get_json() == fakedb.timeseries[code - 1]
+    assert response.get_json() == fakedb.timeseries[code]

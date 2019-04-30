@@ -34,34 +34,28 @@ def add_routes(app):
           Content-Type: application/json
 
           [
-            {
-              "code": 1,
-              "description": {
-                   "id": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
-                   "type": "TemperatureSensorDTH11",
-                   "name": "temperature sensor in DHT11",
-                   "brandName": "Acme",
-                   "modelName": "Acme multisensor DHT11",
-                   "manufacturerName": "Acme Inc.",
-                   "category": ["sensor"],
-                   "function": ["sensing"],
-                   "controlledProperty": ["temperature"]
-                  }
-            },
-            {
-              "code": 2,
-              "description": {
-                   "id": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
-                   "type": "HumiditySensorDHT11",
-                   "name": "Humidity sensor in DHT11",
-                   "brandName": "Acme",
-                   "modelName": "Acme multisensor DHT11",
-                   "manufacturerName": "Acme Inc.",
-                   "category": ["sensor"],
-                   "function": ["sensing"],
-                   "controlledProperty": ["humidity"]
-                  }
-            },
+           {
+             "uuid": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
+             "type": "TemperatureSensorDTH11",
+             "name": "temperature sensor in DHT11",
+             "brandName": "Acme",
+             "modelName": "Acme multisensor DHT11",
+             "manufacturerName": "Acme Inc.",
+             "category": ["sensor"],
+             "function": ["sensing"],
+             "controlledProperty": ["temperature"]
+           },
+           {
+             "uuid": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
+             "type": "HumiditySensorDHT11",
+             "name": "Humidity sensor in DHT11",
+             "brandName": "Acme",
+             "modelName": "Acme multisensor DHT11",
+             "manufacturerName": "Acme Inc.",
+             "category": ["sensor"],
+             "function": ["sensing"],
+             "controlledProperty": ["humidity"]
+           },
           ]
         :resheader Content-Type: application/json
         :status 200: list[SensorType] found
@@ -102,16 +96,14 @@ def add_routes(app):
           Content-Type: application/json
 
           [
-            {"code": 1,
-             "stypecode": 1,
-             "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
-             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc"}
-             },
-            {"code": 2,
-             "stypecode": 2,
-             "geometry": {"type": "Point", "coordinates": [9.2, 31.0]},
-             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4beff"}
-             },
+           {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
+            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
+            "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
+           },
+           {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4beff",
+            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
+            "geometry": {"type": "Point", "coordinates": [9.2, 31.0]},
+           }
           ]
 
         :resheader Content-Type: application/json
@@ -142,9 +134,9 @@ def add_routes(app):
         res = db.list_sensors(args)
         return jsonify(res)
 
-    @app.route('/sensors/<int:code>')
+    @app.route('/sensors/<uuid:code>')
     def sensor(code):
-        """Return description of sensor with code code
+        """Return description of sensor with uuid code
 
         .. :quickref: Get description of sensor[code]
 
@@ -165,10 +157,9 @@ def add_routes(app):
           Vary: Accept
           Content-Type: application/json
 
-          {"code": 1,
-             "stypecode": 1,
-             "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
-             "description": {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc"}
+          {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
+           "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
+           "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
           }
 
         :resheader Content-Type: application/json
@@ -176,10 +167,10 @@ def add_routes(app):
         :returns: :class:`tdmq.objects.Sensor`
 
         """
-        res = db.get_sensor(code)
+        res = db.get_sensor(str(code))
         return jsonify(res)
 
-    @app.route('/sensors/<int:code>/timeseries')
+    @app.route('/sensors/<uuid:code>/timeseries')
     def timeseries(code):
         """Return timeseries for sensor[code].
 
@@ -194,7 +185,7 @@ def add_routes(app):
 
         .. sourcecode:: http
 
-          GET /sensors/1/timeseries?after=2019-02-21T11:03:25Z HTTP/1.1
+          GET /sensors/0fd67c67-c9be-45c6-9719-4c4eada4becc/timeseries?after=2019-02-21T11:03:25Z HTTP/1.1
           Host: example.com
           Accept: application/json
 
@@ -207,7 +198,8 @@ def add_routes(app):
           Vary: Accept
           Content-Type: application/json
 
-          [[0.11, 0.22, 0.33, 0.44], [12000, 12100, 12200, 12300]]
+          {'timedelta':[0.11, 0.22, 0.33, 0.44], 
+           'data': [12000, 12100, 12200, 12300]}
 
         :resheader Content-Type: application/json
 
@@ -229,5 +221,5 @@ def add_routes(app):
         rargs = request.args
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'op'])
-        res = db.get_timeseries(code, args)
+        res = db.get_timeseries(str(code), args)
         return jsonify(res)
