@@ -123,6 +123,12 @@ def init_db():
     logger.debug('init_db: done')
 
 
+def load_file(filename):
+    """Load objects from a json file."""
+    logger.debug('load_file: start')
+    logger.debug('load_file: done.')
+
+
 def list_sensor_types():
     """List known sensor_types"""
     pass
@@ -151,6 +157,15 @@ def add_db_cli(app):
         click.echo('Starting initialization process.')
         init_db()
         click.echo('Initialized the database.')
+
+    @db_cli.command('load')
+    @click.argument('filename', type=click.Path(exists=True))
+    def db_load(filename):
+        msg = 'Loading from {}.'.format(click.format_filename(filename))
+        click.echo(msg)
+        stats = load_file(filename)
+        click.echo('Loaded {}'.format(str(stats)))
+
     app.cli.add_command(db_cli)
 
 

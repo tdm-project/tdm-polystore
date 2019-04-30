@@ -1,5 +1,7 @@
+import tempfile
 
-def test_init_db(runner, monkeypatch):
+
+def test_db_init(runner, monkeypatch):
     class Recorder:
         called = False
 
@@ -9,3 +11,19 @@ def test_init_db(runner, monkeypatch):
     result = runner.invoke(args=['db', 'init'])
     assert 'Initialized' in result.output
     assert Recorder.called
+
+
+def test_db_load(runner, monkeypatch):
+    class Recorder:
+        called = False
+        result = {'sensor_types': 2, 'nodes': 4, 'sensors': 10}
+    
+    def fake_load_file(fname):
+        Recorder.called = fname
+        return Recorder.result
+    monkeypatch.setattr('tdmq.db.load_file', fake_load_file)
+    tmpfile = tempfile.NamedTemporaryFile()
+    result = runner.invoke(args=['db', 'load', tmpfile.name])
+    assert Recorder.called == tmpfile.name
+    assert str(Recorder.result) in result.output
+
