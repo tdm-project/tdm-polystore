@@ -12,12 +12,12 @@ class FakeDB:
     def __init__(self):
         self.initialized = False
         self.called = {}
-        self.sensor_types = OrderedDict(
-            (_['uuid'], _) for _ in json.load(
-                open(os.path.join(root, 'data/sensors.json'))))
-        self.sensors = OrderedDict(
-            (_['uuid'], _) for _ in json.load(
-                open(os.path.join(root, './data/sensors.json'))))
+        sensor_types = json.load(
+            open(os.path.join(root, 'data/sensor_types.json')))['sensor_types']
+        sensors = json.load(
+            open(os.path.join(root, './data/sensors.json')))['sensors']
+        self.sensor_types = OrderedDict((_['uuid'], _) for _ in sensor_types)
+        self.sensors = OrderedDict((_['uuid'], _) for _ in sensors)
         self.sensors_no_args = dict(Counter(
             _['stypecode'] for _ in self.sensors.values()
         ))
