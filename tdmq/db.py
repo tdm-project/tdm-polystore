@@ -54,25 +54,22 @@ def add_extensions(db):
 def add_tables(db):
     SQL = """
     CREATE TABLE  sensor_types (
-           code        SERIAL PRIMARY KEY,
-           id          UUID UNIQUE,
+           code        UUID PRIMARY KEY,
            description JSONB);
     CREATE TABLE  nodes (
-           code        SERIAL PRIMARY KEY,
-           id          UUID UNIQUE,
-           stationcode INT4 NOT NULL,
+           code        UUID PRIMARY KEY,
+           stationcode UUID NOT NULL,
            geom        GEOMETRY,
            description JSONB);
     CREATE TABLE sensors (
-           code        SERIAL PRIMARY KEY,
-           id          UUID UNIQUE,
-           stypecode   INT4 NOT NULL,
-           nodecode    INT4 NOT NULL,
+           code        UUID PRIMARY KEY,
+           stypecode   UUID NOT NULL,
+           nodecode    UUID NOT NULL,
            geom        GEOMETRY,
            description JSONB);
     CREATE TABLE measures (
            time       TIMESTAMPTZ NOT NULL,
-           sensorcode INT4        NOT NULL,
+           sensorcode UUID        NOT NULL,
            value      REAL,
            url        TEXT,
            indx       INT4);
