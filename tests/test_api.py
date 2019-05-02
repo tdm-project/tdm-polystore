@@ -2,6 +2,7 @@ import json
 from collections import Counter
 from collections import OrderedDict
 
+# FIXME move to fixtures
 import os
 root = os.path.dirname(os.path.abspath(__file__))
 sensor_types_fname = os.path.join(root, 'data/sensor_types.json')

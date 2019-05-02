@@ -1,8 +1,11 @@
 import click
+import json
 from flask import current_app, g
 from flask.cli import AppGroup
 
 import psycopg2 as psy
+import itertools as it
+import psycopg2.sql as sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from datetime import datetime, timedelta
 
@@ -81,6 +84,60 @@ def add_tables(db):
             cur.execute(SQL)
 
 
+def take_by_n(a, n):
+    c = it.cycle(range(2*n))
+    for k, g in it.groupby(a, lambda _: next(c) < n):
+        yield [_ for _ in g]
+
+
+def format_to_sql_tuple(t):
+    "Convert tuple t to an SQL.Composable."
+    return sql.SQL("({})").format(sql.SQL(', ').join(
+        sql.Literal(v) for v in t))
+
+
+def load_data_by_chunks(db, data, chunk_size, into, format_to_sql_tuple):
+    values = take_by_n(data, chunk_size)
+    with db:
+        with db.cursor() as cur:
+            for v in values:
+                s = sql.SQL(into) + sql.SQL(' VALUES ')
+                s += sql.SQL(', ').join(format_to_sql_tuple(_) for _ in v)
+                cur.execute(s)
+
+
+def load_sensor_types(db, data, validate=False, chunk_size=10000):
+    """
+    Load sensor_types objects.
+    """
+    def fix_json(d):
+        return format_to_sql_tuple((d['uuid'], json.dumps(d)))
+    logger.debug('load_sensor_types: start loading %d sensor_types', len(data))
+    into = "INSERT INTO sensor_types (code, description)"
+    load_data_by_chunks(db, data, chunk_size, into, fix_json)
+    logger.debug('load_sensor_types: done.')
+    return len(data)
+
+
+def load_sensors(db, data, validate=False, chunk_size=10000):
+    """
+    Load sensors objects.
+    """
+    def fix_geom_and_json(d):
+        return sql.SQL("({})").format(sql.SQL(', ').join([
+            sql.Literal(d['uuid']),
+            sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
+            sql.SQL(
+                "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
+                % json.dumps(d['geometry'])),
+            sql.Literal(json.dumps(d))]))
+    into = "INSERT INTO sensors (code, stypecode, nodecode, geom, description)"
+    logger.debug('load_sensors: start loading %d sensors', len(data))
+    load_data_by_chunks(db, data, chunk_size, into, fix_geom_and_json)
+    logger.debug('load_sensors: done.')
+    return len(data)
+
+
 def get_db():
     """Connect to the application's configured database. The connection
     is unique for each request and will be reused if this is called
@@ -123,7 +180,18 @@ def init_db():
 def load_file(filename):
     """Load objects from a json file."""
     logger.debug('load_file: start')
+    stats = {}
+    with open(filename) as f:
+        data = json.load(f)
+    db = get_db()
+    if 'sensor_types' in data:
+        n = load_sensor_types(db, data['sensor_types'])
+        stats['sensor_types'] = n
+    if 'sensors' in data:
+        n = load_sensors(db, data['sensors'])
+        stats['sensors'] = n
     logger.debug('load_file: done.')
+    return stats
 
 
 def list_sensor_types():
@@ -158,9 +226,10 @@ def add_db_cli(app):
     @db_cli.command('load')
     @click.argument('filename', type=click.Path(exists=True))
     def db_load(filename):
-        msg = 'Loading from {}.'.format(click.format_filename(filename))
+        path = click.format_filename(filename)
+        msg = 'Loading from {}.'.format(path)
         click.echo(msg)
-        stats = load_file(filename)
+        stats = load_file(path)
         click.echo('Loaded {}'.format(str(stats)))
 
     app.cli.add_command(db_cli)
