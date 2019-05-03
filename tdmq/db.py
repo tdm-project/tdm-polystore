@@ -288,7 +288,8 @@ def get_object(db, tname, oid):
     with db:
         with db.cursor() as cur:
             cur.execute(SQL)
-            return cur.fetchall()
+            # FIXME
+            return cur.fetchall()[0][0]
 
 
 def get_sensor(sid):
