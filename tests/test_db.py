@@ -3,6 +3,7 @@
 # FIXME move to fixtures
 import os
 import json
+import tempfile
 root = os.path.dirname(os.path.abspath(__file__))
 sensor_types_fname = os.path.join(root, 'data/sensor_types.json')
 sensors_fname = os.path.join(root, 'data/sensors.json')
@@ -25,3 +26,11 @@ def test_load_db(runner):
     result = runner.invoke(args=['db', 'load', measures_fname])
     n = len(json.load(open(measures_fname))['measures'])
     assert "Loaded {'measures': %d}" % n in result.output
+
+
+def test_dump_db(runner):
+    # FIXME it assumes that it will be run after test_load_db
+    n = len(json.load(open(measures_fname))['measures'])
+    with tempfile.NamedTemporaryFile("w") as f:
+        result = runner.invoke(args=['db', 'dump', 'measures', f.name])
+    assert "Dumped {}".format(n) in result.output

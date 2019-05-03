@@ -106,6 +106,28 @@ def load_data_by_chunks(db, data, chunk_size, into, format_to_sql_tuple):
                 cur.execute(s)
 
 
+def dump_table(db, tname, path, itersize=100000):
+    # FIXME
+    SQL = 'SELECT row_to_json({}) from {};'.format(tname, tname)
+    first = True
+    counter = 0
+    with open(path, 'w') as f:
+        f.write('{"%s": [\n' % tname)
+        with db:
+            with db.cursor('dump_cursor') as cur:
+                cur.itersize = itersize
+                cur.execute(SQL)
+                for r in cur:
+                    if first:
+                        first = False
+                    else:
+                        f.write(',\n')
+                    f.write(json.dumps(r[0]))
+                    counter += 1
+        f.write(']}\n')
+    return counter
+
+
 def load_sensor_types(db, data, validate=False, chunk_size=10000):
     """
     Load sensor_types objects.
@@ -160,7 +182,7 @@ def load_measures(db, data, validate=False, chunk_size=10000):
     def fix_value(d):
         def fix_measure(m):
             # FIXME brute force rendering
-            if 'reference' in m:
+            if 'reference' in m and m['reference'] is not None:
                 return (None, m['reference'], m['index'])
             else:
                 return (m['value'], None, None)
@@ -171,7 +193,6 @@ def load_measures(db, data, validate=False, chunk_size=10000):
     load_data_by_chunks(db, data, chunk_size, into, fix_value)
     logger.debug('load_measures: done.')
     return len(data)
-
 
 
 def get_db():
@@ -234,6 +255,12 @@ def load_file(filename):
     return stats
 
 
+def dump_field(field, path):
+    """Dump all record of field to file path"""
+    db = get_db()
+    return dump_table(db, field, path, itersize=100000)
+
+
 def list_sensor_types():
     """List known sensor_types"""
     pass
@@ -271,6 +298,16 @@ def add_db_cli(app):
         click.echo(msg)
         stats = load_file(path)
         click.echo('Loaded {}'.format(str(stats)))
+
+    @db_cli.command('dump')
+    @click.argument('field')
+    @click.argument('filename', type=click.Path(exists=False))
+    def db_dump(field, filename):
+        msg = 'Dumping {} to {}.'.format(field, filename)
+        path = click.format_filename(filename)
+        click.echo(msg)
+        n = dump_field(field, path)
+        click.echo('Dumped {} records'.format(n))
 
     app.cli.add_command(db_cli)
 
