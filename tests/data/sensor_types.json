@@ -1,6 +1,6 @@
 {"sensor_types": [
     {
-        "uuid": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
+        "code": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
         "type": "TemperatureSensorDTH11",
         "name": "temperature sensor in DHT11",
         "brandName": "Acme",
@@ -11,7 +11,7 @@
         "controlledProperty": ["temperature"]
     },
     {
-        "uuid": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
+        "code": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
         "type": "HumiditySensorDHT11",
         "name": "Humidity sensor in DHT11",
         "brandName": "Acme",

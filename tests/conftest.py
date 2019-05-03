@@ -1,5 +1,4 @@
-import os
-
+import psycopg2 as psy
 import pytest
 from tdmq import create_app
 
@@ -27,3 +26,15 @@ def client(app):
 def runner(app):
     """A test runner for the app's Click commands."""
     return app.test_cli_runner()
+
+
+@pytest.fixture
+def db(app):
+    """Get an handle to the underlying db."""
+    db_settings = {
+        'user': app.config['DB_USER'],
+        'password': app.config['DB_PASSWORD'],
+        'host': app.config['DB_HOST'],
+        'dbname': app.config['DB_NAME'],
+    }
+    return psy.connect(**db_settings)

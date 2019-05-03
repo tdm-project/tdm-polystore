@@ -133,7 +133,7 @@ def load_sensor_types(db, data, validate=False, chunk_size=10000):
     Load sensor_types objects.
     """
     def fix_json(d):
-        return format_to_sql_tuple((d['uuid'], json.dumps(d)))
+        return format_to_sql_tuple((d['code'], json.dumps(d)))
     logger.debug('load_sensor_types: start loading %d sensor_types', len(data))
     into = "INSERT INTO sensor_types (code, description)"
     load_data_by_chunks(db, data, chunk_size, into, fix_json)
@@ -147,7 +147,7 @@ def load_sensors(db, data, validate=False, chunk_size=10000):
     """
     def fix_geom_and_json(d):
         return sql.SQL("({})").format(sql.SQL(', ').join([
-            sql.Literal(d['uuid']),
+            sql.Literal(d['code']),
             sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
             sql.SQL(
                 "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
@@ -174,7 +174,7 @@ def load_measures(db, data, validate=False, chunk_size=10000):
     def fix_geom_and_json(d):
         gf = "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
         return sql.SQL("({})").format(sql.SQL(', ').join([
-            sql.Literal(d['uuid']),
+            sql.Literal(d['code']),
             sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
             sql.SQL(gf % json.dumps(d['geometry'])),
             sql.Literal(json.dumps(d))]))
@@ -261,19 +261,40 @@ def dump_field(field, path):
     return dump_table(db, field, path, itersize=100000)
 
 
+def list_descriptions_in_table(db, tname):
+    SQL = 'SELECT description from {};'.format(tname)
+    # FIXME
+    with db:
+        with db.cursor() as cur:
+            cur.execute(SQL)
+            return [_[0] for _ in cur.fetchall()]
+
+
 def list_sensor_types():
     """List known sensor_types"""
-    pass
+    db = get_db()
+    return list_descriptions_in_table(db, 'sensor_types')
 
 
 def list_sensors(args):
-    """List known sensor_types"""
-    pass
+    """List known sensors"""
+    db = get_db()
+    return list_descriptions_in_table(db, 'sensors')
+
+
+def get_object(db, tname, oid):
+    SQL = """SELECT description FROM {} t
+             WHERE t.code = '{}';""".format(tname, oid)
+    with db:
+        with db.cursor() as cur:
+            cur.execute(SQL)
+            return cur.fetchall()
 
 
 def get_sensor(sid):
     """Provide sensor sid description """
-    pass
+    db = get_db()
+    return get_object(db, 'sensors', sid)
 
 
 def get_timeseries(sid, args):

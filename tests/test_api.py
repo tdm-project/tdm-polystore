@@ -3,8 +3,6 @@ from collections import Counter
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-
-# FIXME move to fixtures
 import os
 root = os.path.dirname(os.path.abspath(__file__))
 sensor_types_fname = os.path.join(root, 'data/sensor_types.json')
@@ -21,8 +19,8 @@ class FakeDB:
             open(os.path.join(root, 'data/sensor_types.json')))['sensor_types']
         sensors = json.load(
             open(os.path.join(root, './data/sensors.json')))['sensors']
-        self.sensor_types = OrderedDict((_['uuid'], _) for _ in sensor_types)
-        self.sensors = OrderedDict((_['uuid'], _) for _ in sensors)
+        self.sensor_types = OrderedDict((_['code'], _) for _ in sensor_types)
+        self.sensors = OrderedDict((_['code'], _) for _ in sensors)
         self.sensors_no_args = dict(Counter(
             _['stypecode'] for _ in self.sensors.values()
         ))
