@@ -22,8 +22,8 @@ def test_db_load(runner, monkeypatch):
         Recorder.called = fname
         return Recorder.result
     monkeypatch.setattr('tdmq.db.load_file', fake_load_file)
-    tmpfile = tempfile.NamedTemporaryFile()
-    result = runner.invoke(args=['db', 'load', tmpfile.name])
-    assert Recorder.called == tmpfile.name
+    with tempfile.NamedTemporaryFile() as tmpfile:
+        result = runner.invoke(args=['db', 'load', tmpfile.name])
+        assert Recorder.called == tmpfile.name
     assert str(Recorder.result) in result.output
 
