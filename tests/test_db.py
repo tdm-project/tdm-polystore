@@ -6,6 +6,7 @@ import json
 root = os.path.dirname(os.path.abspath(__file__))
 sensor_types_fname = os.path.join(root, 'data/sensor_types.json')
 sensors_fname = os.path.join(root, 'data/sensors.json')
+measures_fname = os.path.join(root, 'data/measures.json')
 
 
 def test_init_db(runner):
@@ -21,3 +22,6 @@ def test_load_db(runner):
     result = runner.invoke(args=['db', 'load', sensors_fname])
     n = len(json.load(open(sensors_fname))['sensors'])
     assert "Loaded {'sensors': %d}" % n in result.output
+    result = runner.invoke(args=['db', 'load', measures_fname])
+    n = len(json.load(open(measures_fname))['measures'])
+    assert "Loaded {'measures': %d}" % n in result.output

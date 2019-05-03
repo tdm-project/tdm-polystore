@@ -75,7 +75,7 @@ def add_tables(db):
            sensorcode UUID        NOT NULL,
            value      REAL,
            url        TEXT,
-           indx       INT4);
+           index      INT4);
     SELECT create_hypertable('measures', 'time');
     CREATE INDEX measures_sensor_index on measures(sensorcode);
     """
@@ -138,6 +138,42 @@ def load_sensors(db, data, validate=False, chunk_size=10000):
     return len(data)
 
 
+def load_measures(db, data, validate=False, chunk_size=10000):
+    """
+    Load measures.
+
+    {"time": "2019-02-21T11:32:08Z",
+     "sensorcode": "98359c6d-863a-4c94-a997-d0e5446a489f",
+     "measure": {"value": 0.333}},
+    {"time": "2019-02-21T11:34:08Z",
+     "sensorcode": "98359c6d-863a-4c94-a997-d0e5446a489f",
+     "measure": {"reference": "hdfs://xxxx", "index": 22}}
+    """
+    def fix_geom_and_json(d):
+        gf = "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
+        return sql.SQL("({})").format(sql.SQL(', ').join([
+            sql.Literal(d['uuid']),
+            sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
+            sql.SQL(gf % json.dumps(d['geometry'])),
+            sql.Literal(json.dumps(d))]))
+
+    def fix_value(d):
+        def fix_measure(m):
+            # FIXME brute force rendering
+            if 'reference' in m:
+                return (None, m['reference'], m['index'])
+            else:
+                return (m['value'], None, None)
+        return format_to_sql_tuple((d['time'], d['sensorcode']) +
+                                   fix_measure(d['measure']))
+    into = "INSERT INTO measures (time, sensorcode, value, url, index)"
+    logger.debug('load_measures: start loading %d measures', len(data))
+    load_data_by_chunks(db, data, chunk_size, into, fix_value)
+    logger.debug('load_measures: done.')
+    return len(data)
+
+
+
 def get_db():
     """Connect to the application's configured database. The connection
     is unique for each request and will be reused if this is called
@@ -177,6 +213,12 @@ def init_db():
     logger.debug('init_db: done')
 
 
+loader = {}
+loader['sensor_types'] = load_sensor_types
+loader['sensors'] = load_sensors
+loader['measures'] = load_measures
+
+
 def load_file(filename):
     """Load objects from a json file."""
     logger.debug('load_file: start')
@@ -184,12 +226,10 @@ def load_file(filename):
     with open(filename) as f:
         data = json.load(f)
     db = get_db()
-    if 'sensor_types' in data:
-        n = load_sensor_types(db, data['sensor_types'])
-        stats['sensor_types'] = n
-    if 'sensors' in data:
-        n = load_sensors(db, data['sensors'])
-        stats['sensors'] = n
+    for k in loader.keys():
+        if k in data:
+            n = loader[k](db, data[k])
+            stats[k] = n
     logger.debug('load_file: done.')
     return stats
 

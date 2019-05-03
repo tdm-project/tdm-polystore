@@ -1,12 +1,16 @@
 import json
 from collections import Counter
 from collections import OrderedDict
+from datetime import datetime, timedelta
+
 
 # FIXME move to fixtures
 import os
 root = os.path.dirname(os.path.abspath(__file__))
 sensor_types_fname = os.path.join(root, 'data/sensor_types.json')
 sensors_fname = os.path.join(root, 'data/sensors.json')
+measures_fname = os.path.join(root, 'data/measures.json')
+
 
 # FIXME move it to a fixture?
 class FakeDB:
@@ -22,10 +26,21 @@ class FakeDB:
         self.sensors_no_args = dict(Counter(
             _['stypecode'] for _ in self.sensors.values()
         ))
-        self.timeseries = dict(
-            (_['uuid'], {'timedelta': [0.11, 0.22, 0.33, 0.44],
-                         'data': [12000, 12100, 12200, 12300]})
-            for _ in self.sensors.values())
+        measures = json.load(
+            open(os.path.join(root, 'data/measures.json')))['measures']
+        data = {}
+        for m in measures:
+            data.setdefault(m['sensorcode'], []).append(
+                (datetime.strptime(m['time'], '%Y-%m-%dT%H:%M:%SZ'),
+                 m['measure']['value']))
+        self.timeseries = {}
+        for k in data.keys():
+            ts = sorted(data[k])
+            time_origin = ts[0][0]
+            ts = [[(_[0] - time_origin).seconds, _[1]] for _ in ts]
+            self.timeseries[k] = {
+                'time_origin': time_origin.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'data': ts}
 
     def init(self):
         self.initialized = True
@@ -106,7 +121,8 @@ def test_sensor(client, monkeypatch):
 def test_timeseries(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.get_timeseries', fakedb.get_timeseries)
-    code = list(fakedb.sensors.keys())[0]    
+    code = list(fakedb.sensors.keys())[0]
+    # FIXME these timepoints are random
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
     bucket, op = '20 min', 'sum'
     q = 'after={}&before={}&bucket={}&op={}'.format(after, before, bucket, op)
@@ -119,3 +135,4 @@ def test_timeseries(client, monkeypatch):
     assert args['after'] == after and args['before'] == before
     assert args['bucket'] == bucket and args['op'] == op
     assert response.get_json() == fakedb.timeseries[code]
+
