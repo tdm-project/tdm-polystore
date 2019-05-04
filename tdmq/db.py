@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.info('Logging is active.')
 
+# FIXME move all of this to appropriate classes
 
 def drop_and_create_db():
     logger.debug('drop_and_create_db:init')
@@ -276,14 +277,18 @@ def list_sensor_types():
     return list_descriptions_in_table(db, 'sensor_types')
 
 
-def list_sensors(args):
-    """Return all sensors that have reported an event in a
-       given spatio-temporal region."""
-    db = get_db()
+def list_sensors_in_db(db, args):
     if args is None:
         return list_descriptions_in_table(db, 'sensors')
     else:
         return list_sensors_in_cylinder(db, args)
+
+
+def list_sensors(args):
+    """Return all sensors that have reported an event in a
+       given spatio-temporal region."""
+    db = get_db()
+    return list_sensors_in_db(db, args)
 
 
 def list_sensors_in_cylinder(db, args):
@@ -292,7 +297,7 @@ def list_sensors_in_cylinder(db, args):
         with db.cursor() as cur:
             cur.execute(SQL)
             # FIXME
-            return cur.fetchall()[0][0]
+            return [_[0] for _ in cur.fetchall()]
 
 
 def get_object(db, tname, oid):

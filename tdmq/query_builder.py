@@ -1,3 +1,5 @@
+import json
+
 def select_sensors(args):
     assert args['footprint']['type'] in ['circle']
     if args['footprint']['type'] == 'circle':
@@ -19,13 +21,17 @@ def select_sensors_in_circle(args):
          ),
          selected AS (
          SELECT DISTINCT on (sensorcode) sensorcode FROM measures m
-         WHERE m.time > %s AND m.time < %s
+         WHERE m.time > '%s' AND m.time < '%s'
                AND m.sensorcode IN (SELECT code FROM spatial)
     )
-    SELECT spatial.code, spatial.stypecode,
-           ST_GeoJSONFromGeom(ST_Transform(spatial.geom, 4326))
-    FROM spatial
-    WHERE  spatial.code in (SELECT sensorcode FROM selected);
-    """.format(args['footprint']['center'], args['footprint']['radius'],
-               args['after'], args['before'])
+    SELECT row_to_json(t)
+    FROM (
+       SELECT spatial.code, spatial.stypecode,
+           ST_AsGeoJSON(ST_Transform(spatial.geom, 4326)) geometry
+       FROM spatial
+       WHERE  spatial.code in (SELECT sensorcode FROM selected)
+    ) t
+    """ % (json.dumps(args['footprint']['center']),
+           args['footprint']['radius'],
+           args['after'], args['before'])
     return SQL

@@ -2,12 +2,12 @@
     {"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
      "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
      "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
-     "geometry": {"type": "Point", "coordinates": [9.3, 30.0]}
+     "geometry": {"type": "Point", "coordinates": [9.221, 30.0]}
     },
     {"code": "0fd67c67-c9be-45c6-9719-4c4eada4beff",
      "nodecode": "0fd67cdd-c9be-45c6-9719-4c4eada4beee",
      "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
-     "geometry": {"type": "Point", "coordinates": [9.2, 31.0]}
+     "geometry": {"type": "Point", "coordinates": [9.222, 30.003]}
     }
 ]}
 
