@@ -5,7 +5,7 @@ from flask import url_for
 from flask import jsonify
 
 import tdmq.db as db
-
+from tdmq.utils import convert_footprint
 def add_routes(app):
     @app.route('/')
     def index():
@@ -72,8 +72,7 @@ def add_routes(app):
            The spatio-temporal domain is expressed as a cylinder with
            a given geometrical footprint and a time interval.
 
-           Calling withour arguments will return number of sensors
-           available by SensorType id.
+           Calling withour arguments will return all available sensors.
 
 
         .. :quickref: Get collection of reporting sensors.
@@ -96,11 +95,11 @@ def add_routes(app):
           Content-Type: application/json
 
           [
-           {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
+           {"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
             "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
             "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
            },
-           {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4beff",
+           {"code": "0fd67c67-c9be-45c6-9719-4c4eada4beff",
             "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
             "geometry": {"type": "Point", "coordinates": [9.2, 31.0]},
            }
@@ -131,6 +130,8 @@ def add_routes(app):
         else:
             args = dict((k, rargs.get(k, None))
                         for k in ['footprint', 'after', 'before', 'selector'])
+            if 'footprint' in args:
+                args['footprint'] = convert_footprint(args['footprint'])
         res = db.list_sensors(args)
         return jsonify(res)
 

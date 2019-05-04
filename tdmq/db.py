@@ -8,9 +8,9 @@ import itertools as it
 import psycopg2.sql as sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from datetime import datetime, timedelta
-
 import logging
 
+from tdmq.query_builder import select_sensors
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.DEBUG)
@@ -277,9 +277,22 @@ def list_sensor_types():
 
 
 def list_sensors(args):
-    """List known sensors"""
+    """Return all sensors that have reported an event in a
+       given spatio-temporal region."""
     db = get_db()
-    return list_descriptions_in_table(db, 'sensors')
+    if args is None:
+        return list_descriptions_in_table(db, 'sensors')
+    else:
+        return list_sensors_in_cylinder(db, args)
+
+
+def list_sensors_in_cylinder(db, args):
+    SQL = select_sensors(args)
+    with db:
+        with db.cursor() as cur:
+            cur.execute(SQL)
+            # FIXME
+            return cur.fetchall()[0][0]
 
 
 def get_object(db, tname, oid):
@@ -298,8 +311,13 @@ def get_sensor(sid):
     return get_object(db, 'sensors', sid)
 
 
-def get_timeseries(sid, args):
-    """Provide  timeseries for sensor sid"""
+def get_sensor_type(sid):
+    """Provide sensor_type sid description """
+    db = get_db()
+    return get_object(db, 'sensor_type', sid)
+
+
+def get_timeseries(args):
     pass
 
 
