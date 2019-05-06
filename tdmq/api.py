@@ -110,7 +110,7 @@ def add_routes(app):
         :query footprint: consider only sensors within footprint
                           e.g., 'circle((9.3, 32), 1000)'
 
-        :query after: consider only sensors reporting strictly after
+        :query after: consider only sensors reporting  after (included)
                       this time, e.g., '2019-02-21T11:03:25Z'
 
         :query before: consider only sensors reporting strictly before
@@ -199,12 +199,13 @@ def add_routes(app):
           Vary: Accept
           Content-Type: application/json
 
-          {'timedelta':[0.11, 0.22, 0.33, 0.44], 
+          {'timebase': '2019-02-21T11:03:25Z',
+           'timedelta':[0.11, 0.22, 0.33, 0.44], 
            'data': [12000, 12100, 12200, 12300]}
 
         :resheader Content-Type: application/json
 
-        :query after: consider only sensors reporting strictly after
+        :query after: consider only sensors reporting after (included)
                       this time, e.g., '2019-02-21T11:03:25Z'
 
         :query before: consider only sensors reporting strictly before

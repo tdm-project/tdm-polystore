@@ -11,15 +11,16 @@ from datetime import datetime, timedelta
 import logging
 
 from tdmq.query_builder import select_sensors
+from tdmq.query_builder import gather_scalar_timeseries
 
 # FIXME build a better logging infrastructure
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
 
-# FIXME move all of this to appropriate classes
 
+# FIXME move all of this to appropriate classes
 def drop_and_create_db():
     logger.debug('drop_and_create_db:init')
     db_settings = {
@@ -322,7 +323,42 @@ def get_sensor_type(sid):
     return get_object(db, 'sensor_type', sid)
 
 
-def get_timeseries(args):
+def get_scalar_timeseries_data(db, args):
+    assert 'code' in args
+    assert 'after' in args
+    assert 'before' in args
+    result = {'timebase': args['after'],
+              'timedelta': [],
+              'data': []}
+    SQL = gather_scalar_timeseries(args)
+    with db:
+        with db.cursor() as cur:
+            cur.execute(SQL, args)
+            # FIXME
+            tuples = cur.fetchall()
+            for t in tuples:
+                result['timedelta'].append(t[0].total_seconds())
+                result['data'].append(t[1])
+    return result
+
+
+def get_timeseries(code, args=None):
+    """
+     {'timebase': '2019-02-21T11:03:25Z',
+      'timedelta':[0.11, 0.22, 0.33, 0.44],
+      'data': [12000, 12100, 12200, 12300]}
+     :query after: consider only sensors reporting strictly after
+                   this time, e.g., '2019-02-21T11:03:25Z'
+
+     :query before: consider only sensors reporting strictly before
+                    this time, e.g., '2019-02-22T11:03:25Z'
+
+     :query bucket: time bucket for data aggregation, e.g., '20 min'
+
+     :query op: aggregation operation on data contained in bucket,
+                e.g., `sum`,  `average`, `count` FIXME.
+
+    """
     pass
 
 

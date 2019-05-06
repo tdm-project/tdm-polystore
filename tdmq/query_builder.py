@@ -1,4 +1,7 @@
 import json
+import datetime
+import psycopg2.sql as sql
+
 
 def select_sensors(args):
     assert args['footprint']['type'] in ['circle']
@@ -21,7 +24,7 @@ def select_sensors_in_circle(args):
          ),
          selected AS (
          SELECT DISTINCT on (sensorcode) sensorcode FROM measures m
-         WHERE m.time > '%s' AND m.time < '%s'
+         WHERE m.time >= '%s' AND m.time < '%s'
                AND m.sensorcode IN (SELECT code FROM spatial)
     )
     SELECT row_to_json(t)
@@ -35,3 +38,32 @@ def select_sensors_in_circle(args):
            args['footprint']['radius'],
            args['after'], args['before'])
     return SQL
+
+
+def gather_scalar_timeseries(args):
+    assert 'code' in args
+    assert 'after' in args
+    assert 'before' in args
+
+    if 'bucket' in args:
+        assert isinstance(args['bucket'], datetime.timedelta)
+        assert 'op' in args
+        select = sql.SQL(
+            "SELECT time_bucket({}, time) - {} as dt, {}(value) as v").format(
+                sql.Placeholder(name='bucket'), sql.Placeholder(name='after'),
+                sql.Identifier(args['op']))
+        group_by = sql.SQL("GROUP BY dt ORDER BY dt")
+    else:
+        select = sql.SQL(
+            "SELECT time - {} as dt, value as v").format(
+                sql.Placeholder(name='after'))
+        group_by = sql.SQL(" ")
+    return sql.SQL(' ').join([select,
+                              sql.SQL(
+                                  """FROM measures m
+                                  WHERE m.sensorcode = {}
+                                  AND m.time >= {} AND m.time < {}""").format(
+                                      sql.Placeholder(name='code'),
+                                      sql.Placeholder(name='after'),
+                                      sql.Placeholder(name='before')),
+                              group_by])
