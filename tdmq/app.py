@@ -1,8 +1,8 @@
 import os
 from flask import Flask
 
-from .db import add_db_cli
-from .api import add_routes
+from tdmq.db import add_db_cli
+from tdmq.api import add_routes
 
 
 def create_app(test_config=None):
@@ -11,7 +11,7 @@ def create_app(test_config=None):
         # FIXME this is not working as expected
         APPLICATION_ROOT='/tdmq/v0.1',
         SECRET_KEY='dev',
-        DB_HOST='localhost',
+        DB_HOST='timescaledb',
         DB_NAME='tdmqtest',
         DB_USER='postgres',
         DB_PASSWORD='foobar',

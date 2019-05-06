@@ -14,9 +14,9 @@ from tdmq.query_builder import select_sensors
 from tdmq.query_builder import gather_scalar_timeseries
 
 # FIXME build a better logging infrastructure
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 logger.info('Logging is active.')
 
 
