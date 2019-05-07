@@ -41,13 +41,13 @@ def select_sensors_in_circle(args):
 
 
 def gather_scalar_timeseries(args):
-    assert 'code' in args
-    assert 'after' in args
-    assert 'before' in args
+    assert args['code'] is not None
+    assert args['after'] is not None
+    assert args['before'] is not None
 
-    if 'bucket' in args:
+    if args['bucket'] is not None:
         assert isinstance(args['bucket'], datetime.timedelta)
-        assert 'op' in args
+        assert args['op'] is not None
         select = sql.SQL(
             "SELECT time_bucket({}, time) - {} as dt, {}(value) as v").format(
                 sql.Placeholder(name='bucket'), sql.Placeholder(name='after'),

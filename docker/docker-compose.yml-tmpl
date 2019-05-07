@@ -17,7 +17,12 @@ services:
       - "LOCAL_PATH/notebooks:/home/jupyter/notebooks"
     user: USER_UID:USER_GID
 
-      
+  web:
+    image: tdm/web
+    depends_on:
+      - "timescaledb"
+    ports:
+      - "8000:8000"
 
   hdfs:
     image: tdm/hdfs

@@ -138,7 +138,7 @@ def test_timeseries(client, monkeypatch):
     code = list(fakedb.sensors.keys())[0]
     # FIXME these timepoints are random
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    bucket, op = '20 min', 'sum'
+    bucket, op = 20.22, 'sum'
     q = 'after={}&before={}&bucket={}&op={}'.format(after, before, bucket, op)
     response = client.get('/sensors/{}/timeseries?{}'.format(code, q))
     assert 'get_timeseries' in fakedb.called
@@ -147,6 +147,6 @@ def test_timeseries(client, monkeypatch):
     args = fakedb.called['get_timeseries']
     assert args['code'] == code
     assert args['after'] == after and args['before'] == before
-    assert args['bucket'] == bucket and args['op'] == op
+    assert args['bucket'] == timedelta(seconds=bucket) and args['op'] == op
     assert response.get_json() == fakedb.timeseries[code]
 

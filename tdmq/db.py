@@ -14,9 +14,9 @@ from tdmq.query_builder import select_sensors
 from tdmq.query_builder import gather_scalar_timeseries
 
 # FIXME build a better logging infrastructure
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
 
 
@@ -359,7 +359,14 @@ def get_timeseries(code, args=None):
                 e.g., `sum`,  `average`, `count` FIXME.
 
     """
-    pass
+    db = get_db()
+    sensor = get_object(db, 'sensors', code)
+    args['code'] = code
+    if sensor['geometry']['type'] == 'Point':
+        return get_scalar_timeseries_data(db, args)
+    else:
+        raise ValueError(
+            'timeseries on sensor {} are not supported'.format(code))
 
 
 def add_db_cli(app):

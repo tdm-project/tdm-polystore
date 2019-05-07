@@ -3,9 +3,11 @@ from flask import Flask
 from flask import request
 from flask import url_for
 from flask import jsonify
-
+from datetime import timedelta
 import tdmq.db as db
 from tdmq.utils import convert_footprint
+
+
 def add_routes(app):
     @app.route('/')
     def index():
@@ -16,7 +18,7 @@ def add_routes(app):
         """Return known sensor types.
 
         .. :quickref: Get collection of sensor types.
-        
+
         **Example request**:
 
         .. sourcecode:: http
@@ -211,7 +213,8 @@ def add_routes(app):
         :query before: consider only sensors reporting strictly before
                       this time, e.g., '2019-02-22T11:03:25Z'
 
-        :query bucket: time bucket for data aggregation, e.g., '20 min'
+        :query bucket: time bucket for data aggregation, in seconds,
+                       e.g., 10.33
 
         :query op: aggregation operation on data contained in bucket,
                    e.g., `sum`,  `average`, `count` FIXME.
@@ -223,5 +226,9 @@ def add_routes(app):
         rargs = request.args
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'op'])
+        if args['bucket'] is not None:
+            assert args['op'] is not None
+            args['bucket'] = timedelta(seconds=float(args['bucket']))
+
         res = db.get_timeseries(str(code), args)
         return jsonify(res)
