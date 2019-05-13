@@ -1,0 +1,25 @@
+{"sensor_types": [
+    {
+        "code": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
+        "type": "TemperatureSensorDTH11",
+        "name": "temperature sensor in DHT11",
+        "brandName": "Acme",
+        "modelName": "Acme multisensor DHT11",
+        "manufacturerName": "Acme Inc.",
+        "category": ["sensor"],
+        "function": ["sensing"],
+        "controlledProperty": ["temperature"]
+    },
+    {
+        "code": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
+        "type": "HumiditySensorDHT11",
+        "name": "Humidity sensor in DHT11",
+        "brandName": "Acme",
+        "modelName": "Acme multisensor DHT11",
+        "manufacturerName": "Acme Inc.",
+        "category": ["sensor"],
+        "function": ["sensing"],
+        "controlledProperty": ["humidity"]
+    }
+]
+}
