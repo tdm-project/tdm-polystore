@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  config.py: |
+    DB_HOST = {{ tpl (required "dbHost is required" .Values.conf.dbHost | quote) . }}
+    DB_NAME = {{ tpl (required "dbName is required" .Values.conf.dbName | quote) . }}
+    DB_USER = {{ tpl (required "dbUser is required" .Values.conf.dbUser | quote) . }}
+    DB_PASSWORD = {{ tpl (required "dbPassword is required" .Values.conf.dbPassword | quote) . }}
+kind: ConfigMap
+metadata:
+  name: {{ include "tdmq.fullname" . }}

@@ -19,14 +19,24 @@ spec:
         app.kubernetes.io/name: {{ include "tdmq.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      volumes:
+        - name: flask-config
+          configMap:
+            name: {{ include "tdmq.fullname" . }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TDMQ_FLASK_CONFIG
+              value: /etc/flask/config.py
           ports:
             - name: http
               containerPort: 8000
               protocol: TCP
+          volumeMounts:
+            - name: flask-config
+              mountPath: /etc/flask
           livenessProbe:
             httpGet:
               path: /api/v0.0/

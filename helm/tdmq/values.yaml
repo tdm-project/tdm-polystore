@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: tdmproject/tdmq
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 nameOverride: ""
 fullnameOverride: ""
@@ -46,3 +46,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+conf:
+  dbHost:
+  dbName:
+  dbUser:
+  dbPassword:
