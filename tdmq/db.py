@@ -298,7 +298,10 @@ def list_sensors_in_cylinder(db, args):
         with db.cursor() as cur:
             cur.execute(SQL)
             # FIXME
-            return [_[0] for _ in cur.fetchall()]
+            rval = [_[0] for _ in cur.fetchall()]
+            for s in rval:
+                s["geometry"] = json.loads(s["geometry"])
+            return rval
 
 
 def get_object(db, tname, oid):
