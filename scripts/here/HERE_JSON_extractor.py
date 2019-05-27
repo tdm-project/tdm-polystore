@@ -159,6 +159,10 @@ def load_save_osm_map(place_name):
 
 verbose = False
 processed_path = "./processed/"
+try:
+    os.makedirs(processed_path)
+except FileExistsError:
+    pass
 
 G = load_save_osm_map("Sardinia")
 
