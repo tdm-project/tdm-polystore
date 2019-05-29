@@ -13,7 +13,7 @@ install:
   - cp -rf setup.py tdmq tests/data docker/tdmq-dist/
   - docker build -f docker/Dockerfile.web -t tdm/web docker
 
-# before_script: flake8 -v .
+before_script: flake8 -v .
 
 script:
  - docker-compose -f .travis/docker-compose.yml up -d

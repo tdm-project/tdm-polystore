@@ -1,5 +1,3 @@
-import os
-from flask import Flask
 from flask import request
 from flask import url_for
 from flask import jsonify
@@ -188,7 +186,8 @@ def add_routes(app):
 
         .. sourcecode:: http
 
-          GET /sensors/0fd67c67-c9be-45c6-9719-4c4eada4becc/timeseries?after=2019-02-21T11:03:25Z HTTP/1.1
+          GET /sensors/0fd67c67-c9be-45c6-9719-4c4eada4becc/
+              timeseries?after=2019-02-21T11:03:25Z HTTP/1.1
           Host: example.com
           Accept: application/json
 
@@ -202,7 +201,7 @@ def add_routes(app):
           Content-Type: application/json
 
           {'timebase': '2019-02-21T11:03:25Z',
-           'timedelta':[0.11, 0.22, 0.33, 0.44], 
+           'timedelta':[0.11, 0.22, 0.33, 0.44],
            'data': [12000, 12100, 12200, 12300]}
 
         :resheader Content-Type: application/json
