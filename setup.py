@@ -11,5 +11,3 @@ setup(
         'psycopg2-binary'
         ],
 )
-
-        

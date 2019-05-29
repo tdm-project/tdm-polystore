@@ -7,7 +7,6 @@ import psycopg2 as psy
 import itertools as it
 import psycopg2.sql as sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from datetime import datetime, timedelta
 import logging
 
 from tdmq.query_builder import select_sensors
@@ -88,8 +87,8 @@ def add_tables(db):
 
 def take_by_n(a, n):
     c = it.cycle(range(2*n))
-    for k, g in it.groupby(a, lambda _: next(c) < n):
-        yield [_ for _ in g]
+    for k, g_ in it.groupby(a, lambda _: next(c) < n):
+        yield [_ for _ in g_]
 
 
 def format_to_sql_tuple(t):
@@ -152,8 +151,8 @@ def load_sensors(db, data, validate=False, chunk_size=10000):
             sql.Literal(d['code']),
             sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
             sql.SQL(
-                "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
-                % json.dumps(d['geometry'])),
+              "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
+              % json.dumps(d['geometry'])),
             sql.Literal(json.dumps(d))]))
     into = "INSERT INTO sensors (code, stypecode, nodecode, geom, description)"
     logger.debug('load_sensors: start loading %d sensors', len(data))

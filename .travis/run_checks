@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -euo pipefail
+[ -n "${DEBUG:-}" ] && set -x
+this="${BASH_SOURCE-$0}"
+this_dir=$(cd -P -- "$(dirname -- "${this}")" && pwd -P)
+
+pushd "${this_dir}"
+cid=$(docker-compose ps -q web)
+docker cp ../tests ${cid}:/
+docker-compose exec web bash -c 'pip install pytest'
+docker-compose exec web bash -c 'sed -i -e "s/localhost/timescaledb/" /tests/conftest.py'
+docker-compose exec web bash -c 'pytest /tests'
+popd

@@ -149,4 +149,3 @@ def test_timeseries(client, monkeypatch):
     assert args['after'] == after and args['before'] == before
     assert args['bucket'] == timedelta(seconds=bucket) and args['op'] == op
     assert response.get_json() == fakedb.timeseries[code]
-

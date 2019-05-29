@@ -1,0 +1,21 @@
+language: python
+
+cache: pip
+
+sudo: required
+
+services: docker
+
+before_install: pip install flake8
+
+install:
+  - mkdir -p docker/tdmq-dist
+  - cp -rf setup.py tdmq tests/data docker/tdmq-dist/
+  - docker build -f docker/Dockerfile.web -t tdm/web docker
+
+before_script: flake8 -v .
+
+script:
+ - docker-compose -f .travis/docker-compose.yml up -d
+ - DEBUG=true .travis/run_checks
+ - docker-compose -f .travis/docker-compose.yml down

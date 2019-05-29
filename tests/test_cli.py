@@ -17,7 +17,7 @@ def test_db_load(runner, monkeypatch):
     class Recorder:
         called = False
         result = {'sensor_types': 2, 'nodes': 4, 'sensors': 10}
-    
+
     def fake_load_file(fname):
         Recorder.called = fname
         return Recorder.result
@@ -26,4 +26,3 @@ def test_db_load(runner, monkeypatch):
         result = runner.invoke(args=['db', 'load', tmpfile.name])
         assert Recorder.called == tmpfile.name
     assert str(Recorder.result) in result.output
-

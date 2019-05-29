@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+
+  timescaledb:
+    image: timescale/timescaledb-postgis
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_PASSWORD=foobar
+
+  web:
+    image: tdm/web
+    depends_on:
+      - "timescaledb"
+    ports:
+      - "8000"

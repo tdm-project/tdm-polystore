@@ -1,4 +1,5 @@
-import os, shutil
+import os
+import shutil
 import numpy as np
 import requests
 import json
@@ -8,23 +9,19 @@ import glob
 import osmnx as ox
 ox.config(log_console=True, use_cache=True)
 
+
 def get_coords_from_code(code):
-    string = "https://mhohmann.dev.openstreetmap.org/tmc/tmcview.php?cid=25&tabcd=1&lcd=%s" % code
+    string = ("https://mhohmann.dev.openstreetmap.org/tmc/"
+              "tmcview.php?cid=25&tabcd=1&lcd=%s" % code)
     page = requests.get(string)
     for row in page.content.decode().split("\n"):
-        if "\"coordinates\"" in row: data = row[:-2]
+        if "\"coordinates\"" in row:
+            data = row[:-2]
     d_dict = eval(data)
-    data = d_dict["geometry"]["coordinates"]        
-    
+    data = d_dict["geometry"]["coordinates"]
     return data[1], data[0]
 
 
-def plot_coords(location_dict):
-    list_coords = list(location_dict.values())
-    figure(figsize=(6,12))
-    scatter(*zip(*list_coords), s=1)
-    
-    
 def load_json(name):
     with open(name) as f:
         data = json.load(f)
@@ -39,7 +36,7 @@ def save_position_codes_from_osm(rws):
 
     for el in rws[0]["RW"][:]:
         for eel in el["FIS"]:
-            if True or len(eel["FI"])==2:
+            if True or len(eel["FI"]) == 2:
                 print("-" * 50)
                 print("NOME:", el["DE"])
                 print()
@@ -48,16 +45,18 @@ def save_position_codes_from_osm(rws):
                     pc = eeel["TMC"]["PC"]
                     print(loc,)
                     location_dict[pc] = get_coords_from_code(pc)
-                    osm_edges_dict[pc] = ox.get_nearest_node(G, location_dict[pc], return_dist=False)
+                    osm_edges_dict[pc] = ox.get_nearest_node(
+                        G, location_dict[pc], return_dist=False
+                    )
                     summ += 1
                 print()
 
     print("Total number of edges:", summ)
-    
+
     pickle.dump(location_dict, open("location_id_here.pickle", "wb"))
     pickle.dump(osm_edges_dict, open("osm_edges_here.pickle", "wb"))
-    
-    
+
+
 def load_from_file(name):
     tmp_dict = pickle.load(open(name, "rb"))
     return tmp_dict
@@ -69,7 +68,7 @@ def extract_traffic_data(rws, location_dict, osm_edges_dict):
     for el in rws[0]["RW"][:]:
         date_time = el["PBT"]
         for eel in el["FIS"]:
-            if True or len(eel["FI"])==2:
+            if True or len(eel["FI"]) == 2:
                 data_dict = {}
                 if verbose:
                     print("-" * 50)
@@ -78,37 +77,37 @@ def extract_traffic_data(rws, location_dict, osm_edges_dict):
                 for eeel in eel["FI"]:
                     try:
                         loc = eeel["TMC"]["DE"]
-                    except:
+                    except Exception:
                         print("Place description not present!")
                         continue
                     try:
                         pc = eeel["TMC"]["PC"]
-                    except:
+                    except Exception:
                         print("Position code not present!")
                         continue
                     try:
                         road_len = eeel["TMC"]["LE"]
-                    except:
+                    except Exception:
                         print("road length not present")
                         road_len = np.nan
                     try:
                         flux = eeel["CF"][0]["FF"]
-                    except:
+                    except Exception:
                         print("flux not present")
                         flux = np.nan
                     try:
                         conf = eeel["CF"][0]["CN"]
-                    except:
+                    except Exception:
                         print("confidence information not present")
                         conf = np.nan
                     try:
                         jam = eeel["CF"][0]["JF"]
-                    except:
+                    except Exception:
                         print("jam factor not present")
                         jam = np.nan
                     try:
                         speed = (eeel["CF"][0]["SP"], eeel["CF"][0]["SU"])
-                    except:
+                    except Exception:
                         speed = (np.nan, np.nan)
                     if verbose:
                         print(loc, pc, "*", )
@@ -119,28 +118,34 @@ def extract_traffic_data(rws, location_dict, osm_edges_dict):
                     data_dict["speed"] = speed
                     data_dict["loc"] = loc
                     data_dict["date"] = date_time
-                    
+
                     if pc not in location_dict:
                         try:
-                            location_dict[pc] = get_coords_from_code(pc) # this is painfully slow!
-                        except:
-                            print("Not able to find node coordinates for PC %s" % pc)
+                            # this is painfully slow!
+                            location_dict[pc] = get_coords_from_code(pc)
+                        except Exception:
+                            print("Not able to find node coordinates for PC %s"
+                                  % pc)
                             continue
                     data_dict["coord"] = location_dict[pc]
-                    
+
                     if pc not in osm_edges_dict:
                         try:
-                            osm_edges_dict[pc] = ox.get_nearest_node(G, location_dict[pc], return_dist=False)
-                        except:
-                            print("Not able to find the nearest node to PC %s" % pc)
+                            osm_edges_dict[pc] = ox.get_nearest_node(
+                                G, location_dict[pc], return_dist=False
+                            )
+                        except Exception:
+                            print("Not able to find the nearest node to PC %s"
+                                  % pc)
                             continue
                     data_dict["osm_edge"] = osm_edges_dict[pc]
-                    
+
                     traffic_info_dict[pc] = copy.deepcopy(data_dict)
                     if verbose:
                         print()
-                
+
     return traffic_info_dict, location_dict, osm_edges_dict
+
 
 def load_save_osm_map(place_name):
     place = place_name
@@ -148,12 +153,13 @@ def load_save_osm_map(place_name):
     try:
         G = ox.save_load.load_graphml(place)
         print("Loading graphML version of the map")
-    except:
+    except Exception:
         print("Downloading map from OSM and saving it to disk")
         G = ox.graph_from_place(place_name, network_type='drive')
         ox.save_load.save_graphml(G, filename=place, folder=None)
-        
+
     return G
+
 
 #########################################################################
 
@@ -173,30 +179,32 @@ processed_dts = set(os.path.splitext(_.name)[0]
                     for _ in os.scandir(traffic_info_dir))
 try:
     location_dict = load_from_file("location_id_here_updated.pickle")
-    print ("LOADED location_id file...")
-except:
+    print("LOADED location_id file...")
+except Exception:
     location_dict = {}
 try:
     osm_edges_dict = load_from_file("osm_edges_here_updated.pickle")
-    print ("LOADED OSM edges file...")
-except:
+    print("LOADED OSM edges file...")
+except Exception:
     osm_edges_dict = {}
 
 for i, name in enumerate(glob.glob('*.json')):
     if os.path.getsize(name) == 0:
         continue
     date_time = name[13:-5]
-    print(date_time) 
+    print(date_time)
     if date_time in processed_dts:
         print("SKIPPED, ALREADY PRESENT...")
         continue
     rws = load_json(name)
-    traffic_data, location_dict, osm_edges_dict = extract_traffic_data(rws, location_dict, osm_edges_dict)
+    traffic_data, location_dict, osm_edges_dict = extract_traffic_data(
+        rws, location_dict, osm_edges_dict
+    )
     traffic_out_fn = os.path.join(traffic_info_dir, f"{date_time}.pickle")
     with open(traffic_out_fn, "wb") as f:
         pickle.dump(traffic_data, f)
     shutil.move(name, processed_path+name)
 
-#optionally save the updated location dictionary to file
+# optionally save the updated location dictionary to file
 pickle.dump(location_dict, open("location_id_here_updated.pickle", "wb"))
 pickle.dump(osm_edges_dict, open("osm_edges_here_updated.pickle", "wb"))
