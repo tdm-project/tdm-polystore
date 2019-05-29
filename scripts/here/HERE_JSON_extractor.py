@@ -159,20 +159,18 @@ def load_save_osm_map(place_name):
 
 verbose = False
 processed_path = "./processed/"
-try:
-    os.makedirs(processed_path)
-except FileExistsError:
-    pass
+traffic_info_dir = "./traffic_info_here"
+for p in processed_path, traffic_info_dir:
+    try:
+        os.makedirs(p)
+    except FileExistsError:
+        pass
 
 G = load_save_osm_map("Sardinia")
 
 
-try:
-    traffic_info_dict = load_from_file("traffic_info_here.pickle")
-    print("Loaded Traffic Info file...")
-except:
-    traffic_info_dict = {}
-    
+processed_dts = set(os.path.splitext(_.name)[0]
+                    for _ in os.scandir(traffic_info_dir))
 try:
     location_dict = load_from_file("location_id_here_updated.pickle")
     print ("LOADED location_id file...")
@@ -189,20 +187,16 @@ for i, name in enumerate(glob.glob('*.json')):
         continue
     date_time = name[13:-5]
     print(date_time) 
-    if date_time in traffic_info_dict:
+    if date_time in processed_dts:
         print("SKIPPED, ALREADY PRESENT...")
         continue
     rws = load_json(name)
-    traffic_info_dict[date_time], location_dict, osm_edges_dict = extract_traffic_data(rws, location_dict, osm_edges_dict)
-    
+    traffic_data, location_dict, osm_edges_dict = extract_traffic_data(rws, location_dict, osm_edges_dict)
+    traffic_out_fn = os.path.join(traffic_info_dir, f"{date_time}.pickle")
+    with open(traffic_out_fn, "wb") as f:
+        pickle.dump(traffic_data, f)
     shutil.move(name, processed_path+name)
 
 #optionally save the updated location dictionary to file
 pickle.dump(location_dict, open("location_id_here_updated.pickle", "wb"))
 pickle.dump(osm_edges_dict, open("osm_edges_here_updated.pickle", "wb"))
-
-pickle.dump(traffic_info_dict, open("traffic_info_here.pickle", "wb"))
-
-
-
-
