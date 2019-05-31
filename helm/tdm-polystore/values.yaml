@@ -4,8 +4,13 @@
 postgresql:
   # takes a lot from
   # https://github.com/helm/charts/blob/master/stable/postgresql/values-production.yaml
-  postgresqlDatabase: "tdm"
-  postgresqlUsername: "tdm"
+  # For now, some items are commented out:
+  #  - don't create the DB: it is currently created by `flask db init`
+  #  - disable metrics (they require a DB)
+
+  # postgresqlDatabase: &db_name "tdm"
+  postgresqlUsername: &db_user "tdm"
+  postgresqlPassword: &db_password "changeme"
 
   # By default the chart (which is contributed by Bitnami) is set up to
   # tell pgsql to write its data to /bitnami/postgresql.  We're using the
@@ -38,8 +43,8 @@ postgresql:
           content: "timescaledb"
       size: 40Gi
 
-  metrics:
-      enabled: true
+  # metrics:
+  #     enabled: true
 
   extraEnv:
     - name: "NO_TS_TUNE"
@@ -65,3 +70,11 @@ postgresql:
 
   replication:
       enabled: false
+
+tdmq:
+  conf:
+    dbHost: "{{ .Release.Name }}-postgresql"
+    # dbName: *db_name
+    dbName: "tdm"
+    dbUser: *db_user
+    dbPassword: *db_password
