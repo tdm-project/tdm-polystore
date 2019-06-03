@@ -10,6 +10,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import logging
 
 from tdmq.query_builder import select_sensors
+from tdmq.query_builder import select_sensor_types
 from tdmq.query_builder import gather_scalar_timeseries
 
 # FIXME build a better logging infrastructure
@@ -271,10 +272,18 @@ def list_descriptions_in_table(db, tname):
             return [_[0] for _ in cur.fetchall()]
 
 
-def list_sensor_types():
+def list_sensor_types(args):
     """List known sensor_types"""
     db = get_db()
-    return list_descriptions_in_table(db, 'sensor_types')
+    if not args:
+        return list_descriptions_in_table(db, 'sensor_types')
+    else:
+        query, data = select_sensor_types(args)
+        with db:
+            with db.cursor() as cur:
+                cur.execute(query, data)
+                rval = [_[0] for _ in cur.fetchall()]
+                return rval
 
 
 def list_sensors_in_db(db, args):

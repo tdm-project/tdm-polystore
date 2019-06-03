@@ -61,7 +61,7 @@ def add_routes(app):
         :status 200: list[SensorType] found
         :returns: :class:`list[tdmq.objects.SensorType]`
         """
-        res = db.list_sensor_types()
+        res = db.list_sensor_types(request.args)
         return jsonify(res)
 
     @app.route('/sensors')
