@@ -54,6 +54,11 @@ def test_list_sensors_with_args(db):
     for d in data:
         assert d['code'] in sensors_by_code
         assert d['stypecode'] == sensors_by_code[d['code']]['stypecode']
+    # query by type
+    t = sensors[0]["stypecode"]
+    exp_res = [_ for _ in sensors if _["stypecode"] == t]
+    res = list_sensors_in_db(db, {"type": t})
+    assert res == exp_res
 
 
 def test_get_scalar_timeseries_data(db):
@@ -81,8 +86,8 @@ def test_get_scalar_timeseries_data(db):
         args['code'] = code
         result = get_scalar_timeseries_data(db, args)
         assert result['timebase'] == args['after']
-        assert result['timedelta'] == deltas_by_code[code]
-        assert result['data'] == values_by_code[code]
+        assert result['timedelta'] == deltas_by_code.get(code, [])
+        assert result['data'] == values_by_code.get(code, [])
 
 
 def test_get_scalar_timeseries_data_empty(db):

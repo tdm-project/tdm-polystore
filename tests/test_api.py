@@ -106,9 +106,9 @@ def test_sensors(client, monkeypatch):
     monkeypatch.setattr('tdmq.db.list_sensors', fakedb.list_sensors)
     footprint = 'circle((9.2, 33), 1000)'
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    selector = "sensor_type.category=meteo"
-    q = 'footprint={}&after={}&before={}&selector={}'.format(
-        footprint, after, before, selector)
+    type_ = next(iter(fakedb.sensor_types))
+    q = 'footprint={}&after={}&before={}&type={}'.format(
+        footprint, after, before, type_)
     response = client.get('/sensors?{}'.format(q))
     assert 'list_sensors' in fakedb.called
     assert response.status == '200 OK'
@@ -116,18 +116,18 @@ def test_sensors(client, monkeypatch):
     args = fakedb.called['list_sensors']
     assert args['footprint'] == convert_footprint(footprint)
     assert args['after'] == after and args['before'] == before
-    assert args['selector'] == selector
+    assert args['type'] == type_
     assert response.get_json() == fakedb.list_sensors(args)
 
 
 def test_sensors_fail(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.list_sensors', fakedb.list_sensors)
-    footprint = 'circle((9.2 33), 1000)'
+    footprint = 'circle((9.2 33), 1000)'  # note the missing comma
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    selector = "sensor_type.category=meteo"
-    q = 'footprint={}&after={}&before={}&selector={}'.format(
-        footprint, after, before, selector)
+    type_ = next(iter(fakedb.sensor_types))
+    q = 'footprint={}&after={}&before={}&type={}'.format(
+        footprint, after, before, type_)
     with pytest.raises(ValueError) as ve:
         client.get('/sensors?{}'.format(q))
         assert "footprint" in ve.value

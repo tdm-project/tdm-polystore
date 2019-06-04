@@ -287,20 +287,36 @@ def list_sensor_types(args):
 
 
 def list_sensors_in_db(db, args):
-    if args is None:
+    if not args:
         return list_descriptions_in_table(db, 'sensors')
+    if "type" in args:
+        if "footprint" in args:
+            # TODO: remove this restriction
+            raise ValueError("selecting by type and footprint not supported")
+        return list_sensors_by_type(db, args)
     else:
+        # FIXME this is restricted to the case where "footprint", "before",
+        # and "after" are ALL present
         return list_sensors_in_cylinder(db, args)
 
 
 def list_sensors(args):
-    """Return all sensors that have reported an event in a
-       given spatio-temporal region."""
     db = get_db()
     return list_sensors_in_db(db, args)
 
 
+def list_sensors_by_type(db, args):
+    query = "SELECT description FROM sensors WHERE stypecode=UUID(%s)"
+    data = [args["type"]]
+    with db:
+        with db.cursor() as cur:
+            cur.execute(query, data)
+            return [_[0] for _ in cur.fetchall()]
+
+
 def list_sensors_in_cylinder(db, args):
+    """Return all sensors that have reported an event in a
+       given spatio-temporal region."""
     SQL = select_sensors(args)
     with db:
         with db.cursor() as cur:
