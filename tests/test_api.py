@@ -14,6 +14,7 @@ measures_fname = os.path.join(root, 'data/measures.json')
 
 # FIXME move it to a fixture?
 class FakeDB:
+
     def __init__(self):
         self.initialized = False
         self.called = {}
@@ -45,8 +46,8 @@ class FakeDB:
     def init(self):
         self.initialized = True
 
-    def list_sensor_types(self):
-        self.called['list_sensor_types'] = True
+    def list_sensor_types(self, args):
+        self.called['list_sensor_types'] = args
         return [_ for _ in self.sensor_types.values()]
 
     def list_sensors(self, args):
@@ -66,14 +67,28 @@ class FakeDB:
         return self.timeseries[code]
 
 
-def test_sensor_types(client, monkeypatch):
+def test_sensor_types_no_args(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.list_sensor_types', fakedb.list_sensor_types)
     response = client.get('/sensor_types')
     assert 'list_sensor_types' in fakedb.called
     assert response.status == '200 OK'
     assert response.is_json
-    assert response.get_json() == fakedb.list_sensor_types()
+    assert response.get_json() == fakedb.list_sensor_types({})
+
+
+def test_sensor_types(client, monkeypatch):
+    fakedb = FakeDB()
+    monkeypatch.setattr('tdmq.db.list_sensor_types', fakedb.list_sensor_types)
+    in_args = {"type": "multisensor", "controlledProperty": "temperature"}
+    q = "&".join(f"{k}={v}" for k, v in in_args.items())
+    response = client.get(f'/sensor_types?{q}')
+    assert 'list_sensor_types' in fakedb.called
+    args = fakedb.called['list_sensor_types']
+    assert {k: v for k, v in args.items()} == in_args
+    assert response.status == '200 OK'
+    assert response.is_json
+    assert response.get_json() == fakedb.list_sensor_types(args)
 
 
 def test_sensors_no_args(client, monkeypatch):
