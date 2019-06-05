@@ -7,6 +7,10 @@ this_dir=$(cd -P -- "$(dirname -- "${this}")" && pwd -P)
 
 pushd "${this_dir}"
 cid=$(docker-compose ps -q web)
+if [ -z "${cid:-}" ]; then
+    echo 'ERROR: service "web" is not running' 1>&2
+    exit 1
+fi
 docker cp ../tests ${cid}:/
 docker-compose exec web bash -c 'pip install pytest'
 docker-compose exec web bash -c 'sed -i -e "s/localhost/timescaledb/" /tests/conftest.py'

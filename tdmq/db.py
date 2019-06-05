@@ -275,6 +275,10 @@ def list_descriptions_in_table(db, tname):
 def list_sensor_types(args):
     """List known sensor_types"""
     db = get_db()
+    return list_sensor_types_in_db(db, args)
+
+
+def list_sensor_types_in_db(db, args):
     if not args:
         return list_descriptions_in_table(db, 'sensor_types')
     else:
