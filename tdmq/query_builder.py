@@ -1,12 +1,33 @@
 import json
 import datetime
 import psycopg2.sql as sql
+from psycopg2.extras import Json
 
 
 def select_sensors(args):
     assert args['footprint']['type'] in ['circle']
     if args['footprint']['type'] == 'circle':
         return select_sensors_in_circle(args)
+
+
+def select_sensor_types(args):
+    """\
+    E.g., dict(brandName="Acme", controlledProperty="humidity,temperature")
+    """
+    query = "".join([
+        "SELECT description FROM sensor_types WHERE",
+        " AND ".join(
+            "(description->%s @> %s::jsonb)" for _ in args
+        ),
+    ])
+    data = []
+    for k, v in args.items():
+        data.append(k)
+        v = v.split(",")
+        if len(v) == 1:
+            v = v[0]
+        data.append(Json(v))
+    return query, data
 
 
 def select_sensors_in_circle(args):

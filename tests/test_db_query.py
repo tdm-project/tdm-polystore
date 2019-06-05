@@ -2,6 +2,7 @@ from tdmq.db import list_descriptions_in_table
 from tdmq.db import get_object
 from tdmq.db import list_sensors_in_db
 from tdmq.db import get_scalar_timeseries_data
+from tdmq.db import list_sensor_types_in_db
 
 from datetime import datetime, timedelta
 import json
@@ -15,6 +16,21 @@ def test_db_list_sensor_types(db):
     data = list_descriptions_in_table(db, 'sensor_types')
     assert len(sensor_types) == len(data)
     assert data == sensor_types
+
+
+def test_list_sensor_types_with_args(db):
+    sensor_types = json.load(
+        open(os.path.join(root, 'data/sensor_types.json')))['sensor_types']
+    args = {"controlledProperty": "temperature", "manufacturerName": "CRS4"}
+    exp_res = [_ for _ in sensor_types if all((
+        "temperature" in _["controlledProperty"],
+        _["manufacturerName"] == "CRS4"
+    ))]
+    assert list_sensor_types_in_db(db, args) == exp_res
+    args = {"controlledProperty": "temperature,humidity"}
+    exp_res = [_ for _ in sensor_types if
+               {"temperature", "humidity"}.issubset(_["controlledProperty"])]
+    assert list_sensor_types_in_db(db, args) == exp_res
 
 
 def test_list_sensors(db):
@@ -54,6 +70,11 @@ def test_list_sensors_with_args(db):
     for d in data:
         assert d['code'] in sensors_by_code
         assert d['stypecode'] == sensors_by_code[d['code']]['stypecode']
+    # query by type
+    t = sensors[0]["stypecode"]
+    exp_res = [_ for _ in sensors if _["stypecode"] == t]
+    res = list_sensors_in_db(db, {"type": t})
+    assert res == exp_res
 
 
 def test_get_scalar_timeseries_data(db):
@@ -81,8 +102,8 @@ def test_get_scalar_timeseries_data(db):
         args['code'] = code
         result = get_scalar_timeseries_data(db, args)
         assert result['timebase'] == args['after']
-        assert result['timedelta'] == deltas_by_code[code]
-        assert result['data'] == values_by_code[code]
+        assert result['timedelta'] == deltas_by_code.get(code, [])
+        assert result['data'] == values_by_code.get(code, [])
 
 
 def test_get_scalar_timeseries_data_empty(db):

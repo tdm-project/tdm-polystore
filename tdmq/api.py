@@ -61,7 +61,7 @@ def add_routes(app):
         :status 200: list[SensorType] found
         :returns: :class:`list[tdmq.objects.SensorType]`
         """
-        res = db.list_sensor_types()
+        res = db.list_sensor_types(request.args)
         return jsonify(res)
 
     @app.route('/sensors')
@@ -116,22 +116,15 @@ def add_routes(app):
         :query before: consider only sensors reporting strictly before
                       this time, e.g., '2019-02-22T11:03:25Z'
 
-        :query selector: consider only sensors such that this
-                         predicate is true,
-                         e.g., 'temperature in sensor_type.controlledProperty'
+        :query type: consider only sensors of this type (filter by stypecode)
 
         :status 200: list[Sensor] found
         :returns: :class:`list[tdmq.objects.Sensor]`
 
         """
-        rargs = request.args
-        if not rargs:
-            args = None
-        else:
-            args = dict((k, rargs.get(k, None))
-                        for k in ['footprint', 'after', 'before', 'selector'])
-            if 'footprint' in args:
-                args['footprint'] = convert_footprint(args['footprint'])
+        args = {k: v for k, v in request.args.items()}
+        if 'footprint' in args:
+            args['footprint'] = convert_footprint(args['footprint'])
         res = db.list_sensors(args)
         return jsonify(res)
 

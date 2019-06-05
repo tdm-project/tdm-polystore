@@ -14,6 +14,7 @@ measures_fname = os.path.join(root, 'data/measures.json')
 
 # FIXME move it to a fixture?
 class FakeDB:
+
     def __init__(self):
         self.initialized = False
         self.called = {}
@@ -45,8 +46,8 @@ class FakeDB:
     def init(self):
         self.initialized = True
 
-    def list_sensor_types(self):
-        self.called['list_sensor_types'] = True
+    def list_sensor_types(self, args):
+        self.called['list_sensor_types'] = args
         return [_ for _ in self.sensor_types.values()]
 
     def list_sensors(self, args):
@@ -66,14 +67,28 @@ class FakeDB:
         return self.timeseries[code]
 
 
-def test_sensor_types(client, monkeypatch):
+def test_sensor_types_no_args(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.list_sensor_types', fakedb.list_sensor_types)
     response = client.get('/sensor_types')
     assert 'list_sensor_types' in fakedb.called
     assert response.status == '200 OK'
     assert response.is_json
-    assert response.get_json() == fakedb.list_sensor_types()
+    assert response.get_json() == fakedb.list_sensor_types({})
+
+
+def test_sensor_types(client, monkeypatch):
+    fakedb = FakeDB()
+    monkeypatch.setattr('tdmq.db.list_sensor_types', fakedb.list_sensor_types)
+    in_args = {"type": "multisensor", "controlledProperty": "temperature"}
+    q = "&".join(f"{k}={v}" for k, v in in_args.items())
+    response = client.get(f'/sensor_types?{q}')
+    assert 'list_sensor_types' in fakedb.called
+    args = fakedb.called['list_sensor_types']
+    assert {k: v for k, v in args.items()} == in_args
+    assert response.status == '200 OK'
+    assert response.is_json
+    assert response.get_json() == fakedb.list_sensor_types(args)
 
 
 def test_sensors_no_args(client, monkeypatch):
@@ -91,9 +106,9 @@ def test_sensors(client, monkeypatch):
     monkeypatch.setattr('tdmq.db.list_sensors', fakedb.list_sensors)
     footprint = 'circle((9.2, 33), 1000)'
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    selector = "sensor_type.category=meteo"
-    q = 'footprint={}&after={}&before={}&selector={}'.format(
-        footprint, after, before, selector)
+    type_ = next(iter(fakedb.sensor_types))
+    q = 'footprint={}&after={}&before={}&type={}'.format(
+        footprint, after, before, type_)
     response = client.get('/sensors?{}'.format(q))
     assert 'list_sensors' in fakedb.called
     assert response.status == '200 OK'
@@ -101,18 +116,18 @@ def test_sensors(client, monkeypatch):
     args = fakedb.called['list_sensors']
     assert args['footprint'] == convert_footprint(footprint)
     assert args['after'] == after and args['before'] == before
-    assert args['selector'] == selector
+    assert args['type'] == type_
     assert response.get_json() == fakedb.list_sensors(args)
 
 
 def test_sensors_fail(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.list_sensors', fakedb.list_sensors)
-    footprint = 'circle((9.2 33), 1000)'
+    footprint = 'circle((9.2 33), 1000)'  # note the missing comma
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    selector = "sensor_type.category=meteo"
-    q = 'footprint={}&after={}&before={}&selector={}'.format(
-        footprint, after, before, selector)
+    type_ = next(iter(fakedb.sensor_types))
+    q = 'footprint={}&after={}&before={}&type={}'.format(
+        footprint, after, before, type_)
     with pytest.raises(ValueError) as ve:
         client.get('/sensors?{}'.format(q))
         assert "footprint" in ve.value

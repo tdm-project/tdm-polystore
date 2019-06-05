@@ -20,6 +20,28 @@
         "category": ["sensor"],
         "function": ["sensing"],
         "controlledProperty": ["humidity"]
+    },
+    {
+        "code": "ea388bc4-668b-4f06-b738-6267a8a7a37d",
+        "type": "multisensor",
+        "name": "Jack",
+        "brandName": "ProSensor",
+        "modelName": "R2D2",
+        "manufacturerName": "CRS4",
+        "category": ["sensor"],
+        "function": ["sensing"],
+        "controlledProperty": ["humidity", "temperature"]
+    },
+    {
+        "code": "a1103bd9-fba0-4652-b58e-e4f0c4278262",
+        "type": "power sensor",
+        "name": "John",
+        "brandName": "ProSensor",
+        "modelName": "C3PO",
+        "manufacturerName": "CRS4",
+        "category": ["sensor"],
+        "function": ["sensing"],
+        "controlledProperty": ["power"]
     }
 ]
 }
