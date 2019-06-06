@@ -326,6 +326,9 @@ def list_sensors_in_cylinder(db, args):
         with db.cursor() as cur:
             cur.execute(SQL)
             # FIXME
+            # returned description is not the same as the stored one
+            #   1. nodecode is missing
+            #   2. geometry is "reconstructed" with a small error
             rval = [_[0] for _ in cur.fetchall()]
             for s in rval:
                 s["geometry"] = json.loads(s["geometry"])

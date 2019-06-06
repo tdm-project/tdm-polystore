@@ -1,5 +1,7 @@
 language: python
 
+python: 3.6
+
 cache: pip
 
 sudo: required
@@ -10,7 +12,7 @@ before_install: pip install flake8
 
 install:
   - mkdir -p docker/tdmq-dist
-  - cp -rf setup.py tdmq tests/data docker/tdmq-dist/
+  - cp -rf apidocs setup.py tdmq tests/data docker/tdmq-dist/
   - docker build -f docker/Dockerfile.web -t tdm/web docker
 
 before_script: flake8 -v .
