@@ -15,10 +15,10 @@ def add_routes(app):
     def sensor_types():
         """Return a list of sensor types.
 
+        .. :quickref: Get sensor types
+
         With no parameters, return all sensor types. Parameters can be used to
         filter sensor types according to one or more attributes.
-
-        .. :quickref: Get collection of sensor types.
 
         **Example request**::
 
@@ -45,6 +45,10 @@ def add_routes(app):
            }
           ]
 
+        :query {attribute}: select sensors whose description has the specified
+          value(s) for the chosen attribute (top-level JSON key, e.g.,
+          name=SensorPro; controlledProperty=humidity,temperature)
+
         :resheader Content-Type: application/json
         :status 200: no error
         :returns: list of sensor types
@@ -54,19 +58,22 @@ def add_routes(app):
 
     @app.route('/sensors')
     def sensors():
-        """Return the collection of sensor that have reported an event in a
-           given spatio-temporal region.
+        """Return a list of sensors.
 
-           The spatio-temporal domain is expressed as a cylinder with
-           a given geometrical footprint and a time interval.
+        .. :quickref: Get sensors
 
-           Calling without arguments will return all available sensors.
-
-        .. :quickref: Get collection of reporting sensors.
+        With no parameters, return all sensors. With ``type={uuid}``, select
+        sensors of the specified type. When ``footprint``, ``after`` and
+        ``before`` are specified, return all sensors that have reported an
+        event in the corresponding spatio-temporal region.
 
         **Example request**::
 
-          GET /sensors?footprint=circle((9.2, 33.0), 1000) HTTP/1.1
+          GET /sensors?footprint=circle((9.22, 30.0), 1000)
+                      &after=2019-05-02T11:00:00Z
+                      &before=2019-05-02T11:50:25Z HTTP/1.1
+
+        (unencoded URL)
 
         **Example response**:
 
@@ -75,27 +82,29 @@ def add_routes(app):
           HTTP/1.1 200 OK
           Content-Type: application/json
 
-          [
-           {"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
-            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
-            "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
-           },
+          [{"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
+            "geometry": {
+              "coordinates": [9.22100000642642, 30.0000000019687],
+              "type": "Point"
+            },
+            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65"},
            {"code": "0fd67c67-c9be-45c6-9719-4c4eada4beff",
-            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
-            "geometry": {"type": "Point", "coordinates": [9.2, 31.0]},
-           }
-          ]
+            "geometry": {
+              "coordinates": [9.22200000642623, 30.0030000019686],
+              "type": "Point"
+            },
+            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe"}]
 
         :resheader Content-Type: application/json
 
         :query footprint: consider only sensors within footprint
-                          e.g., 'circle((9.3, 32), 1000)'
+          e.g., ``circle((9.3, 32), 1000)``
 
         :query after: consider only sensors reporting  after (included)
-                      this time, e.g., '2019-02-21T11:03:25Z'
+          this time, e.g., ``2019-02-21T11:03:25Z``
 
         :query before: consider only sensors reporting strictly before
-                      this time, e.g., '2019-02-22T11:03:25Z'
+          this time, e.g., ``2019-02-22T11:03:25Z``
 
         :query type: consider only sensors of this type (filter by stypecode)
 
@@ -112,11 +121,11 @@ def add_routes(app):
     def sensor(code):
         """Return description of sensor with uuid ``code``.
 
-        .. :quickref: Get description of sensor[code]
+        .. :quickref: Get sensor description
 
         **Example request**::
 
-          GET /sensors/1 HTTP/1.1
+          GET /sensors/0fd67c67-c9be-45c6-9719-4c4eada4becc HTTP/1.1
 
         **Example response**:
 
@@ -125,10 +134,10 @@ def add_routes(app):
           HTTP/1.1 200 OK
           Content-Type: application/json
 
-          {"uuid": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
-           "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
-           "geometry": {"type": "Point", "coordinates": [9.3, 30.0]},
-          }
+          {"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
+           "geometry": {"coordinates": [9.221, 30.0], "type": "Point"},
+           "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
+           "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65"}
 
         :resheader Content-Type: application/json
         :status 200: no error
@@ -141,17 +150,17 @@ def add_routes(app):
     def timeseries(code):
         """Return timeseries for sensor ``code``.
 
-        Will return the measures and the related timedeltas array, the
-        latter expressed as seconds from the `after` time, if `after`
-        is defined, otherwise as FIXME ISO-XX datetime.
+        .. :quickref: Get time series data for sensor
 
-        .. :quickref: Get time series of data of sensor[code].
-
+        For the specified sensor and time interval, return all measures and
+        the corresponding timedeltas array (expressed in seconds from the
+        initial time). Also returns the initial time as "timebase".
 
         **Example request**::
 
           GET /sensors/0fd67c67-c9be-45c6-9719-4c4eada4becc/
-              timeseries?after=2019-02-21T11:03:25Z HTTP/1.1
+              timeseries?after=2019-02-21T11:03:25Z
+                        &before=2019-05-02T11:50:25Z HTTP/1.1
 
         **Example response**:
 
@@ -176,7 +185,7 @@ def add_routes(app):
                        e.g., 10.33
 
         :query op: aggregation operation on data contained in bucket,
-                   e.g., `sum`,  `average`, `count` FIXME.
+                   e.g., `sum`, `count`.
 
         :status 200: no errors
         :returns: list of sensors
