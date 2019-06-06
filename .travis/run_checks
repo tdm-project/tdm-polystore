@@ -12,7 +12,7 @@ if [ -z "${cid:-}" ]; then
     exit 1
 fi
 docker cp ../tests ${cid}:/
-docker-compose exec web bash -c 'pip install pytest'
 docker-compose exec web bash -c 'sed -i -e "s/localhost/timescaledb/" /tests/conftest.py'
 docker-compose exec web bash -c 'pytest /tests'
+docker-compose exec web bash -c 'make -C /tdmq-dist/apidocs html'
 popd
