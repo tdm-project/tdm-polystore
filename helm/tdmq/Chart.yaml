@@ -1,0 +1,4 @@
+apiVersion: v1
+description: TDM query service
+name: tdmq
+version: 0.1.0

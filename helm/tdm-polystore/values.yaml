@@ -1,0 +1,80 @@
+# global:
+#   postgresql: {}
+
+postgresql:
+  # takes a lot from
+  # https://github.com/helm/charts/blob/master/stable/postgresql/values-production.yaml
+  # For now, some items are commented out:
+  #  - don't create the DB: it is currently created by `flask db init`
+  #  - disable metrics (they require a DB)
+
+  # postgresqlDatabase: &db_name "tdm"
+  postgresqlUsername: &db_user "tdm"
+  postgresqlPassword: &db_password "changeme"
+
+  # By default the chart (which is contributed by Bitnami) is set up to
+  # tell pgsql to write its data to /bitnami/postgresql.  We're using the
+  # timescaledb image which is based on the standard pgsql image and is
+  # set up to write to "/var/lib/postgresql/data"
+  postgresqlDataDir: &pgdata_ptr "/var/lib/postgresql/data"
+
+  postgresqlExtendedConf:
+      # based on output of timescaledb-tune using 4 cpus and 16 GB RAM
+      sharedBuffers: "4GB"
+      effective_cache_size: "24GB"
+      maintenance_work_mem: "2GB"
+      work_mem: "25MB"
+      max_worker_processes: 11
+      max_parallel_workers_per_gather: 2
+      max_parallel_workers: 4
+
+  resources:
+    requests:
+      memory: "16Gi"
+      cpu: "4"
+
+  persistence:
+      enabled: true
+      #existingClaim: "data-alert-nightingale-postgresql-0"
+      mountPath: *pgdata_ptr
+      subPath: "postgres"
+      storageClass: cinder-retain
+      annotations:
+          content: "timescaledb"
+      size: 40Gi
+
+  # metrics:
+  #     enabled: true
+
+  extraEnv:
+    - name: "NO_TS_TUNE"
+      value: "true"
+
+  image:
+      repository: "timescale/timescaledb-postgis"
+      tag: "1.2.2-pg11"
+      pullPolicy: IfNotPresent
+
+  volumePermissions:
+      enabled: false
+      image:
+          pullPolicy: IfNotPresent
+      securityContext:
+          runAsUser: 0
+
+  securityContext:
+    enabled: false
+    # postgres user in timescaledb image has uid:gid 70
+    fsGroup: 70
+    runAsUser: 70
+
+  replication:
+      enabled: false
+
+tdmq:
+  conf:
+    dbHost: "{{ .Release.Name }}-postgresql"
+    # dbName: *db_name
+    dbName: "tdm"
+    dbUser: *db_user
+    dbPassword: *db_password

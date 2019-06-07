@@ -8,8 +8,6 @@ from tdmq.api import add_routes
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        # FIXME this is not working as expected
-        APPLICATION_ROOT='/tdmq/v0.1',
         SECRET_KEY='dev',
         DB_HOST='timescaledb',
         DB_NAME='tdmqtest',
@@ -17,7 +15,7 @@ def create_app(test_config=None):
         DB_PASSWORD='foobar',
     )
     if test_config is None:
-        app.config.from_pyfile('config.py', silent=True)
+        app.config.from_envvar('TDMQ_FLASK_CONFIG', silent=True)
     else:
         app.config.from_mapping(test_config)
 
