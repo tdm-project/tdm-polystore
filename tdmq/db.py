@@ -317,10 +317,10 @@ def list_sensors_by_type(db, args):
 def list_sensors_in_cylinder(db, args):
     """Return all sensors that have reported an event in a
        given spatio-temporal region."""
-    SQL = select_sensors(args)
+    query, data = select_sensors(args)
     with db:
         with db.cursor() as cur:
-            cur.execute(SQL)
+            cur.execute(query, data)
             # FIXME
             # returned description is not the same as the stored one
             #   1. nodecode is missing
