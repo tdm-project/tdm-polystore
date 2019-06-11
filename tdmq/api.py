@@ -11,7 +11,7 @@ def add_routes(app):
     def index():
         return 'The URL for this page is {}'.format(url_for('index'))
 
-    @app.route('/sensor_types')
+    @app.route('/sensor_types', methods=['GET', 'POST'])
     def sensor_types():
         """Return a list of sensor types.
 
@@ -53,10 +53,15 @@ def add_routes(app):
         :status 200: no error
         :returns: list of sensor types
         """
-        res = db.list_sensor_types(request.args)
-        return jsonify(res)
+        if request.method == "GET":
+            res = db.list_sensor_types(request.args)
+            return jsonify(res)
+        else:
+            data = request.json
+            db.load_sensor_types(db.get_db(), data)
+            return jsonify({"loaded": len(data)})
 
-    @app.route('/sensors')
+    @app.route('/sensors', methods=['GET', 'POST'])
     def sensors():
         """Return a list of sensors.
 
@@ -111,11 +116,16 @@ def add_routes(app):
         :status 200: no error
         :returns: list of sensors
         """
-        args = {k: v for k, v in request.args.items()}
-        if 'footprint' in args:
-            args['footprint'] = convert_footprint(args['footprint'])
-        res = db.list_sensors(args)
-        return jsonify(res)
+        if request.method == "GET":
+            args = {k: v for k, v in request.args.items()}
+            if 'footprint' in args:
+                args['footprint'] = convert_footprint(args['footprint'])
+            res = db.list_sensors(args)
+            return jsonify(res)
+        else:
+            data = request.json
+            db.load_sensors(db.get_db(), data)
+            return jsonify({"loaded": len(data)})
 
     @app.route('/sensors/<uuid:code>')
     def sensor(code):
@@ -199,3 +209,9 @@ def add_routes(app):
 
         res = db.get_timeseries(str(code), args)
         return jsonify(res)
+
+    @app.route('/measures', methods=["POST"])
+    def measures():
+        data = request.json
+        db.load_measures(db.get_db(), data)
+        return jsonify({"loaded": len(data)})
