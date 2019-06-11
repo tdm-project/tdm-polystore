@@ -31,21 +31,21 @@ def select_sensor_types(args):
 
 
 def select_sensors_in_circle(args):
-    SQL = """
+    query = """
     WITH spatial AS (
          SELECT code, stypecode, geom
          FROM sensors
          WHERE ST_DWithin(
                    geom,
                    ST_Transform(
-                       ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326),
+                       ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
                        3003
                    ),
                    %s)
          ),
          selected AS (
          SELECT DISTINCT on (sensorcode) sensorcode FROM measures m
-         WHERE m.time >= '%s' AND m.time < '%s'
+         WHERE m.time >= %s AND m.time < %s
                AND m.sensorcode IN (SELECT code FROM spatial)
     )
     SELECT row_to_json(t)
@@ -55,10 +55,14 @@ def select_sensors_in_circle(args):
        FROM spatial
        WHERE  spatial.code in (SELECT sensorcode FROM selected)
     ) t
-    """ % (json.dumps(args['footprint']['center']),
-           args['footprint']['radius'],
-           args['after'], args['before'])
-    return SQL
+    """
+    data = [
+        json.dumps(args['footprint']['center']),
+        args['footprint']['radius'],
+        args['after'],
+        args['before']
+    ]
+    return query, data
 
 
 def gather_scalar_timeseries(args):

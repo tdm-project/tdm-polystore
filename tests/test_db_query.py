@@ -56,20 +56,35 @@ def test_db_get_sensor_type(db):
 
 
 def test_list_sensors_with_args(db):
+    """\
+    Sensor dist from [9.2215, 30.0015] (coord conversion with GDAL):
+      "0fd67c67-c9be-45c6-9719-4c4eada4beff" 173.07071847340288
+      "0fd67c67-c9be-45c6-9719-4c4eada4becc" 173.0708798144605
+      "838407d9-9876-4226-a039-ff17ba833b2c" 44533.32174325444
+      "d5307bae-76a9-4298-885c-05e7a4d521c2" 111412.41515372833
+      "13c1cb32-486a-407f-b286-dc9ea8fef99f" 133329.30383038227
+      "1f69d31c-a5ef-4ef4-902d-45f5e57923c6" 223714.63917666752
+    """
     sensors = json.load(
         open(os.path.join(root, 'data/sensors.json')))['sensors']
     sensors_by_code = dict((s['code'], s) for s in sensors)
-    args = {}
-    args['footprint'] = {'type': 'circle',
-                         'center':  {'type': 'Point',
-                                     'coordinates': [9.2215, 30.0015]},
-                         'radius': 100000}
-    args['after'] = '2019-05-02T11:00:00Z'
-    args['before'] = '2019-05-02T11:50:25Z'
-    data = list_sensors_in_db(db, args)
-    for d in data:
-        assert d['code'] in sensors_by_code
-        assert d['stypecode'] == sensors_by_code[d['code']]['stypecode']
+    center = [9.2215, 30.0015]
+    expected_sensors_by_radius = {
+        175: 2, 45000: 3, 115000: 4, 135000: 5, 225000: 6
+    }
+    args = {'after': '2019-05-02T11:00:00Z',
+            'before': '2019-05-02T11:50:25Z'}
+    for radius, exp_n in expected_sensors_by_radius.items():
+        args['footprint'] = {
+            'type': 'circle',
+            'center':  {'type': 'Point', 'coordinates': center},
+            'radius': radius
+        }
+        data = list_sensors_in_db(db, args)
+        assert len(data) == exp_n
+        for d in data:
+            assert d['code'] in sensors_by_code
+            assert d['stypecode'] == sensors_by_code[d['code']]['stypecode']
     # query by type
     t = sensors[0]["stypecode"]
     exp_res = [_ for _ in sensors if _["stypecode"] == t]

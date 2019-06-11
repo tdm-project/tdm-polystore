@@ -29,19 +29,15 @@ def drop_and_create_db():
         'host': current_app.config['DB_HOST'],
         'dbname': 'postgres'
         }
-    logger.debug('drop_and_create_db:db_setting: {}'.format(db_settings))
+    logger.debug('drop_and_create_db:db_settings: %s', db_settings)
     con = psy.connect(**db_settings)
-    # FIXME we are breaking one of psycopg2 cardinal rules. However,
-    # since we are creating the database, it should be ok.  To be
-    # paranoid, we chould check if db_name does not contain SQL
-    # commands.
-    db_name = current_app.config['DB_NAME']
-    logger.debug('drop_and_create_db:db_name: {}'.format(db_name))
+    db_name = sql.Identifier(current_app.config['DB_NAME'])
+    logger.debug('drop_and_create_db:db_name: %s', db_name.string)
     with con:
         con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         with con.cursor() as cur:
-            cur.execute('DROP DATABASE IF EXISTS {};'.format(db_name))
-            cur.execute('CREATE DATABASE {}'.format(db_name))
+            cur.execute(sql.SQL('DROP DATABASE IF EXISTS {}').format(db_name))
+            cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
     con.close()
     logger.debug('drop_and_create_db:done.')
 
@@ -109,8 +105,9 @@ def load_data_by_chunks(db, data, chunk_size, into, format_to_sql_tuple):
 
 
 def dump_table(db, tname, path, itersize=100000):
-    # FIXME
-    SQL = 'SELECT row_to_json({}) from {};'.format(tname, tname)
+    query = sql.SQL('SELECT row_to_json({0}) from {0}').format(
+        sql.Identifier(tname)
+    )
     first = True
     counter = 0
     with open(path, 'w') as f:
@@ -118,7 +115,7 @@ def dump_table(db, tname, path, itersize=100000):
         with db:
             with db.cursor('dump_cursor') as cur:
                 cur.itersize = itersize
-                cur.execute(SQL)
+                cur.execute(query)
                 for r in cur:
                     if first:
                         first = False
@@ -209,7 +206,7 @@ def get_db():
             'host': current_app.config['DB_HOST'],
             'dbname': current_app.config['DB_NAME'],
         }
-        logger.debug('get_db:db_setting: {}'.format(db_settings))
+        logger.debug('get_db:db_setting: %s', db_settings)
         g.db = psy.connect(**db_settings)
     return g.db
 
@@ -264,11 +261,10 @@ def dump_field(field, path):
 
 
 def list_descriptions_in_table(db, tname):
-    SQL = 'SELECT description from {};'.format(tname)
-    # FIXME
+    query = sql.SQL('SELECT description FROM {}').format(sql.Identifier(tname))
     with db:
         with db.cursor() as cur:
-            cur.execute(SQL)
+            cur.execute(query)
             return [_[0] for _ in cur.fetchall()]
 
 
@@ -321,10 +317,10 @@ def list_sensors_by_type(db, args):
 def list_sensors_in_cylinder(db, args):
     """Return all sensors that have reported an event in a
        given spatio-temporal region."""
-    SQL = select_sensors(args)
+    query, data = select_sensors(args)
     with db:
         with db.cursor() as cur:
-            cur.execute(SQL)
+            cur.execute(query, data)
             # FIXME
             # returned description is not the same as the stored one
             #   1. nodecode is missing
@@ -336,12 +332,12 @@ def list_sensors_in_cylinder(db, args):
 
 
 def get_object(db, tname, oid):
-    SQL = """SELECT description FROM {} t
-             WHERE t.code = '{}';""".format(tname, oid)
+    query = sql.SQL("SELECT description FROM {} t WHERE t.code = {}").format(
+        sql.Identifier(tname), sql.Placeholder()
+    )
     with db:
         with db.cursor() as cur:
-            cur.execute(SQL)
-            # FIXME
+            cur.execute(query, [oid])
             return cur.fetchall()[0][0]
 
 
