@@ -19,7 +19,7 @@ db_created=0
 }
 
 CREATE_DB=${CREATE_DB:-false}
-if $CREATE_DB ; then
+if [[ "$CREATE_DB" == "true" ]]; then
   create_db
 fi
 
