@@ -12,7 +12,7 @@ services:
   tiledb:
     image: tdm/tiledb
     ports:
-      - "8888"
+      - "8888:8888"
     volumes:
       - "LOCAL_PATH/notebooks:/home/jupyter/notebooks"
     user: USER_UID:USER_GID
