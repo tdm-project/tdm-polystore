@@ -1,17 +1,18 @@
-import click
-import json
-from flask import current_app, g
-from flask.cli import AppGroup
-
-import psycopg2 as psy
 import itertools as it
-import psycopg2.sql as sql
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import json
 import logging
 
-from tdmq.query_builder import select_sensors
-from tdmq.query_builder import select_sensor_types
+import click
+import psycopg2 as psy
+import psycopg2.sql as sql
+from flask import current_app, g
+from flask.cli import AppGroup
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
 from tdmq.query_builder import gather_scalar_timeseries
+from tdmq.query_builder import select_sensor_types
+from tdmq.query_builder import select_sensors
+from tdmq.query_builder import select_sensors_by_footprint
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +29,7 @@ def drop_and_create_db():
         'password': current_app.config['DB_PASSWORD'],
         'host': current_app.config['DB_HOST'],
         'dbname': 'postgres'
-        }
+    }
     logger.debug('drop_and_create_db:db_settings: %s', db_settings)
     con = psy.connect(**db_settings)
     db_name = sql.Identifier(current_app.config['DB_NAME'])
@@ -83,7 +84,7 @@ def add_tables(db):
 
 
 def take_by_n(a, n):
-    c = it.cycle(range(2*n))
+    c = it.cycle(range(2 * n))
     for k, g_ in it.groupby(a, lambda _: next(c) < n):
         yield [_ for _ in g_]
 
@@ -131,8 +132,10 @@ def load_sensor_types(db, data, validate=False, chunk_size=10000):
     """
     Load sensor_types objects.
     """
+
     def fix_json(d):
         return format_to_sql_tuple((d['code'], json.dumps(d)))
+
     logger.debug('load_sensor_types: start loading %d sensor_types', len(data))
     into = "INSERT INTO sensor_types (code, description)"
     load_data_by_chunks(db, data, chunk_size, into, fix_json)
@@ -144,14 +147,16 @@ def load_sensors(db, data, validate=False, chunk_size=10000):
     """
     Load sensors objects.
     """
+
     def fix_geom_and_json(d):
         return sql.SQL("({})").format(sql.SQL(', ').join([
             sql.Literal(d['code']),
             sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
             sql.SQL(
-              "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
-              % json.dumps(d['geometry'])),
+                "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
+                % json.dumps(d['geometry'])),
             sql.Literal(json.dumps(d))]))
+
     into = "INSERT INTO sensors (code, stypecode, nodecode, geom, description)"
     logger.debug('load_sensors: start loading %d sensors', len(data))
     load_data_by_chunks(db, data, chunk_size, into, fix_geom_and_json)
@@ -170,6 +175,7 @@ def load_measures(db, data, validate=False, chunk_size=10000):
      "sensorcode": "98359c6d-863a-4c94-a997-d0e5446a489f",
      "measure": {"reference": "hdfs://xxxx", "index": 22}}
     """
+
     def fix_geom_and_json(d):
         gf = "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
         return sql.SQL("({})").format(sql.SQL(', ').join([
@@ -185,8 +191,10 @@ def load_measures(db, data, validate=False, chunk_size=10000):
                 return (None, m['reference'], m['index'])
             else:
                 return (m['value'], None, None)
+
         return format_to_sql_tuple((d['time'], d['sensorcode']) +
                                    fix_measure(d['measure']))
+
     into = "INSERT INTO measures (time, sensorcode, value, url, index)"
     logger.debug('load_measures: start loading %d measures', len(data))
     load_data_by_chunks(db, data, chunk_size, into, fix_value)
@@ -274,16 +282,19 @@ def list_sensor_types(args):
     return list_sensor_types_in_db(db, args)
 
 
+def exec_query(db, query, data):
+    with db:
+        with db.cursor() as cur:
+            cur.execute(query, data)
+            rval = [_[0] for _ in cur.fetchall()]
+            return rval
+
+
 def list_sensor_types_in_db(db, args):
     if not args:
         return list_descriptions_in_table(db, 'sensor_types')
     else:
-        query, data = select_sensor_types(args)
-        with db:
-            with db.cursor() as cur:
-                cur.execute(query, data)
-                rval = [_[0] for _ in cur.fetchall()]
-                return rval
+        return exec_query(db, *select_sensor_types(args))
 
 
 def list_sensors_in_db(db, args):
@@ -294,10 +305,12 @@ def list_sensors_in_db(db, args):
             # TODO: remove this restriction
             raise ValueError("selecting by type and footprint not supported")
         return list_sensors_by_type(db, args)
-    else:
+    elif "footprint" in args:
         # FIXME this is restricted to the case where "footprint", "before",
         # and "after" are ALL present
         return list_sensors_in_cylinder(db, args)
+    else:
+        return exec_query(db, *select_sensors(args))
 
 
 def list_sensors(args):
@@ -317,7 +330,7 @@ def list_sensors_by_type(db, args):
 def list_sensors_in_cylinder(db, args):
     """Return all sensors that have reported an event in a
        given spatio-temporal region."""
-    query, data = select_sensors(args)
+    query, data = select_sensors_by_footprint(args)
     with db:
         with db.cursor() as cur:
             cur.execute(query, data)

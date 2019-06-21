@@ -1,12 +1,13 @@
-from tdmq.db import list_descriptions_in_table
-from tdmq.db import get_object
-from tdmq.db import list_sensors_in_db
-from tdmq.db import get_scalar_timeseries_data
-from tdmq.db import list_sensor_types_in_db
-
-from datetime import datetime, timedelta
 import json
 import os
+from datetime import datetime, timedelta
+
+from tdmq.db import get_object
+from tdmq.db import get_scalar_timeseries_data
+from tdmq.db import list_descriptions_in_table
+from tdmq.db import list_sensor_types_in_db
+from tdmq.db import list_sensors_in_db
+
 root = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -77,7 +78,7 @@ def test_list_sensors_with_args(db):
     for radius, exp_n in expected_sensors_by_radius.items():
         args['footprint'] = {
             'type': 'circle',
-            'center':  {'type': 'Point', 'coordinates': center},
+            'center': {'type': 'Point', 'coordinates': center},
             'radius': radius
         }
         data = list_sensors_in_db(db, args)
@@ -92,9 +93,14 @@ def test_list_sensors_with_args(db):
     assert res == exp_res
 
 
+    res = list_sensors_in_db(db, {"name": "test"})
+    assert len(res) == 1
+
+
 def test_get_scalar_timeseries_data(db):
     def to_dt(s):
         return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")
+
     args = {}
     args['bucket'] = timedelta(seconds=1)
     args['op'] = 'sum'
