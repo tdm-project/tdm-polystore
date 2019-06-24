@@ -92,7 +92,6 @@ def test_list_sensors_with_args(db):
     res = list_sensors_in_db(db, {"type": t})
     assert res == exp_res
 
-
     res = list_sensors_in_db(db, {"name": "test"})
     assert len(res) == 1
 
