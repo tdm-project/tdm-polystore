@@ -15,12 +15,12 @@ def filter_by_description(table_name, args):
     """\
     E.g., dict(brandName="Acme", controlledProperty="humidity,temperature")
     """
-    query = "".join([
-        "SELECT description FROM %s WHERE" % table_name,
-        " AND ".join(
-            "(description->%s @> %s::jsonb)" for _ in args
-        ),
-    ])
+    qstart = sql.SQL("SELECT description FROM {} WHERE").format(
+        sql.Identifier(table_name))
+    query = qstart + sql.SQL(" AND ").join(
+        sql.SQL("(description->{} @> {}::jsonb)").format(
+            sql.Placeholder(), sql.Placeholder())
+        for _ in args)
     data = []
     for k, v in args.items():
         data.append(k)
