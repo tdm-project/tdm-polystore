@@ -153,7 +153,8 @@ def load_sensors(db, data, validate=False, chunk_size=10000):
             sql.Literal(d['code']),
             sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
             sql.SQL(
-                "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
+                "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), "
+                "3003)"
                 % json.dumps(d['geometry'])),
             sql.Literal(json.dumps(d))]))
 

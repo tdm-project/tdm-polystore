@@ -1,5 +1,6 @@
-import json
 import datetime
+import json
+
 import psycopg2.sql as sql
 from psycopg2.extras import Json
 
@@ -36,6 +37,7 @@ def select_sensor_types(args):
 
 def select_sensors(args):
     return filter_by_description('sensors', args)
+
 
 def select_sensors_in_circle(args):
     query = """
