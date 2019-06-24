@@ -1,25 +1,26 @@
-import json
 import datetime
+import json
+
 import psycopg2.sql as sql
 from psycopg2.extras import Json
 
 
-def select_sensors(args):
+def select_sensors_by_footprint(args):
     assert args['footprint']['type'] in ['circle']
     if args['footprint']['type'] == 'circle':
         return select_sensors_in_circle(args)
 
 
-def select_sensor_types(args):
+def filter_by_description(table_name, args):
     """\
     E.g., dict(brandName="Acme", controlledProperty="humidity,temperature")
     """
-    query = "".join([
-        "SELECT description FROM sensor_types WHERE",
-        " AND ".join(
-            "(description->%s @> %s::jsonb)" for _ in args
-        ),
-    ])
+    qstart = sql.SQL("SELECT description FROM {} WHERE").format(
+        sql.Identifier(table_name))
+    query = qstart + sql.SQL(" AND ").join(
+        sql.SQL("(description->{} @> {}::jsonb)").format(
+            sql.Placeholder(), sql.Placeholder())
+        for _ in args)
     data = []
     for k, v in args.items():
         data.append(k)
@@ -28,6 +29,14 @@ def select_sensor_types(args):
             v = v[0]
         data.append(Json(v))
     return query, data
+
+
+def select_sensor_types(args):
+    return filter_by_description('sensor_types', args)
+
+
+def select_sensors(args):
+    return filter_by_description('sensors', args)
 
 
 def select_sensors_in_circle(args):
@@ -75,20 +84,20 @@ def gather_scalar_timeseries(args):
         assert args['op'] is not None
         select = sql.SQL(
             "SELECT time_bucket({}, time) - {} as dt, {}(value) as v").format(
-                sql.Placeholder(name='bucket'), sql.Placeholder(name='after'),
-                sql.Identifier(args['op']))
+            sql.Placeholder(name='bucket'), sql.Placeholder(name='after'),
+            sql.Identifier(args['op']))
         group_by = sql.SQL("GROUP BY dt ORDER BY dt")
     else:
         select = sql.SQL(
             "SELECT time - {} as dt, value as v").format(
-                sql.Placeholder(name='after'))
+            sql.Placeholder(name='after'))
         group_by = sql.SQL(" ")
     return sql.SQL(' ').join([select,
                               sql.SQL(
                                   """FROM measures m
                                   WHERE m.sensorcode = {}
                                   AND m.time >= {} AND m.time < {}""").format(
-                                      sql.Placeholder(name='code'),
-                                      sql.Placeholder(name='after'),
-                                      sql.Placeholder(name='before')),
+                                  sql.Placeholder(name='code'),
+                                  sql.Placeholder(name='after'),
+                                  sql.Placeholder(name='before')),
                               group_by])

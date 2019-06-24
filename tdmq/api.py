@@ -1,7 +1,9 @@
+from datetime import timedelta
+
+from flask import jsonify
 from flask import request
 from flask import url_for
-from flask import jsonify
-from datetime import timedelta
+
 import tdmq.db as db
 from tdmq.utils import convert_footprint
 
@@ -70,7 +72,13 @@ def add_routes(app):
         With no parameters, return all sensors. With ``type={uuid}``, select
         sensors of the specified type. When ``footprint``, ``after`` and
         ``before`` are specified, return all sensors that have reported an
-        event in the corresponding spatio-temporal region.
+        event in the corresponding spatio-temporal region. Sensors can also
+        be filtered by generic attributes stored in the description field.
+
+        Note: currently queries by footprint, type or attributes are mutually
+         exclusive, i.e. they cannot be combined in a single query.
+
+
 
         **Example request**::
 
@@ -112,6 +120,9 @@ def add_routes(app):
           this time, e.g., ``2019-02-22T11:03:25Z``
 
         :query type: consider only sensors of this type (filter by stypecode)
+        :query {attribute}: select sensors whose description has the
+            specified value(s) for the chosen attribute
+            (top-level JSON key, e.g., name=SensorName)
 
         :status 200: no error
         :returns: list of sensors

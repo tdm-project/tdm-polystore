@@ -1,10 +1,9 @@
 # FIXME: We are assuming that we have access to the DB mentioned in conftest.py
 
+import json
 # FIXME move to fixtures
 import os
-import json
 import tempfile
-
 
 root = os.path.dirname(os.path.abspath(__file__))
 sensor_types_fname = os.path.join(root, 'data/sensor_types.json')
