@@ -122,8 +122,7 @@ def add_routes(app):
         :query type: consider only sensors of this type (filter by stypecode)
         :query {attribute}: select sensors whose description has the
             specified value(s) for the chosen attribute
-            (top-level JSON key, e.g., name=SensorName;
-            controlledProperty=humidity,temperature)
+            (top-level JSON key, e.g., name=SensorName)
 
         :status 200: no error
         :returns: list of sensors
