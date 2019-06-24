@@ -1,34 +1,26 @@
 {"sensors": [
-    {"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
-     "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
-     "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
-     "geometry": {"type": "Point", "coordinates": [9.221, 30.0]},
-      "name": "test"
+    {"name": "sensor_0",
+     "type": "sensor_type_0",
+     "geometry": {"type": "Point", "coordinates": [9.221, 30.0]}
     },
-    {"code": "0fd67c67-c9be-45c6-9719-4c4eada4beff",
-     "nodecode": "0fd67cdd-c9be-45c6-9719-4c4eada4beee",
-     "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
+    {"name": "sensor_1",
+     "type": "sensor_type_1",
      "geometry": {"type": "Point", "coordinates": [9.222, 30.003]}
     },
-    {"code": "838407d9-9876-4226-a039-ff17ba833b2c",
-     "stypecode": "ea388bc4-668b-4f06-b738-6267a8a7a37d",
-     "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
+    {"name": "sensor_2",
+     "type": "sensor_type_2",
      "geometry": {"type": "Point", "coordinates": [9.201, 29.6]}
     },
-    {"code": "1f69d31c-a5ef-4ef4-902d-45f5e57923c6",
-     "stypecode": "a1103bd9-fba0-4652-b58e-e4f0c4278262",
-     "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
+    {"name": "sensor_3",
+     "type": "sensor_type_3",
      "geometry": {"type": "Point", "coordinates": [9.551, 32.0]}
     },
-    {"code": "13c1cb32-486a-407f-b286-dc9ea8fef99f",
-     "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
-     "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
+    {"name": "sensor_4",
+     "type": "sensor_type_0",
      "geometry": {"type": "Point", "coordinates": [9.343, 31.2]}
     },
-    {"code": "d5307bae-76a9-4298-885c-05e7a4d521c2",
-     "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
-     "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
+    {"name": "sensor_5",
+     "type": "sensor_type_1",
      "geometry": {"type": "Point", "coordinates": [9.119, 29.0]}
     }
 ]}
-

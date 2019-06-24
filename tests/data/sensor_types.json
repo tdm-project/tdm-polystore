@@ -1,8 +1,7 @@
 {"sensor_types": [
     {
-        "code": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
         "type": "TemperatureSensorDTH11",
-        "name": "temperature sensor in DHT11",
+        "name": "sensor_type_0",
         "brandName": "Acme",
         "modelName": "Acme multisensor DHT11",
         "manufacturerName": "Acme Inc.",
@@ -11,9 +10,8 @@
         "controlledProperty": ["temperature"]
     },
     {
-        "code": "0fd67c67-c9be-45c6-9719-4c4eada4bebe",
         "type": "HumiditySensorDHT11",
-        "name": "Humidity sensor in DHT11",
+        "name": "sensor_type_1",
         "brandName": "Acme",
         "modelName": "Acme multisensor DHT11",
         "manufacturerName": "Acme Inc.",
@@ -22,9 +20,8 @@
         "controlledProperty": ["humidity"]
     },
     {
-        "code": "ea388bc4-668b-4f06-b738-6267a8a7a37d",
         "type": "multisensor",
-        "name": "Jack",
+        "name": "sensor_type_2",
         "brandName": "ProSensor",
         "modelName": "R2D2",
         "manufacturerName": "CRS4",
@@ -33,9 +30,8 @@
         "controlledProperty": ["humidity", "temperature"]
     },
     {
-        "code": "a1103bd9-fba0-4652-b58e-e4f0c4278262",
         "type": "power sensor",
-        "name": "John",
+        "name": "sensor_type_3",
         "brandName": "ProSensor",
         "modelName": "C3PO",
         "manufacturerName": "CRS4",
