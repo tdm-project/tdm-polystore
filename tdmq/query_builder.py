@@ -92,3 +92,30 @@ def gather_scalar_timeseries(args):
                                       sql.Placeholder(name='after'),
                                       sql.Placeholder(name='before')),
                               group_by])
+
+
+def gather_nonscalar_timeseries(args):
+    assert args['code'] is not None
+    assert args['after'] is not None
+    assert args['before'] is not None
+
+    if args['bucket'] is not None:
+        assert isinstance(args['bucket'], datetime.timedelta)
+        select = sql.SQL(
+            "SELECT time_bucket({}, time) - {} as dt, array_agg(url) as u, array_agg(index) as i").format(
+                sql.Placeholder(name='bucket'), sql.Placeholder(name='after'))
+        group_by = sql.SQL("GROUP BY dt ORDER BY dt")
+    else:
+        select = sql.SQL(
+            "SELECT time - {} as dt, url as u, index as i").format(
+                sql.Placeholder(name='after'))
+        group_by = sql.SQL(" ")
+    return sql.SQL(' ').join([select,
+                              sql.SQL(
+                                  """FROM measures m
+                                  WHERE m.sensorcode = {}
+                                  AND m.time >= {} AND m.time < {}""").format(
+                                      sql.Placeholder(name='code'),
+                                      sql.Placeholder(name='after'),
+                                      sql.Placeholder(name='before')),
+                              group_by])
