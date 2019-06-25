@@ -56,7 +56,10 @@ def add_routes(app):
         :returns: list of sensor types
         """
         if request.method == "GET":
-            res = db.list_sensor_types(request.args)
+            res = []
+            for code, descr in db.list_sensor_types(request.args):
+                descr["code"] = code
+                res.append(descr)
             return jsonify(res)
         else:
             data = request.json
@@ -131,7 +134,10 @@ def add_routes(app):
             args = {k: v for k, v in request.args.items()}
             if 'footprint' in args:
                 args['footprint'] = convert_footprint(args['footprint'])
-            res = db.list_sensors(args)
+            res = []
+            for code, descr in db.list_sensors(args):
+                descr["code"] = code
+                res.append(descr)
             return jsonify(res)
         else:
             data = request.json
@@ -165,6 +171,7 @@ def add_routes(app):
         :returns: sensor description
         """
         res = db.get_sensor(str(code))
+        res["code"] = code
         return jsonify(res)
 
     @app.route('/sensors/<uuid:code>/timeseries')

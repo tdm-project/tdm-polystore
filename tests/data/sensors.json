@@ -1,26 +1,32 @@
 {"sensors": [
     {"name": "sensor_0",
      "type": "sensor_type_0",
+     "node": "node_0",
      "geometry": {"type": "Point", "coordinates": [9.221, 30.0]}
     },
     {"name": "sensor_1",
      "type": "sensor_type_1",
+     "node": "node_0",
      "geometry": {"type": "Point", "coordinates": [9.222, 30.003]}
     },
     {"name": "sensor_2",
      "type": "sensor_type_2",
+     "node": "node_0",
      "geometry": {"type": "Point", "coordinates": [9.201, 29.6]}
     },
     {"name": "sensor_3",
      "type": "sensor_type_3",
+     "node": "node_0",
      "geometry": {"type": "Point", "coordinates": [9.551, 32.0]}
     },
     {"name": "sensor_4",
      "type": "sensor_type_0",
+     "node": "node_0",
      "geometry": {"type": "Point", "coordinates": [9.343, 31.2]}
     },
     {"name": "sensor_5",
      "type": "sensor_type_1",
+     "node": "node_0",
      "geometry": {"type": "Point", "coordinates": [9.119, 29.0]}
     }
 ]}
