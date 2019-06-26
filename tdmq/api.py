@@ -35,21 +35,21 @@ def add_routes(app):
 
           [
            {
-             "uuid": "0fd67c67-c9be-45c6-9719-4c4eada4be65",
-             "type": "TemperatureSensorDTH11",
-             "name": "temperature sensor in DHT11",
              "brandName": "Acme",
-             "modelName": "Acme multisensor DHT11",
-             "manufacturerName": "Acme Inc.",
              "category": ["sensor"],
+             "code": "c7afa96b-ca9a-5561-b57b-5187ad005d75",
+             "controlledProperty": ["temperature"],
              "function": ["sensing"],
-             "controlledProperty": ["temperature"]
+             "manufacturerName": "Acme Inc.",
+             "modelName": "Acme multisensor DHT11",
+             "name": "sensor_type_0",
+             "type": "TemperatureSensorDTH11"
            }
           ]
 
         :query {attribute}: select sensors whose description has the specified
           value(s) for the chosen attribute (top-level JSON key, e.g.,
-          name=SensorPro; controlledProperty=humidity,temperature)
+          brandName=Acme; controlledProperty=humidity,temperature)
 
         :resheader Content-Type: application/json
         :status 200: no error
@@ -72,16 +72,13 @@ def add_routes(app):
 
         .. :quickref: Get sensors
 
-        With no parameters, return all sensors. With ``type={uuid}``, select
-        sensors of the specified type. When ``footprint``, ``after`` and
-        ``before`` are specified, return all sensors that have reported an
-        event in the corresponding spatio-temporal region. Sensors can also
-        be filtered by generic attributes stored in the description field.
+        With no parameters, return all sensors. When ``footprint``, ``after``
+        and ``before`` are specified, return all sensors that have reported an
+        event in the corresponding spatio-temporal region. Sensors can also be
+        filtered by generic attributes stored in the description field.
 
-        Note: currently queries by footprint, type or attributes are mutually
-         exclusive, i.e. they cannot be combined in a single query.
-
-
+        Note: currently queries by footprint or by attributes are mutually
+        exclusive, i.e. they cannot be combined in a single query.
 
         **Example request**::
 
@@ -98,18 +95,16 @@ def add_routes(app):
           HTTP/1.1 200 OK
           Content-Type: application/json
 
-          [{"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
-            "geometry": {
-              "coordinates": [9.22100000642642, 30.0000000019687],
-              "type": "Point"
-            },
-            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65"},
-           {"code": "0fd67c67-c9be-45c6-9719-4c4eada4beff",
-            "geometry": {
-              "coordinates": [9.22200000642623, 30.0030000019686],
-              "type": "Point"
-            },
-            "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4bebe"}]
+          [{"code": "c034f147-8e54-50bd-97bb-9db1addcdc5a",
+            "geometry": {"coordinates": [9.221, 30.0], "type": "Point"},
+            "name": "sensor_0",
+            "node": "node_0",
+            "type": "sensor_type_0"},
+           {"code": "c932ff51-6eec-5b73-abe1-4163f9e72cb3",
+            "geometry": {"coordinates": [9.222, 30.003], "type": "Point"},
+            "name": "sensor_1",
+            "node": "node_0",
+            "type": "sensor_type_1"}]
 
         :resheader Content-Type: application/json
 
@@ -122,10 +117,9 @@ def add_routes(app):
         :query before: consider only sensors reporting strictly before
           this time, e.g., ``2019-02-22T11:03:25Z``
 
-        :query type: consider only sensors of this type (filter by stypecode)
         :query {attribute}: select sensors whose description has the
             specified value(s) for the chosen attribute
-            (top-level JSON key, e.g., name=SensorName)
+            (top-level JSON key, e.g., type=sensor_type_1)
 
         :status 200: no error
         :returns: list of sensors
@@ -161,10 +155,11 @@ def add_routes(app):
           HTTP/1.1 200 OK
           Content-Type: application/json
 
-          {"code": "0fd67c67-c9be-45c6-9719-4c4eada4becc",
+          {"code": "c034f147-8e54-50bd-97bb-9db1addcdc5a",
            "geometry": {"coordinates": [9.221, 30.0], "type": "Point"},
-           "nodecode": "0fd67ccc-c9be-45c6-9719-4c4eada4beaa",
-           "stypecode": "0fd67c67-c9be-45c6-9719-4c4eada4be65"}
+           "name": "sensor_0",
+           "node": "node_0",
+           "type": "sensor_type_0"}
 
         :resheader Content-Type: application/json
         :status 200: no error
