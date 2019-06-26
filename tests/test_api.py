@@ -1,7 +1,8 @@
 import json
 import pytest
-from collections import Counter
+import uuid
 from collections import OrderedDict
+from copy import deepcopy
 from datetime import datetime, timedelta
 from tdmq.utils import convert_footprint
 
@@ -15,23 +16,29 @@ measures_fname = os.path.join(root, 'data/measures.json')
 # FIXME move it to a fixture?
 class FakeDB:
 
+    NS = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
+
+    def __load(self, fname):
+        table = OrderedDict()
+        with open(fname) as f:
+            data = json.load(f)
+        descriptions = next(iter(data.values()))
+        for d in descriptions:
+            code = str(uuid.uuid5(self.NS, d['name']))
+            table[code] = d
+        return table
+
     def __init__(self):
         self.initialized = False
         self.called = {}
-        sensor_types = json.load(
-            open(os.path.join(root, 'data/sensor_types.json')))['sensor_types']
-        sensors = json.load(
-            open(os.path.join(root, './data/sensors.json')))['sensors']
-        self.sensor_types = OrderedDict((_['code'], _) for _ in sensor_types)
-        self.sensors = OrderedDict((_['code'], _) for _ in sensors)
-        self.sensors_no_args = dict(Counter(
-            _['stypecode'] for _ in self.sensors.values()
-        ))
+        self.sensor_types = self.__load(sensor_types_fname)
+        self.sensors = self.__load(sensors_fname)
         measures = json.load(
             open(os.path.join(root, 'data/measures.json')))['measures']
         data = {}
         for m in measures:
-            data.setdefault(m['sensorcode'], []).append(
+            sensorcode = str(uuid.uuid5(self.NS, m['sensor']))
+            data.setdefault(sensorcode, []).append(
                 (datetime.strptime(m['time'], '%Y-%m-%dT%H:%M:%SZ'),
                  m['measure']['value']))
         self.timeseries = {}
@@ -48,18 +55,15 @@ class FakeDB:
 
     def list_sensor_types(self, args):
         self.called['list_sensor_types'] = args
-        return [_ for _ in self.sensor_types.values()]
+        return list(deepcopy(self.sensor_types).items())
 
     def list_sensors(self, args):
         self.called['list_sensors'] = args
-        if args:
-            return [_ for _ in self.sensors.values()]
-        else:
-            return self.sensors_no_args
+        return list(deepcopy(self.sensors).items())
 
     def get_sensor(self, code):
         self.called['get_sensor'] = {'code': code}
-        return self.sensors[code]
+        return deepcopy(self.sensors[code])
 
     def get_timeseries(self, code, args):
         args['code'] = code
@@ -67,14 +71,24 @@ class FakeDB:
         return self.timeseries[code]
 
 
+def _checkresp(response, table=None):
+    assert response.status == '200 OK'
+    assert response.is_json
+    if table:
+        result = response.get_json()
+        assert len(result) == len(table)
+        for r in result:
+            assert "code" in r
+            code = r.pop("code")
+            assert r == table[code]
+
+
 def test_sensor_types_no_args(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.list_sensor_types', fakedb.list_sensor_types)
     response = client.get('/sensor_types')
     assert 'list_sensor_types' in fakedb.called
-    assert response.status == '200 OK'
-    assert response.is_json
-    assert response.get_json() == fakedb.list_sensor_types({})
+    _checkresp(response, table=fakedb.sensor_types)
 
 
 def test_sensor_types(client, monkeypatch):
@@ -86,9 +100,7 @@ def test_sensor_types(client, monkeypatch):
     assert 'list_sensor_types' in fakedb.called
     args = fakedb.called['list_sensor_types']
     assert {k: v for k, v in args.items()} == in_args
-    assert response.status == '200 OK'
-    assert response.is_json
-    assert response.get_json() == fakedb.list_sensor_types(args)
+    _checkresp(response, table=fakedb.sensor_types)
 
 
 def test_sensors_no_args(client, monkeypatch):
@@ -96,9 +108,7 @@ def test_sensors_no_args(client, monkeypatch):
     monkeypatch.setattr('tdmq.db.list_sensors', fakedb.list_sensors)
     response = client.get('/sensors')
     assert 'list_sensors' in fakedb.called
-    assert response.status == '200 OK'
-    assert response.is_json
-    assert response.get_json() == fakedb.sensors_no_args
+    _checkresp(response, table=fakedb.sensors)
 
 
 def test_sensors(client, monkeypatch):
@@ -106,18 +116,13 @@ def test_sensors(client, monkeypatch):
     monkeypatch.setattr('tdmq.db.list_sensors', fakedb.list_sensors)
     footprint = 'circle((9.2, 33), 1000)'
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    type_ = next(iter(fakedb.sensor_types))
-    q = 'footprint={}&after={}&before={}&type={}'.format(
-        footprint, after, before, type_)
+    q = 'footprint={}&after={}&before={}'.format(footprint, after, before)
     response = client.get('/sensors?{}'.format(q))
     assert 'list_sensors' in fakedb.called
-    assert response.status == '200 OK'
-    assert response.is_json
     args = fakedb.called['list_sensors']
     assert args['footprint'] == convert_footprint(footprint)
     assert args['after'] == after and args['before'] == before
-    assert args['type'] == type_
-    assert response.get_json() == fakedb.list_sensors(args)
+    _checkresp(response, table=fakedb.sensors)
 
 
 def test_sensors_fail(client, monkeypatch):
@@ -139,12 +144,14 @@ def test_sensor(client, monkeypatch):
     monkeypatch.setattr('tdmq.db.get_sensor', fakedb.get_sensor)
     code = list(fakedb.sensors.keys())[0]
     response = client.get('/sensors/{}'.format(code))
-    assert 'get_sensor' in fakedb.called
-    assert response.status == '200 OK'
-    assert response.is_json
     args = fakedb.called['get_sensor']
     assert args['code'] == code
-    assert response.get_json() == fakedb.get_sensor(code)
+    assert 'get_sensor' in fakedb.called
+    _checkresp(response)
+    result = response.get_json()
+    assert "code" in result
+    code = result.pop("code")
+    assert result == fakedb.sensors[code]
 
 
 def test_timeseries(client, monkeypatch):
