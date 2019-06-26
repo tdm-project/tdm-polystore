@@ -1,4 +1,5 @@
 import json
+import os
 import pytest
 import uuid
 from collections import OrderedDict
@@ -6,7 +7,6 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from tdmq.utils import convert_footprint
 
-import os
 root = os.path.dirname(os.path.abspath(__file__))
 sensor_types_fname = os.path.join(root, 'data/sensor_types.json')
 sensors_fname = os.path.join(root, 'data/sensors.json')
@@ -29,7 +29,6 @@ class FakeDB:
         return table
 
     def __init__(self):
-        self.initialized = False
         self.called = {}
         self.sensor_types = self.__load(sensor_types_fname)
         self.sensors = self.__load(sensors_fname)
@@ -42,16 +41,13 @@ class FakeDB:
                 (datetime.strptime(m['time'], '%Y-%m-%dT%H:%M:%SZ'),
                  m['measure']['value']))
         self.timeseries = {}
-        for k in data.keys():
+        for k in data:
             ts = sorted(data[k])
             time_origin = ts[0][0]
             ts = [[(_[0] - time_origin).seconds, _[1]] for _ in ts]
             self.timeseries[k] = {
                 'time_origin': time_origin.strftime('%Y-%m-%dT%H:%M:%SZ'),
                 'data': ts}
-
-    def init(self):
-        self.initialized = True
 
     def list_sensor_types(self, args):
         self.called['list_sensor_types'] = args
@@ -142,7 +138,7 @@ def test_sensors_fail(client, monkeypatch):
 def test_sensor(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.get_sensor', fakedb.get_sensor)
-    code = list(fakedb.sensors.keys())[0]
+    code = next(iter(fakedb.sensors))
     response = client.get('/sensors/{}'.format(code))
     args = fakedb.called['get_sensor']
     assert args['code'] == code
@@ -157,7 +153,7 @@ def test_sensor(client, monkeypatch):
 def test_timeseries(client, monkeypatch):
     fakedb = FakeDB()
     monkeypatch.setattr('tdmq.db.get_timeseries', fakedb.get_timeseries)
-    code = list(fakedb.sensors.keys())[0]
+    code = next(iter(fakedb.sensors))
     # FIXME these timepoints are random
     after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
     bucket, op = 20.22, 'sum'

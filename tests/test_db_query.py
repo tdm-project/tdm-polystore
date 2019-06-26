@@ -9,6 +9,12 @@ from tdmq.db import list_sensor_types_in_db
 from tdmq.db import list_sensors_in_db
 
 root = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(root, 'data/sensor_types.json')) as f:
+    sensor_types = json.load(f)['sensor_types']
+with open(os.path.join(root, 'data/sensors.json')) as f:
+    sensors = json.load(f)['sensors']
+with open(os.path.join(root, 'data/measures.json')) as f:
+    measures = json.load(f)['measures']
 
 
 def _getdesc(query_result):
@@ -16,16 +22,12 @@ def _getdesc(query_result):
 
 
 def test_db_list_sensor_types(db):
-    sensor_types = json.load(
-        open(os.path.join(root, 'data/sensor_types.json')))['sensor_types']
     data = list_descriptions_in_table(db, 'sensor_types')
     assert len(sensor_types) == len(data)
     assert _getdesc(data) == sensor_types
 
 
 def test_list_sensor_types_with_args(db):
-    sensor_types = json.load(
-        open(os.path.join(root, 'data/sensor_types.json')))['sensor_types']
     args = {"controlledProperty": "temperature", "manufacturerName": "CRS4"}
     exp_res = [_ for _ in sensor_types if all((
         "temperature" in _["controlledProperty"],
@@ -39,24 +41,18 @@ def test_list_sensor_types_with_args(db):
 
 
 def test_list_sensors(db):
-    sensors = json.load(
-        open(os.path.join(root, 'data/sensors.json')))['sensors']
     data = list_descriptions_in_table(db, 'sensors')
     assert len(sensors) == len(data)
     assert _getdesc(data) == sensors
 
 
 def test_db_get_sensor(db):
-    sensors = json.load(
-        open(os.path.join(root, 'data/sensors.json')))['sensors']
     for s in sensors:
         code = list_sensors_in_db(db, {"name": s["name"]})[0][0]
         assert s == get_object(db, 'sensors', code)
 
 
 def test_db_get_sensor_type(db):
-    sensor_types = json.load(
-        open(os.path.join(root, 'data/sensor_types.json')))['sensor_types']
     for s in sensor_types:
         code = list_sensor_types_in_db(db, {"name": s["name"]})[0][0]
         assert s == get_object(db, 'sensor_types', code)
@@ -72,8 +68,6 @@ def test_list_sensors_with_args(db):
       "sensor_4" 133329.30383038227
       "sensor_3" 223714.63917666752
     """
-    sensors = json.load(
-        open(os.path.join(root, 'data/sensors.json')))['sensors']
     sensors_by_name = dict((s['name'], s) for s in sensors)
     center = [9.2215, 30.0015]
     expected_sensors_by_radius = {
@@ -108,10 +102,6 @@ def test_get_scalar_timeseries_data(db):
     args['op'] = 'sum'
     args['after'] = '2019-05-02T11:00:00Z'
     args['before'] = '2019-05-02T11:50:35Z'
-    sensors = json.load(
-        open(os.path.join(root, 'data/sensors.json')))['sensors']
-    measures = json.load(
-        open(os.path.join(root, 'data/measures.json')))['measures']
     sensors_by_name = dict((s['name'], s) for s in sensors)
     timebase = to_dt(args['after'])
     deltas_by_name = {}
@@ -131,8 +121,6 @@ def test_get_scalar_timeseries_data(db):
 
 
 def test_get_scalar_timeseries_data_empty(db):
-    sensors = json.load(
-        open(os.path.join(root, 'data/sensors.json')))['sensors']
     sensors_by_name = dict((s['name'], s) for s in sensors)
     args = {}
     args['bucket'] = timedelta(seconds=3)
