@@ -63,8 +63,8 @@ def add_routes(app):
             return jsonify(res)
         else:
             data = request.json
-            db.load_sensor_types(db.get_db(), data)
-            return jsonify({"loaded": len(data)})
+            codes = db.load_sensor_types(db.get_db(), data)
+            return jsonify(codes)
 
     @app.route('/sensors', methods=['GET', 'POST'])
     def sensors():
@@ -141,8 +141,8 @@ def add_routes(app):
             return jsonify(res)
         else:
             data = request.json
-            db.load_sensors(db.get_db(), data)
-            return jsonify({"loaded": len(data)})
+            codes = db.load_sensors(db.get_db(), data)
+            return jsonify(codes)
 
     @app.route('/sensors/<uuid:code>')
     def sensor(code):
@@ -231,5 +231,5 @@ def add_routes(app):
     @app.route('/measures', methods=["POST"])
     def measures():
         data = request.json
-        db.load_measures(db.get_db(), data)
-        return jsonify({"loaded": len(data)})
+        n = db.load_measures(db.get_db(), data)
+        return jsonify({"loaded": n})
