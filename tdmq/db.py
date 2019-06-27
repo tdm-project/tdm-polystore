@@ -1,6 +1,7 @@
 import itertools as it
 import json
 import logging
+import uuid
 
 import click
 import psycopg2 as psy
@@ -19,6 +20,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
+
+
+NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
 
 # FIXME move all of this to appropriate classes
@@ -95,14 +99,19 @@ def format_to_sql_tuple(t):
         sql.Literal(v) for v in t))
 
 
-def load_data_by_chunks(db, data, chunk_size, into, format_to_sql_tuple):
+def load_data_by_chunks(db, data, chunk_size, into, format_to_sql_tuple,
+                        ret=None):
     values = take_by_n(data, chunk_size)
     with db:
         with db.cursor() as cur:
             for v in values:
                 s = sql.SQL(into) + sql.SQL(' VALUES ')
                 s += sql.SQL(', ').join(format_to_sql_tuple(_) for _ in v)
+                if ret:
+                    s += sql.SQL(' RETURNING {}').format(sql.Identifier(ret))
                 cur.execute(s)
+                if ret:
+                    return cur.fetchall()
 
 
 def dump_table(db, tname, path, itersize=100000):
@@ -131,27 +140,35 @@ def dump_table(db, tname, path, itersize=100000):
 def load_sensor_types(db, data, validate=False, chunk_size=10000):
     """
     Load sensor_types objects.
+
+    Return the list of UUIDs assigned to each object.
     """
 
     def fix_json(d):
-        return format_to_sql_tuple((d['code'], json.dumps(d)))
+        code = uuid.uuid5(NAMESPACE_TDMQ, d['name'])
+        return format_to_sql_tuple((str(code), json.dumps(d)))
 
     logger.debug('load_sensor_types: start loading %d sensor_types', len(data))
     into = "INSERT INTO sensor_types (code, description)"
-    load_data_by_chunks(db, data, chunk_size, into, fix_json)
+    r = load_data_by_chunks(db, data, chunk_size, into, fix_json, ret='code')
     logger.debug('load_sensor_types: done.')
-    return len(data)
+    return [_[0] for _ in r]
 
 
 def load_sensors(db, data, validate=False, chunk_size=10000):
     """
     Load sensors objects.
+
+    Return the list of UUIDs assigned to each object.
     """
 
     def fix_geom_and_json(d):
+        code = uuid.uuid5(NAMESPACE_TDMQ, d['name'])
+        stypecode = uuid.uuid5(NAMESPACE_TDMQ, d['type'])
+        nodecode = uuid.uuid5(NAMESPACE_TDMQ, d['node'])
         return sql.SQL("({})").format(sql.SQL(', ').join([
-            sql.Literal(d['code']),
-            sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
+            sql.Literal(str(code)),
+            sql.Literal(str(stypecode)), sql.Literal(str(nodecode)),
             sql.SQL(
                 "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), "
                 "3003)"
@@ -160,20 +177,23 @@ def load_sensors(db, data, validate=False, chunk_size=10000):
 
     into = "INSERT INTO sensors (code, stypecode, nodecode, geom, description)"
     logger.debug('load_sensors: start loading %d sensors', len(data))
-    load_data_by_chunks(db, data, chunk_size, into, fix_geom_and_json)
+    r = load_data_by_chunks(db, data, chunk_size, into, fix_geom_and_json,
+                            ret='code')
     logger.debug('load_sensors: done.')
-    return len(data)
+    return [_[0] for _ in r]
 
 
 def load_measures(db, data, validate=False, chunk_size=10000):
     """
     Load measures.
 
+    Return the number of loaded objects.
+
     {"time": "2019-02-21T11:32:08Z",
-     "sensorcode": "98359c6d-863a-4c94-a997-d0e5446a489f",
+     "sensor": "sensor_0",
      "measure": {"value": 0.333}},
     {"time": "2019-02-21T11:34:08Z",
-     "sensorcode": "98359c6d-863a-4c94-a997-d0e5446a489f",
+     "sensor": "sensor_1",
      "measure": {"reference": "hdfs://xxxx", "index": 22}}
     """
 
@@ -193,7 +213,8 @@ def load_measures(db, data, validate=False, chunk_size=10000):
             else:
                 return (m['value'], None, None)
 
-        return format_to_sql_tuple((d['time'], d['sensorcode']) +
+        sensorcode = uuid.uuid5(NAMESPACE_TDMQ, d['sensor'])
+        return format_to_sql_tuple((d['time'], str(sensorcode)) +
                                    fix_measure(d['measure']))
 
     into = "INSERT INTO measures (time, sensorcode, value, url, index)"
@@ -257,7 +278,11 @@ def load_file(filename):
     db = get_db()
     for k in loader.keys():
         if k in data:
-            n = loader[k](db, data[k])
+            rval = loader[k](db, data[k])
+            try:
+                n = len(rval)
+            except TypeError:
+                n = rval  # measures
             stats[k] = n
     logger.debug('load_file: done.')
     return stats
@@ -270,11 +295,12 @@ def dump_field(field, path):
 
 
 def list_descriptions_in_table(db, tname):
-    query = sql.SQL('SELECT description FROM {}').format(sql.Identifier(tname))
+    query = sql.SQL('SELECT code, description FROM {}').format(
+        sql.Identifier(tname))
     with db:
         with db.cursor() as cur:
             cur.execute(query)
-            return [_[0] for _ in cur.fetchall()]
+            return cur.fetchall()
 
 
 def list_sensor_types(args):
@@ -287,8 +313,7 @@ def exec_query(db, query, data):
     with db:
         with db.cursor() as cur:
             cur.execute(query, data)
-            rval = [_[0] for _ in cur.fetchall()]
-            return rval
+            return cur.fetchall()
 
 
 def list_sensor_types_in_db(db, args):
@@ -301,11 +326,6 @@ def list_sensor_types_in_db(db, args):
 def list_sensors_in_db(db, args):
     if not args:
         return list_descriptions_in_table(db, 'sensors')
-    if "type" in args:
-        if "footprint" in args:
-            # TODO: remove this restriction
-            raise ValueError("selecting by type and footprint not supported")
-        return list_sensors_by_type(db, args)
     elif "footprint" in args:
         # FIXME this is restricted to the case where "footprint", "before",
         # and "after" are ALL present
@@ -319,15 +339,6 @@ def list_sensors(args):
     return list_sensors_in_db(db, args)
 
 
-def list_sensors_by_type(db, args):
-    query = "SELECT description FROM sensors WHERE stypecode=UUID(%s)"
-    data = [args["type"]]
-    with db:
-        with db.cursor() as cur:
-            cur.execute(query, data)
-            return [_[0] for _ in cur.fetchall()]
-
-
 def list_sensors_in_cylinder(db, args):
     """Return all sensors that have reported an event in a
        given spatio-temporal region."""
@@ -335,14 +346,7 @@ def list_sensors_in_cylinder(db, args):
     with db:
         with db.cursor() as cur:
             cur.execute(query, data)
-            # FIXME
-            # returned description is not the same as the stored one
-            #   1. nodecode is missing
-            #   2. geometry is "reconstructed" with a small error
-            rval = [_[0] for _ in cur.fetchall()]
-            for s in rval:
-                s["geometry"] = json.loads(s["geometry"])
-            return rval
+            return cur.fetchall()
 
 
 def get_object(db, tname, oid):

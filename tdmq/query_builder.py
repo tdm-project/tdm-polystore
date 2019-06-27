@@ -15,7 +15,7 @@ def filter_by_description(table_name, args):
     """\
     E.g., dict(brandName="Acme", controlledProperty="humidity,temperature")
     """
-    qstart = sql.SQL("SELECT description FROM {} WHERE").format(
+    qstart = sql.SQL("SELECT code, description FROM {} WHERE").format(
         sql.Identifier(table_name))
     query = qstart + sql.SQL(" AND ").join(
         sql.SQL("(description->{} @> {}::jsonb)").format(
@@ -41,35 +41,20 @@ def select_sensors(args):
 
 def select_sensors_in_circle(args):
     query = """
-    WITH spatial AS (
-         SELECT code, stypecode, geom
-         FROM sensors
-         WHERE ST_DWithin(
-                   geom,
-                   ST_Transform(
-                       ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
-                       3003
-                   ),
-                   %s)
-         ),
-         selected AS (
-         SELECT DISTINCT on (sensorcode) sensorcode FROM measures m
-         WHERE m.time >= %s AND m.time < %s
-               AND m.sensorcode IN (SELECT code FROM spatial)
+    WITH temporal AS (
+      SELECT DISTINCT on (sensorcode) sensorcode FROM measures m
+      WHERE m.time >= %s AND m.time < %s
     )
-    SELECT row_to_json(t)
-    FROM (
-       SELECT spatial.code, spatial.stypecode,
-           ST_AsGeoJSON(ST_Transform(spatial.geom, 4326)) geometry
-       FROM spatial
-       WHERE  spatial.code in (SELECT sensorcode FROM selected)
-    ) t
+    SELECT code, description FROM sensors t
+    WHERE ST_DWithin(
+      t.geom, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s)
+    AND code IN (SELECT sensorcode FROM temporal)
     """
     data = [
+        args['after'],
+        args['before'],
         json.dumps(args['footprint']['center']),
         args['footprint']['radius'],
-        args['after'],
-        args['before']
     ]
     return query, data
 
