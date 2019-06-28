@@ -14,6 +14,7 @@ from tdmq.query_builder import gather_scalar_timeseries
 from tdmq.query_builder import select_sensor_types
 from tdmq.query_builder import select_sensors
 from tdmq.query_builder import select_sensors_by_footprint
+from tdmq.query_builder import gather_nonscalar_timeseries
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.INFO)
@@ -390,6 +391,24 @@ def get_scalar_timeseries_data(db, args):
     return result
 
 
+def get_tiledb_timeseries_data(db, args):
+    assert 'code' in args
+    assert 'after' in args
+    assert 'before' in args
+    result = {'timebase': args['after'],
+              'timedelta': [],
+              'data': []}
+    SQL = gather_nonscalar_timeseries(args)
+    with db.cursor() as cur:
+        cur.execute(SQL, args)
+        # FIXME in principle, it could blow up, but it is unlikely
+        tuples = cur.fetchall()
+    for t in tuples:
+        result['timedelta'].append(t[0].total_seconds())
+        result['data'].append(t[1:])
+    return result
+
+
 def get_timeseries(code, args=None):
     """
      {'timebase': '2019-02-21T11:03:25Z',
@@ -412,6 +431,12 @@ def get_timeseries(code, args=None):
     args['code'] = code
     if sensor['geometry']['type'] == 'Point':
         return get_scalar_timeseries_data(db, args)
+    elif sensor['geometry']['type'] == 'Polygon':
+        # FIXME we should be really checking on the sensor_type and
+        # call the right gathering function e.g., we could have data
+        # that it is not stored on a tiledb, maybe graph snapshots or
+        # something like that
+        return get_tiledb_timeseries_data(db, args)
     else:
         raise ValueError(
             'timeseries on sensor {} are not supported'.format(code))
