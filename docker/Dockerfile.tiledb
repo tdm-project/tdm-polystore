@@ -82,6 +82,11 @@ ENV HADOOP_LOG_DIR="/home/jupyter/hadoop_logs"
 
 COPY core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 
+COPY ./tdmq-dist /tdmq-dist
+WORKDIR /tdmq-dist
+
+RUN python3 setup.py install
+
 WORKDIR /home/jupyter
 USER jupyter
 RUN mkdir .jupyter notebooks
