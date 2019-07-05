@@ -7,7 +7,8 @@ images:
 	cp -a setup.py tdmq docker/tdmq-dist
 	cp -a tests/data tdmq docker/tdmq-dist
 	docker build -f docker/Dockerfile.hdfs -t tdm/hdfs docker
-	docker build -f docker/Dockerfile.tiledb -t tdm/tiledb docker
+	docker build -f docker/Dockerfile.tdmqc -t tdm/tdmqc docker
+	docker build -f docker/Dockerfile.jupyter -t tdm/tdmqj docker
 	docker build -f docker/Dockerfile.web -t tdm/web docker
 
 

@@ -9,8 +9,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=foobar
 
-  tiledb:
-    image: tdm/tiledb
+  tdmqj:
+    image: tdm/tdmqj
     ports:
       - "8888:8888"
     volumes:

@@ -54,22 +54,6 @@ RUN git clone https://github.com/TileDB-Inc/TileDB-Py.git && \
     cd .. && \
     rm -rf TileDB-Py
 
-
-RUN useradd -m jupyter && \
-    pip3 install --no-cache-dir \
-        ckanapi \
-	folium \
-        jupyter \
-        matplotlib \
-        cartopy \
-	colormap \
-        easydev \
-	psycopg2 \
-	pyproj \
-        xarray \
-        wget
-	
-
 RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
     echo "export CLASSPATH=\"${CLASSPATH}\"" >> /etc/profile.d/hadoop.sh && \
     echo "export HADOOP_HOME=/opt/hadoop" >> /etc/profile.d/hadoop.sh && \
@@ -86,13 +70,3 @@ COPY ./tdmq-dist /tdmq-dist
 WORKDIR /tdmq-dist
 
 RUN python3 setup.py install
-
-WORKDIR /home/jupyter
-USER jupyter
-RUN mkdir .jupyter notebooks
-COPY --chown=jupyter jupyter_notebook_config.py .jupyter/
-
-WORKDIR notebooks
-
-EXPOSE 8888
-ENTRYPOINT ["/bin/bash", "-l", "-c", "jupyter notebook"]
