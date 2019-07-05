@@ -23,12 +23,23 @@ class Sensor(abc.ABC):
     def timeseries(self, after, before, bucket=None, op=None):
         pass
 
+    @abc.abstractmethod
+    def get_shape(self):
+        "Returns the shape of the sensor measure."
+        pass
 
 class ScalarSensor(Sensor):
     def timeseries(self, after, before, bucket=None, op=None):
         return ScalarTimeSeries(self, after, before, bucket, op)
 
+    def get_shape(self):
+        return ()
 
 class NonScalarSensor(Sensor):
     def timeseries(self, after, before, bucket=None, op=None):
         return NonScalarTimeSeries(self, after, before, bucket, op)
+
+    def get_shape(self):
+        grid = self.description['grid']
+        return (grid['xsize'], grid['ysize'])
+
