@@ -40,6 +40,6 @@ class NonScalarSensor(Sensor):
         return NonScalarTimeSeries(self, after, before, bucket, op)
 
     def get_shape(self):
-        grid = self.description['grid']
-        return (grid['xsize'], grid['ysize'])
+        shape = self.description['shape']
+        return tuple(shape)
 
