@@ -33,3 +33,15 @@ services:
       - "9866"
       - "9867"
       - "9870:9870"
+
+  tdmqc:
+    image: tdm/tdmqc
+    depends_on:
+      - "hdfs"
+      - "web"
+    volumes:
+      - "LOCAL_PATH/examples:/tdmq-dist/examples"
+    entrypoint:
+      - bash
+      - -c
+      - "sleep 36000"

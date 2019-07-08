@@ -62,11 +62,11 @@ RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
     echo  /usr/lib/jvm/jre/lib/amd64/server > /etc/ld.so.conf.d/jvm.conf && \
     ldconfig
 
-ENV HADOOP_LOG_DIR="/home/jupyter/hadoop_logs"
-
 COPY core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 
 COPY ./tdmq-dist /tdmq-dist
 WORKDIR /tdmq-dist
 
-RUN python3 setup.py install
+RUN pip3 install --no-cache-dir pytest && \
+    python3 setup.py install
+ENTRYPOINT ["/bin/bash", "-l", "-c", "pytest ./tests"]

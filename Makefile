@@ -2,10 +2,10 @@ PSWD=foobar
 #IMAGE=timescale/timescaledb
 IMAGE=timescale/timescaledb-postgis
 
+# FIXME copying tests/data twice...
 images:
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
-	cp -a setup.py tdmq docker/tdmq-dist
-	cp -a tests/data tdmq docker/tdmq-dist
+	cp -rf apidocs setup.py tdmq tests/data docker/tdmq-dist
 	docker build -f docker/Dockerfile.hdfs -t tdm/hdfs docker
 	docker build -f docker/Dockerfile.tdmqc -t tdm/tdmqc docker
 	docker build -f docker/Dockerfile.jupyter -t tdm/tdmqj docker
