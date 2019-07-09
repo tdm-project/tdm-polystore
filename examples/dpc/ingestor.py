@@ -36,7 +36,7 @@ def main():
     time_delta = timedelta(seconds=temp.description['timedelta'])
     possible_tdeltas = np.arange(0, (now - time_base).total_seconds(),
                                  time_delta.total_seconds())
-    # FIXME are we shure that ts.timedelta is sorted?
+    # FIXME are we sure that ts.timedelta is sorted?
     idx = np.searchsorted(possible_tdeltas, ts.timedelta)
     for i in set(range(len(possible_tdeltas))) - set(idx):
         t = time_base + i * time_delta
