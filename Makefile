@@ -11,13 +11,18 @@ images:
 	docker build -f docker/Dockerfile.jupyter -t tdm/tdmqj docker
 	docker build -f docker/Dockerfile.web -t tdm/web docker
 
-
-run: images
+docker/docker-compose.yml: docker/docker-compose.yml-tmpl
 	sed -e "s^LOCAL_PATH^$${PWD}^" -e "s^USER_UID^$$(id -u)^" \
             -e "s^USER_GID^$$(id -g)^"  \
             < docker/docker-compose.yml-tmpl > docker/docker-compose.yml
+
+run: images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up
 
-clean:
+start: images docker/docker-compose.yml
+	docker-compose -f ./docker/docker-compose.yml up -d
+
+stop:
 	docker-compose -f ./docker/docker-compose.yml down
 
+clean: stop
