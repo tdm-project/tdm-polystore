@@ -33,6 +33,7 @@ COPY core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 RUN cd /tdmq-dist \
  && find . -type f -print0 | xargs -0 chmod a+r \
  && find . -type d -print0 | xargs -0 chmod a+rx \
+ && chmod 644 /opt/hadoop/etc/hadoop/core-site.xml \
  && python3 setup.py install
 
 COPY tdmqj-entrypoint.sh /usr/local/bin/
