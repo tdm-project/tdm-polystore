@@ -9,5 +9,5 @@ setup(
         'flask',
         'click',
         'psycopg2-binary'
-        ],
+    ],
 )

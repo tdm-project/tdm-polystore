@@ -28,12 +28,14 @@ class Sensor(abc.ABC):
         "Returns the shape of the sensor measure."
         pass
 
+
 class ScalarSensor(Sensor):
     def timeseries(self, after, before, bucket=None, op=None):
         return ScalarTimeSeries(self, after, before, bucket, op)
 
     def get_shape(self):
         return ()
+
 
 class NonScalarSensor(Sensor):
     def timeseries(self, after, before, bucket=None, op=None):
@@ -42,4 +44,3 @@ class NonScalarSensor(Sensor):
     def get_shape(self):
         shape = self.description['shape']
         return tuple(shape)
-

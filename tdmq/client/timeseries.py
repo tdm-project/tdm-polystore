@@ -34,6 +34,7 @@ class TimeSeries(abc.ABC):
     def get_shape(self):
         return (len(self.data),) + self.sensor.get_shape()
 
+
 class ScalarTimeSeries(TimeSeries):
     def fetch(self):
         data = self.pre_fetch()

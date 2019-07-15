@@ -9,7 +9,8 @@ import os
 from datetime import datetime, timedelta
 
 
-dpc_url = 'http://www.protezionecivile.gov.it/wide-api/wide/product/downloadProduct'
+dpc_url = \
+    'http://www.protezionecivile.gov.it/wide-api/wide/product/downloadProduct'
 
 mask_value = -9999.0
 
