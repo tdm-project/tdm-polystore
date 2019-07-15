@@ -16,6 +16,7 @@ RUN useradd -m jupyter && \
         psycopg2 \
         pyproj \
         xarray \
+        tifffile \
         wget
 
 RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
