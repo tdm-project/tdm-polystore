@@ -9,8 +9,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=foobar
 
-  tiledb:
-    image: tdm/tiledb
+  tdmqj:
+    image: tdm/tdmqj
     ports:
       - "8888:8888"
     volumes:
@@ -33,3 +33,15 @@ services:
       - "9866"
       - "9867"
       - "9870:9870"
+
+  tdmqc:
+    image: tdm/tdmqc
+    depends_on:
+      - "hdfs"
+      - "web"
+    volumes:
+      - "LOCAL_PATH/examples:/tdmq-dist/examples"
+    entrypoint:
+      - bash
+      - -c
+      - "sleep 36000"
