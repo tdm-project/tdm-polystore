@@ -47,8 +47,9 @@ def create_db(drop=False):
                 cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
             else:
                 cur.execute(
-                        'SELECT count(*) FROM pg_catalog.pg_database WHERE datname = %s',
-                        [current_app.config['DB_NAME']])
+                    'SELECT count(*) FROM pg_catalog.pg_database '
+                    'WHERE datname = %s',
+                    [current_app.config['DB_NAME']])
                 if not cur.fetchone()[0]:
                     cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
 
