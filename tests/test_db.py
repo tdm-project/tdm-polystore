@@ -16,22 +16,35 @@ def test_init_db(runner):
     assert 'Initialized' in result.output
 
 
+def assert_n_dumped(runner, _type, expected_n):
+    with tempfile.NamedTemporaryFile("w") as f:
+        result = runner.invoke(args=['db', 'dump', _type, f.name])
+    assert "Dumped {}".format(expected_n) in result.output
+
+
 def test_load_db(runner):
-    # FIXME it assumes that it will be run after test_init_db
+    runner.invoke(args=['db', 'init', '--drop'])
     result = runner.invoke(args=['db', 'load', sensor_types_fname])
     n = len(json.load(open(sensor_types_fname))['sensor_types'])
     assert "Loaded {'sensor_types': %d}" % n in result.output
+    assert_n_dumped(runner, 'sensor_types', n)
     result = runner.invoke(args=['db', 'load', sensors_fname])
     n = len(json.load(open(sensors_fname))['sensors'])
+    assert_n_dumped(runner, 'sensors', n)
     assert "Loaded {'sensors': %d}" % n in result.output
     result = runner.invoke(args=['db', 'load', measures_fname])
     n = len(json.load(open(measures_fname))['measures'])
     assert "Loaded {'measures': %d}" % n in result.output
-
-
-def test_dump_db(runner):
-    # FIXME it assumes that it will be run after test_load_db
     n = len(json.load(open(measures_fname))['measures'])
-    with tempfile.NamedTemporaryFile("w") as f:
-        result = runner.invoke(args=['db', 'dump', 'measures', f.name])
-    assert "Dumped {}".format(n) in result.output
+    assert_n_dumped(runner, 'measures', n)
+
+
+def init_db_drop(runner):
+    runner.invoke(args=['db', 'init', '--drop'])
+    runner.invoke(args=['db', 'load', sensor_types_fname])
+    n = len(json.load(open(sensor_types_fname))['sensor_types'])
+    assert_n_dumped(runner, 'sensor_types', n)
+    runner.invoke(args=['db', 'init'])
+    assert_n_dumped(runner, 'sensor_types', n)
+    runner.invoke(args=['db', 'init', '--drop'])
+    assert_n_dumped(runner, 'sensor_types', 0)
