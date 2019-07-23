@@ -10,11 +10,11 @@ from flask import current_app, g
 from flask.cli import AppGroup
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+from tdmq.query_builder import gather_nonscalar_timeseries
 from tdmq.query_builder import gather_scalar_timeseries
 from tdmq.query_builder import select_sensor_types
 from tdmq.query_builder import select_sensors
 from tdmq.query_builder import select_sensors_by_footprint
-from tdmq.query_builder import gather_nonscalar_timeseries
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.INFO)
@@ -22,12 +22,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
 
-
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
 
 # FIXME move all of this to appropriate classes
-def drop_and_create_db():
+def create_db(drop=False):
     logger.debug('drop_and_create_db:init')
     db_settings = {
         'user': current_app.config['DB_USER'],
@@ -42,8 +41,18 @@ def drop_and_create_db():
     with con:
         con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         with con.cursor() as cur:
-            cur.execute(sql.SQL('DROP DATABASE IF EXISTS {}').format(db_name))
-            cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
+            if drop:
+                cur.execute(
+                    sql.SQL('DROP DATABASE IF EXISTS {}').format(db_name))
+                cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
+            else:
+                cur.execute(
+                    'SELECT count(*) FROM pg_catalog.pg_database '
+                    'WHERE datname = %s',
+                    [current_app.config['DB_NAME']])
+                if not cur.fetchone()[0]:
+                    cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
+
     con.close()
     logger.debug('drop_and_create_db:done.')
 
@@ -60,28 +69,28 @@ def add_extensions(db):
 
 def add_tables(db):
     SQL = """
-    CREATE TABLE  sensor_types (
+    CREATE TABLE IF NOT EXISTS sensor_types (
            code        UUID PRIMARY KEY,
            description JSONB);
-    CREATE TABLE  nodes (
+    CREATE TABLE IF NOT EXISTS nodes (
            code        UUID PRIMARY KEY,
            stationcode UUID NOT NULL,
            geom        GEOMETRY,
            description JSONB);
-    CREATE TABLE sensors (
+    CREATE TABLE IF NOT EXISTS sensors (
            code        UUID PRIMARY KEY,
            stypecode   UUID NOT NULL,
            nodecode    UUID NOT NULL,
            geom        GEOMETRY,
            description JSONB);
-    CREATE TABLE measures (
+    CREATE TABLE IF NOT EXISTS measures (
            time       TIMESTAMPTZ NOT NULL,
            sensorcode UUID        NOT NULL,
            value      REAL,
            url        TEXT,
            index      INT4);
-    SELECT create_hypertable('measures', 'time');
-    CREATE INDEX measures_sensor_index on measures(sensorcode);
+    SELECT create_hypertable('measures', 'time', if_not_exists => TRUE);
+    CREATE INDEX IF NOT EXISTS measures_sensor_index on measures(sensorcode);
     """
     with db:
         with db.cursor() as cur:
@@ -252,10 +261,10 @@ def close_db(e=None):
         db.close()
 
 
-def init_db():
+def init_db(drop=False):
     """Clear existing data and create new tables."""
-    logger.debug('init_db: start')
-    drop_and_create_db()
+    logger.debug(f'init_db: start drop {drop}')
+    create_db(drop)
     logger.debug('init_db: db_created')
     db = get_db()
     add_extensions(db)
@@ -446,9 +455,10 @@ def add_db_cli(app):
     db_cli = AppGroup('db')
 
     @db_cli.command('init')
-    def db_init():
+    @click.option('--drop', default=False, is_flag=True)
+    def db_init(drop):
         click.echo('Starting initialization process.')
-        init_db()
+        init_db(drop)
         click.echo('Initialized the database.')
 
     @db_cli.command('load')

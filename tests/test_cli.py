@@ -5,7 +5,7 @@ def test_db_init(runner, monkeypatch):
     class Recorder:
         called = False
 
-    def fake_init_db():
+    def fake_init_db(drop=False):
         Recorder.called = True
     monkeypatch.setattr('tdmq.db.init_db', fake_init_db)
     result = runner.invoke(args=['db', 'init'])
