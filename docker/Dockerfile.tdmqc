@@ -67,6 +67,6 @@ COPY core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 COPY ./tdmq-dist /tdmq-dist
 WORKDIR /tdmq-dist
 
-RUN pip3 install --no-cache-dir pytest && \
+RUN pip3 install --no-cache-dir requests pytest && \
     python3 setup.py install
 ENTRYPOINT ["/bin/bash", "-l", "-c", "pytest ./tests"]
