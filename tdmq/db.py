@@ -61,6 +61,7 @@ def add_extensions(db):
     SQL = """
     CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
     CREATE EXTENSION IF NOT EXISTS postgis;
+    CREATE EXTENSION IF NOT EXISTS citext;
     """
     with db:
         with db.cursor() as cur:
@@ -69,28 +70,73 @@ def add_extensions(db):
 
 def add_tables(db):
     SQL = """
-    CREATE TABLE IF NOT EXISTS sensor_types (
-           code        UUID PRIMARY KEY,
-           description JSONB);
-    CREATE TABLE IF NOT EXISTS nodes (
-           code        UUID PRIMARY KEY,
-           stationcode UUID NOT NULL,
-           geom        GEOMETRY,
-           description JSONB);
-    CREATE TABLE IF NOT EXISTS sensors (
-           code        UUID PRIMARY KEY,
-           stypecode   UUID NOT NULL,
-           nodecode    UUID NOT NULL,
-           geom        GEOMETRY,
-           description JSONB);
-    CREATE TABLE IF NOT EXISTS measures (
-           time       TIMESTAMPTZ NOT NULL,
-           sensorcode UUID        NOT NULL,
-           value      REAL,
-           url        TEXT,
-           index      INT4);
-    SELECT create_hypertable('measures', 'time', if_not_exists => TRUE);
-    CREATE INDEX IF NOT EXISTS measures_sensor_index on measures(sensorcode);
+      create table geom_type (
+          name text primary key
+      );
+
+      create table entity_category (
+          category citext primary key
+      );
+      
+      create table entity_type (
+          category text references entity_category(category),
+          entity_type citext,
+          schema jsonb,
+          primary key(category, entity_type)
+      );
+      
+      create table source (
+          source_id uuid,
+          external_id text not null unique,
+          geometry_type text not null,
+          entity_category text not null,
+          entity_type citext not null,
+          description jsonb, -- https://fiware-datamodels.readthedocs.io/en/latest/Device/DeviceModel/doc/spec/index.html
+          primary key (source_id),
+          foreign key (entity_category, entity_type) references entity_type(category, entity_type)
+          foreign key (geometry_type) references geom_type(name)
+      );
+      
+      create table record (
+          time timestamp(0) not null,
+          source_id text not null references source,
+          geometry geom not null,
+          data jsonb not null
+      );
+      
+      -- create the hypertable on record. Rather than using the default index, we create an
+      -- index on (source_id, time DESC) as suggested by TimescaleDB best practices:
+      -- https://docs.timescale.com/v1.2/using-timescaledb/schema-management#indexing-best-practices
+      select create_hypertable('record', 'time', create_default_indexes => false, if_not_exists => TRUE);
+      create index on record (source_id, time DESC);
+      
+      insert into entity_category values
+          ('Radar'),
+          ('Satellite'),
+          ('Station');
+      
+      insert into entity_type values
+          ('Radar', 'MeteoRadarMosaic'),
+          ('Station', 'PointWeatherObserver'),
+          ('Station', 'TemperatureMosaic')
+          ;
+
+      insert into geom_type values 
+          ('Point'),
+          ('LineString'),
+          ('Polygon'),
+          ('MultiPoint'),
+          ('MultiLineString'),
+          ('MultiPolygon'),
+          ('GeometryCollection'),
+          ('CircularString'),
+          ('CompoundCurve'),
+          ('CurvePolygon'),
+          ('MultiCurve'),
+          ('MultiSurface'),
+          ('PolyhedralSurface'),
+          ('Triangle'),
+          ('Tin');
     """
     with db:
         with db.cursor() as cur:
