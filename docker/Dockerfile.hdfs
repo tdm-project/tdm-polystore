@@ -1,5 +1,0 @@
-FROM crs4/hadoop:3.2.0-ubuntu
-# LABEL maintainer="gianluigi.zanetti@crs4.it"
-
-
-COPY entrypoint.sh /
