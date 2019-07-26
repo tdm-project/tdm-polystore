@@ -10,34 +10,45 @@ services:
       - POSTGRES_PASSWORD=foobar
 
   tdmqj:
-    image: tdm/tdmqj
+    image: tdmproject/tdmqj
     ports:
       - "8888:8888"
     volumes:
       - "LOCAL_PATH/notebooks:/home/jupyter/notebooks"
     user: USER_UID:USER_GID
+    environment:
+      - NAMENODE_HOSTNAME=namenode
 
   web:
-    image: tdm/web
+    image: tdmproject/tdmq
     depends_on:
       - "timescaledb"
     ports:
       - "8000:8000"
-
-  hdfs:
-    image: tdm/hdfs
+    environment:
+    - "CREATE_DB=true"
+  namenode:
+    image: crs4/namenode:3.2.0
     ports:
-      - "8020"
-      - "9000"
-      - "9864:9864"
-      - "9866"
-      - "9867"
+      - "8020:8020"
       - "9870:9870"
+      - "9871:9871"
+
+  datanode:
+    image: crs4/datanode:3.2.0
+    ports:
+      - "9864:9864"
+      - "9865:9865"
+      - "9866:9866"
+      - "9867:9867"
+    environment:
+      - NAMENODE_HOSTNAME=namenode
+
 
   tdmqc:
-    image: tdm/tdmqc
+    image: tdmproject/tdmqc
     depends_on:
-      - "hdfs"
+      - "namenode"
       - "web"
     volumes:
       - "LOCAL_PATH/examples:/tdmq-dist/examples"
@@ -45,3 +56,5 @@ services:
       - bash
       - -c
       - "sleep 36000"
+    environment:
+      - NAMENODE_HOSTNAME=namenode

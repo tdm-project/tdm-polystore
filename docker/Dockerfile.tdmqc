@@ -1,72 +1,10 @@
-FROM crs4/hadoop:3.2.0-ubuntu
+FROM tdmproject/tiledb:0.1.1
 
 #FROM hd311
-# LABEL maintainer="gianluigi.zanetti@crs4.it"
-
-
-RUN echo 'APT::Get::Assume-Yes "true";' >> /etc/apt/apt.conf.d/99yes && \
-    apt update && \
-    apt upgrade && \
-    apt install \
-      cmake \
-      gcc \
-      gdal-bin \
-      libeccodes-dev \
-      libgdal-dev \
-      libudunits2-dev \
-      m4 \
-      netcdf-bin \
-      g++ \
-      git \
-      make \
-      python3-dev \
-      python3-pip \
-      python3-gdal \
-      wget && \
-    apt-get clean
-
-# RUN wget https://cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz && \
-#     tar xvf cmake-3.3.2-Linux-x86_64.tar.gz   && \
-#     cp -R cmake-3.3.2-Linux-x86_64/bin /usr/  && \
-#     cp -R cmake-3.3.2-Linux-x86_64/doc /usr/  && \   
-#     cp -R cmake-3.3.2-Linux-x86_64/man /usr/  && \    
-#     cp -R cmake-3.3.2-Linux-x86_64/share /usr/  && \
-#     rm cmake-3.3.2-Linux-x86_64.tar.gz  && \
-#     rm -rf cmake-3.3.2-Linux-x86_64
-
-RUN git clone https://github.com/TileDB-Inc/TileDB.git && \
-    cd TileDB && \
-    git checkout 35a9f29 && \
-    mkdir build && \
-    cd build && \
-    ../bootstrap --prefix=/usr --enable-hdfs --enable-verbose && \
-    make  && \
-    make install-tiledb && \
-    cd ../.. && \
-    rm -rf TileDB
-
-RUN git clone https://github.com/TileDB-Inc/TileDB-Py.git && \
-    cd TileDB-Py && \
-    git checkout 2349cb3&& \
-    pip3 install --no-cache-dir -r requirements_dev.txt && \
-    python3 setup.py build_ext --inplace && \
-    python3 setup.py install && \
-    cd .. && \
-    rm -rf TileDB-Py
-
-RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
-    echo "export CLASSPATH=\"${CLASSPATH}\"" >> /etc/profile.d/hadoop.sh && \
-    echo "export HADOOP_HOME=/opt/hadoop" >> /etc/profile.d/hadoop.sh && \
-    echo "export HADOOP_LOG_DIR=/home/jupyter/hadoop_logs" \
-                                          >> /etc/profile.d/hadoop.sh && \
-    echo  /usr/lib/jvm/jre/lib/amd64/server > /etc/ld.so.conf.d/jvm.conf && \
-    ldconfig
-
-COPY core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 
 COPY ./tdmq-dist /tdmq-dist
 WORKDIR /tdmq-dist
 
 RUN pip3 install --no-cache-dir requests pytest && \
     python3 setup.py install
-ENTRYPOINT ["/bin/bash", "-l", "-c", "pytest ./tests"]
+CMD ["tail", "-f", "/dev/null"]

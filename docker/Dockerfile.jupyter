@@ -1,26 +1,28 @@
-FROM tdm/tdmqc
+FROM tdmproject/tdmqc
 
-#FROM hd311
-# LABEL maintainer="gianluigi.zanetti@crs4.it"
+RUN apt-get update -q \
+ && apt-get install -y --no-install-recommends libnss-wrapper libproj-dev proj-data proj-bin libgeos-dev \
+ && apt-get autoclean && apt-get clean
 
 RUN useradd -m jupyter && \
     pip3 install --no-cache-dir \
         ckanapi \
-	folium \
+    	folium \
         jupyter \
         matplotlib \
-        cartopy \
-	colormap \
+        cython \
+        colormap \
         easydev \
-	psycopg2 \
-	pyproj \
+        psycopg2-binary \
+        pyproj \
         xarray \
-        wget
-	
+        tifffile \
+        wget && \
+    pip3 install cartopy
 
-RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
-    echo "export CLASSPATH=\"${CLASSPATH}\"" >> /etc/profile.d/hadoop.sh && \
-    echo "export HADOOP_HOME=/opt/hadoop" >> /etc/profile.d/hadoop.sh && \
+#cartopy must be installed after cython
+
+RUN echo "export HADOOP_HOME=/opt/hadoop" >> /etc/profile.d/hadoop.sh && \
     echo "export HADOOP_LOG_DIR=/home/jupyter/hadoop_logs" \
                                           >> /etc/profile.d/hadoop.sh && \
     echo  /usr/lib/jvm/jre/lib/amd64/server > /etc/ld.so.conf.d/jvm.conf && \
@@ -28,19 +30,29 @@ RUN CLASSPATH=`/opt/hadoop/bin/hadoop classpath --glob` && \
 
 ENV HADOOP_LOG_DIR="/home/jupyter/hadoop_logs"
 
-COPY core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 
-COPY ./tdmq-dist /tdmq-dist
-WORKDIR /tdmq-dist
+RUN cd /tdmq-dist \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx \
+ && chmod a+w -R /opt/hadoop/etc/hadoop/ \
+ && python3 setup.py install
 
-RUN python3 setup.py install
+COPY tdmqj-entrypoint.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/tdmqj-entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqj-entrypoint.sh" ]
 
-WORKDIR /home/jupyter
+
 USER jupyter
-RUN mkdir .jupyter notebooks
-COPY --chown=jupyter jupyter_notebook_config.py .jupyter/
+
+ENV HOME=/home/jupyter
+ENV TDMQ_DIST=/tdmq-dist
+ENV DATA_DIR="${TDMQ_DIST}/data"
+
+RUN mkdir --parents /home/jupyter/.jupyter /home/jupyter/notebooks \
+ && find /home/jupyter/ -type f -print0 | xargs -0 chmod a+rw \
+ && find /home/jupyter/ -type d -print0 | xargs -0 chmod a+rwx
 
 WORKDIR notebooks
+CMD [ "--notebook-dir=/home/jupyter/notebooks" ]
 
 EXPOSE 8888
-ENTRYPOINT ["/bin/bash", "-l", "-c", "jupyter notebook"]
