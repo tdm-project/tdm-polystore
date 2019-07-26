@@ -26,18 +26,6 @@
         "manufacturerName": "CRS4"
      }
     },
-    {"id": "tdm/sensor_2",
-     "type": "PointWeatherObserver",
-     "category": "Station",
-     "default_footprint": {"type": "Point", "coordinates": [9.201, 29.6]},
-     "controlledProperties": ["humidity", "temperature"],
-     "description": {
-        "type": "multisensor",
-        "brandName": "ProSensor",
-        "modelName": "R2D2",
-        "manufacturerName": "CRS4"
-     }
-    },
     {"id": "tdm/sensor_3",
      "type": "EnergyConsumptionMonitor",
      "category": "Station",
