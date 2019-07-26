@@ -6,10 +6,9 @@ IMAGE=timescale/timescaledb-postgis
 images:
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
 	cp -rf apidocs setup.py tdmq tests/data docker/tdmq-dist
-	docker build -f docker/Dockerfile.hdfs -t tdm/hdfs docker
-	docker build -f docker/Dockerfile.tdmqc -t tdm/tdmqc docker
-	docker build -f docker/Dockerfile.jupyter -t tdm/tdmqj docker
-	docker build -f docker/Dockerfile.web -t tdm/web docker
+	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
+	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
+	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
 
 docker/docker-compose.yml: docker/docker-compose.yml-tmpl
 	sed -e "s^LOCAL_PATH^$${PWD}^" -e "s^USER_UID^$$(id -u)^" \
