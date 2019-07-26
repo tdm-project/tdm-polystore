@@ -16,6 +16,8 @@ services:
     volumes:
       - "LOCAL_PATH/notebooks:/home/jupyter/notebooks"
     user: USER_UID:USER_GID
+    environment:
+      - NAMENODE_HOSTNAME=namenode
 
   web:
     image: tdm/web
@@ -53,3 +55,5 @@ services:
       - bash
       - -c
       - "sleep 36000"
+    environment:
+      - NAMENODE_HOSTNAME=namenode
