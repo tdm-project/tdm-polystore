@@ -10,7 +10,7 @@ services:
       - POSTGRES_PASSWORD=foobar
 
   tdmqj:
-    image: tdm/tdmqj
+    image: tdmproject/tdmqj
     ports:
       - "8888:8888"
     volumes:
@@ -20,7 +20,7 @@ services:
       - NAMENODE_HOSTNAME=namenode
 
   web:
-    image: tdm/web
+    image: tdmproject/tdmq
     depends_on:
       - "timescaledb"
     ports:
@@ -45,7 +45,7 @@ services:
 
 
   tdmqc:
-    image: tdm/tdmqc
+    image: tdmproject/tdmqc
     depends_on:
       - "namenode"
       - "web"
