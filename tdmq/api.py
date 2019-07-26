@@ -12,61 +12,8 @@ def add_routes(app):
     @app.route('/')
     def index():
         return 'The URL for this page is {}'.format(url_for('index'))
-
-    @app.route('/sensor_types', methods=['GET', 'POST'])
-    def sensor_types():
-        """Return a list of sensor types.
-
-        .. :quickref: Get sensor types
-
-        With no parameters, return all sensor types. Parameters can be used to
-        filter sensor types according to one or more attributes.
-
-        **Example request**::
-
-          GET /sensor_types?controlledProperty=temperature HTTP/1.1
-
-        **Example response**:
-
-        .. sourcecode:: http
-
-          HTTP/1.1 200 OK
-          Content-Type: application/json
-
-          [
-           {
-             "brandName": "Acme",
-             "category": ["sensor"],
-             "code": "c7afa96b-ca9a-5561-b57b-5187ad005d75",
-             "controlledProperty": ["temperature"],
-             "function": ["sensing"],
-             "manufacturerName": "Acme Inc.",
-             "modelName": "Acme multisensor DHT11",
-             "name": "sensor_type_0",
-             "type": "TemperatureSensorDTH11"
-           }
-          ]
-
-        :query {attribute}: select sensors whose description has the specified
-          value(s) for the chosen attribute (top-level JSON key, e.g.,
-          brandName=Acme; controlledProperty=humidity,temperature)
-
-        :resheader Content-Type: application/json
-        :status 200: no error
-        :returns: list of sensor types
-        """
-        if request.method == "GET":
-            res = []
-            for code, descr in db.list_sensor_types(request.args):
-                descr["code"] = code
-                res.append(descr)
-            return jsonify(res)
-        else:
-            data = request.json
-            codes = db.load_sensor_types(db.get_db(), data)
-            return jsonify(codes)
-
     @app.route('/sensors', methods=['GET', 'POST'])
+
     def sensors():
         """Return a list of sensors.
 
