@@ -1,32 +1,30 @@
 {"sources": [
     {"id": "tdm/sensor_0",
+     "alias": "my desk",
      "type": "PointWeatherObserver",
      "category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.221, 30.0]},
      "stationary": true,
-     "controlledProperties": ["temperature"],
+     "controlledProperties": ["temperature", "humidity"],
      "description": {
-        "type": "TemperatureSensorDTH11",
-        "alias": "my desk",
-        "brandName": "Acme",
-        "modelName": "Acme multisensor DHT11",
-        "manufacturerName": "Acme Inc.",
-        "category": ["sensor"],
-        "function": ["sensing"] }
+        "type": "multisensor",
+        "brandName": "ProSensor",
+        "modelName": "R2D2",
+        "manufacturerName": "CRS4"
+     }
     },
     {"id": "tdm/sensor_1",
+     "alias": "B221",
      "type": "PointWeatherObserver",
      "category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
-     "controlledProperties": ["humidity"],
+     "controlledProperties": ["humidity", "temperature"],
      "description": {
-        "type": "HumiditySensorDHT11",
-        "alias": "B221",
-        "brandName": "Acme",
-        "modelName": "Acme multisensor DHT11",
-        "manufacturerName": "Acme Inc.",
-        "category": ["sensor"],
-        "function": ["sensing"] }
+        "type": "multisensor",
+        "brandName": "ProSensor",
+        "modelName": "R2D2",
+        "manufacturerName": "CRS4"
+     }
     },
     {"id": "tdm/sensor_2",
      "type": "PointWeatherObserver",
@@ -37,9 +35,8 @@
         "type": "multisensor",
         "brandName": "ProSensor",
         "modelName": "R2D2",
-        "manufacturerName": "CRS4",
-        "category": ["sensor"],
-        "function": ["sensing"] }
+        "manufacturerName": "CRS4"
+     }
     },
     {"id": "tdm/sensor_3",
      "type": "EnergyConsumptionMonitor",
@@ -50,9 +47,7 @@
         "type": "power sensor",
         "brandName": "ProSensor",
         "modelName": "C3PO",
-        "manufacturerName": "CRS4",
-        "category": ["sensor"],
-        "function": ["sensing"] }
+        "manufacturerName": "CRS4" }
     },
     {"id": "tdm/sensor_4",
      "type": "PointWeatherObserver",
@@ -63,11 +58,10 @@
         "type": "TemperatureSensorDTH11",
         "brandName": "Acme",
         "modelName": "Acme multisensor DHT11",
-        "manufacturerName": "Acme Inc.",
-        "category": ["sensor"],
-        "function": ["sensing"] }
+        "manufacturerName": "Acme Inc." }
     },
     {"id": "tdm/sensor_5",
+     "alias": "Mobile sensor",
      "type": "PointWeatherObserver",
      "category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.119, 29.0]},
@@ -77,8 +71,6 @@
         "type": "HumiditySensorDHT11",
         "brandName": "Acme",
         "modelName": "Acme multisensor DHT11",
-        "manufacturerName": "Acme Inc.",
-        "category": ["sensor"],
-        "function": ["sensing"] }
+        "manufacturerName": "Acme Inc." }
     }
 ]}
