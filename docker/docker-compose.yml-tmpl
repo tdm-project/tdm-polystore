@@ -47,7 +47,7 @@ services:
   tdmqc:
     image: tdm/tdmqc
     depends_on:
-      - "hdfs"
+      - "namenode"
       - "web"
     volumes:
       - "LOCAL_PATH/examples:/tdmq-dist/examples"
