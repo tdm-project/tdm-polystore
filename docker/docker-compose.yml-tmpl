@@ -24,15 +24,23 @@ services:
     ports:
       - "8000:8000"
 
-  hdfs:
-    image: tdm/hdfs
+  namenode:
+    image: crs4/namenode:3.2.0
     ports:
-      - "8020"
-      - "9000"
-      - "9864:9864"
-      - "9866"
-      - "9867"
+      - "8020:8020"
       - "9870:9870"
+      - "9871:9871"
+
+  datanode:
+    image: crs4/datanode:3.2.0
+    ports:
+      - "9864:9864"
+      - "9865:9865"
+      - "9866:9866"
+      - "9867:9867"
+    environment:
+      - NAMENODE_HOSTNAME=namenode
+
 
   tdmqc:
     image: tdm/tdmqc
