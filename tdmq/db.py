@@ -29,6 +29,15 @@ psycopg2.extras.register_uuid()
 
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
+## Temp stubs used by tests/test_api.py 
+def list_sources():
+    pass
+
+
+def get_source():
+    pass
+
+
 
 # FIXME move all of this to appropriate classes
 def create_db(drop=False):
