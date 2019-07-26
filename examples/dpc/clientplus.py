@@ -16,7 +16,6 @@ from tdmq.client.client import sensor_classes
 sensor_classes['temperatureSensorNetwork'] = sensor_classes['meteoRadar']
 
 
-TILEDB_HDFS_ROOT = 'hdfs://hdfs:9000/arrays'
 
 
 def ingest(sensor, t, data_fetcher):
@@ -40,12 +39,13 @@ def ingest(sensor, t, data_fetcher):
 
 class Client(tdmqc.Client):
 
-    def __init__(self, tdmq_base_url):
+    def __init__(self, tdmq_base_url, hdfs_url):
+        self.hdfs_url = hdfs_url
         super().__init__(tdmq_base_url,
                          tiledb.Ctx({'vfs.hdfs.username': 'root'}))
 
     def sensor_data_path(self, code):
-        return os.path.join(TILEDB_HDFS_ROOT, code)
+        return os.path.join(self.hdfs_url, code)
 
     def create_tiledb_array(self, n_slots, description):
         array_name = self.sensor_data_path(description['code'])
