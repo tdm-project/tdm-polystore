@@ -25,7 +25,8 @@ services:
       - "timescaledb"
     ports:
       - "8000:8000"
-
+    environment:
+    - "CREATE_DB=true"
   namenode:
     image: crs4/namenode:3.2.0
     ports:
