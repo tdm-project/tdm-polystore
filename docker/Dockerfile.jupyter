@@ -13,7 +13,7 @@ RUN useradd -m jupyter && \
         cython \
         colormap \
         easydev \
-        psycopg2 \
+        psycopg2-binary \
         pyproj \
         xarray \
         tifffile \
