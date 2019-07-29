@@ -3,6 +3,13 @@ import tiledb
 import os
 import numpy as np
 
+# FIXME build a better logging infrastructure
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.info('Logging is active.')
+
 from tdmq.client.sources import NonScalarSource
 
 source_classes = {
@@ -22,8 +29,37 @@ class Client:
             if tiledb_hdfs_root is None else tiledb_hdfs_root
         self.tiledb_ctx = tiledb_ctx
 
-    def source_data_path(self, tdmq_id):
+    def _destroy_source(self, tdmq_id):
+        r = requests.delete(f'{self.base_url}/{tdmq_id}')
+        if r.status_code == 500:
+            raise ValueError('Internal error')
+
+    def _source_data_path(self, tdmq_id):
         return os.path.join(self.tiledb_hdfs_root, tdmq_id)
+
+    def _register_thing(self, thing, description):
+        assert isinstance(description, dict)
+        r = requests.post(f'{self.base_url}/{thing}', json=[description])
+        if r.status_code == 500:
+            raise ValueError('Internal error')
+        description['tdmq_id'] = r.json()[0]
+        return description
+
+    def register_source(self, sid, entity_type, geometry_type,
+                        description, nslots=None):
+        """Register a new data source
+        .. :quickref: Register a new data source
+        """
+        description = self.register_thing('sensors', description)
+        if 'shape' in description and len(description['shape']) > 0:
+            assert nslots is not None
+            try:
+                self._create_tiledb_array(nslots, description)
+            except Exception as e:
+                logger.error(
+                    f'Failure in creating tiledb array: {e}, cleaning up')
+                self._destroy_source(description['tdmq_id'])                
+        return description
 
     def get_entity_categories(self):
         return requests.get(f'{self.base_url}/entity_categories').json()
@@ -44,7 +80,7 @@ class Client:
         # FIXME we need to fix this 'type' thing
         stype = self.source_types[res['type']]
         return source_classes[stype['type']](
-            self, code, stype, res)
+            self, tdmq_id, stype, res)
 
     def get_timeseries(self, code, args):
         return requests.get(f'{self.base_url}/sources/{code}/timeseries',
@@ -66,3 +102,38 @@ class Client:
         with tiledb.DenseArray(url, mode='r', ctx=self.tiledb_ctx) as A:
             data = A[args]
         return data
+
+    def _create_tiledb_array(self, n_slots, description):
+        array_name = self.sensor_data_path(description['code'])
+        if tiledb.object_type(array_name) is not None:
+            raise ValueError('duplicate object with path %s' % array_name)
+        shape = description['shape']
+        assert len(shape) > 0 and n_slots > 0
+        dims = [tiledb.Dim(name="delta_t",
+                           domain=(0, n_slots),
+                           tile=1, dtype=np.int32)]
+        dims = dims + [tiledb.Dim(name=f"dim{i}", domain=(0, n - 1),
+                                  tile=n, dtype=np.int32)
+                       for i, n in enumerate(shape)]
+        dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
+        attrs = [tiledb.Attr(name=aname, dtype=np.float32)
+                 for aname in description['controlledProperty']]
+        schema = tiledb.ArraySchema(domain=dom, sparse=False,
+                                    attrs=attrs, ctx=self.tiledb_ctx)
+        # Create the (empty) array on disk.
+        tiledb.DenseArray.create(array_name, schema)
+        return array_name
+
+    def register_measure(self, measure):
+        assert isinstance(measure, dict)
+        # FIXME check if thing already exists and manage errors
+        r = requests.post(f'{self.base_url}/measures', json=[measure])
+        if r.status_code == 500:
+            raise ValueError('Illegal value')
+        return r.json()
+
+    def register_sensor_type(self, description):
+        description = self.register_thing('sensor_types', description)
+        self.update_sensor_types()
+        return description
+
