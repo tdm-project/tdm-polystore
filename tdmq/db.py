@@ -5,6 +5,7 @@ import uuid
 
 import click
 import psycopg2 as psy
+import psycopg2.extras
 import psycopg2.sql as sql
 from flask import current_app, g
 from flask.cli import AppGroup
@@ -44,14 +45,7 @@ def create_db(drop=False):
             if drop:
                 cur.execute(
                     sql.SQL('DROP DATABASE IF EXISTS {}').format(db_name))
-                cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
-            else:
-                cur.execute(
-                    'SELECT count(*) FROM pg_catalog.pg_database '
-                    'WHERE datname = %s',
-                    [current_app.config['DB_NAME']])
-                if not cur.fetchone()[0]:
-                    cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
+            cur.execute(sql.SQL('CREATE DATABASE {} IF NOT EXISTS').format(db_name))
 
     con.close()
     logger.debug('drop_and_create_db:done.')
@@ -70,58 +64,62 @@ def add_extensions(db):
 
 def add_tables(db):
     SQL = """
-      create table geom_type (
-          name text primary key
+      CREATE TABLE geom_type (
+          name TEXT PRIMARY KEY
       );
 
-      create table entity_category (
-          category citext primary key
+      CREATE TABLE entity_category (
+          category CITEXT PRIMARY KEY
       );
-      
-      create table entity_type (
-          category text references entity_category(category),
-          entity_type citext,
-          schema jsonb,
-          primary key(category, entity_type)
+
+      CREATE TABLE entity_type (
+          category TEXT REFERENCES entity_category(category),
+          entity_type CITEXT,
+          schema JSONB,
+          PRIMARY KEY (category, entity_type)
       );
-      
-      create table source (
-          source_id uuid,
-          external_id text not null unique,
-          geometry_type text not null,
-          entity_category text not null,
-          entity_type citext not null,
-          description jsonb, -- https://fiware-datamodels.readthedocs.io/en/latest/Device/DeviceModel/doc/spec/index.html
-          primary key (source_id),
-          foreign key (entity_category, entity_type) references entity_type(category, entity_type)
-          foreign key (geometry_type) references geom_type(name)
+
+      CREATE TABLE source (
+          tdmq_id UUID,
+          external_id TEXT NOT NULL UNIQUE,
+          default_footprint GEOM NOT NULL,
+          stationary BOOLEAN NOT NULL DEFAULT TRUE, -- source.stationary is true => record.geom is NULL
+          entity_category TEXT NOT NULL,
+          entity_type CITEXT NOT NULL,
+          description JSONB,
+          PRIMARY KEY (source_id),
+          FOREIGN KEY (entity_category, entity_type) REFERENCES entity_type(category, entity_type)
+          FOREIGN KEY (geometry_type) REFERENCES geom_type(name)
       );
-      
-      create table record (
-          time timestamp(0) not null,
-          source_id text not null references source,
-          geometry geom not null,
-          data jsonb not null
+
+      CREATE TABLE record (
+          time TIMESTAMP(0) NOT NULL,
+          source_id UUID NOT NULL REFERENCES source(tdmq_id),
+          footprint GEOM, -- source.stationary is true => record.footprint is NULL
+          data JSONB NOT NULL
       );
-      
+
       -- create the hypertable on record. Rather than using the default index, we create an
       -- index on (source_id, time DESC) as suggested by TimescaleDB best practices:
       -- https://docs.timescale.com/v1.2/using-timescaledb/schema-management#indexing-best-practices
-      select create_hypertable('record', 'time', create_default_indexes => false, if_not_exists => TRUE);
-      create index on record (source_id, time DESC);
-      
-      insert into entity_category values
+      SELECT create_hypertable('record', 'time', create_default_indexes => FALSE, if_not_exists => TRUE);
+      CREATE INDEX ON record (tdmq_id, time DESC);
+      CREATE INDEX ON source USING GIST (default_footprint);
+
+      INSERT INTO entity_category VALUES
           ('Radar'),
           ('Satellite'),
+          ('Simulation'),
           ('Station');
-      
-      insert into entity_type values
+
+      INSERT INTO entity_type VALUES
           ('Radar', 'MeteoRadarMosaic'),
           ('Station', 'PointWeatherObserver'),
           ('Station', 'TemperatureMosaic')
+          ('Station', 'EnergyConsumptionMonitor')
           ;
 
-      insert into geom_type values 
+      INSERT INTO geom_type VALUES
           ('Point'),
           ('LineString'),
           ('Polygon'),
@@ -155,21 +153,6 @@ def format_to_sql_tuple(t):
         sql.Literal(v) for v in t))
 
 
-def load_data_by_chunks(db, data, chunk_size, into, format_to_sql_tuple,
-                        ret=None):
-    values = take_by_n(data, chunk_size)
-    with db:
-        with db.cursor() as cur:
-            for v in values:
-                s = sql.SQL(into) + sql.SQL(' VALUES ')
-                s += sql.SQL(', ').join(format_to_sql_tuple(_) for _ in v)
-                if ret:
-                    s += sql.SQL(' RETURNING {}').format(sql.Identifier(ret))
-                cur.execute(s)
-                if ret:
-                    return cur.fetchall()
-
-
 def dump_table(db, tname, path, itersize=100000):
     query = sql.SQL('SELECT row_to_json({0}) from {0}').format(
         sql.Identifier(tname)
@@ -193,91 +176,92 @@ def dump_table(db, tname, path, itersize=100000):
     return counter
 
 
-def load_sensor_types(db, data, validate=False, chunk_size=10000):
+def load_sensors(db, data, validate=False, chunk_size=500):
     """
-    Load sensor_types objects.
-
-    Return the list of UUIDs assigned to each object.
+    Deprecated
     """
-
-    def fix_json(d):
-        code = uuid.uuid5(NAMESPACE_TDMQ, d['name'])
-        return format_to_sql_tuple((str(code), json.dumps(d)))
-
-    logger.debug('load_sensor_types: start loading %d sensor_types', len(data))
-    into = "INSERT INTO sensor_types (code, description)"
-    r = load_data_by_chunks(db, data, chunk_size, into, fix_json, ret='code')
-    logger.debug('load_sensor_types: done.')
-    return [_[0] for _ in r]
+    return load_sources(db, data, validate, chunk_size)
 
 
-def load_sensors(db, data, validate=False, chunk_size=10000):
+def load_sources(db, data, validate=False, chunk_size=500):
     """
     Load sensors objects.
 
     Return the list of UUIDs assigned to each object.
     """
 
-    def fix_geom_and_json(d):
-        code = uuid.uuid5(NAMESPACE_TDMQ, d['name'])
-        stypecode = uuid.uuid5(NAMESPACE_TDMQ, d['type'])
-        nodecode = uuid.uuid5(NAMESPACE_TDMQ, d['node'])
-        return sql.SQL("({})").format(sql.SQL(', ').join([
-            sql.Literal(str(code)),
-            sql.Literal(str(stypecode)), sql.Literal(str(nodecode)),
-            sql.SQL(
-                "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), "
-                "3003)"
-                % json.dumps(d['geometry'])),
-            sql.Literal(json.dumps(d))]))
+    def gen_source_tuple(d):
+        tdmq_id = uuid.uuid5(NAMESPACE_TDMQ, d['id'])
+        external_id = d['id']
+        entity_type = d['type']
+        entity_cat = d['category']
+        geom_type = d['geometry']['type']
+        return ( tdmq_id, external_id, geom_type, entity_cat, entity_type, psycopg2.extras.Json(d) )
 
-    into = "INSERT INTO sensors (code, stypecode, nodecode, geom, description)"
-    logger.debug('load_sensors: start loading %d sensors', len(data))
-    r = load_data_by_chunks(db, data, chunk_size, into, fix_geom_and_json,
-                            ret='code')
-    logger.debug('load_sensors: done.')
-    return [_[0] for _ in r]
+    logger.debug('load_sources: start loading %d sensors', len(data))
+    tuples = [ gen_source_tuple(t) for t in data ]
+    sql = "INSERT INTO sensors (tdmq_id, external_id, geometry_type, entity_category, entity_type, description) VALUES %s"
+    with db:
+        with db.cursor() as cur:
+            psycopg2.extras.execute_values(cur, sql, tuples, page_size=chunk_size)
+            db.commit()
+    logger.debug('load_sources: done.')
+    return [ t[0] for t in tuples ]
 
 
-def load_measures(db, data, validate=False, chunk_size=10000):
+def load_measures(db, data, validate=False, chunk_size=500):
     """
-    Load measures.
+    Deprecated
+    """
+    return load_records(db, data, validate, chunk_size)
+
+
+def load_records(db, records, validate=False, chunk_size=500):
+    """
+    Load records.
 
     Return the number of loaded objects.
 
     {"time": "2019-02-21T11:32:08Z",
      "sensor": "sensor_0",
-     "measure": {"value": 0.333}},
+     "data": {"prop1": 0.333}},
     {"time": "2019-02-21T11:34:08Z",
      "sensor": "sensor_1",
-     "measure": {"reference": "hdfs://xxxx", "index": 22}}
+     "data": {"reference": "hdfs://xxxx", "index": 22}},
+    {"time": "2019-02-21T12:14:01Z",
+     "sensor": "sensor_3",
+     "footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
+     "data": {"something": 42 }
     """
+    def add_internal_source_ids(cursor, data):
+        external_ids = tuple(set(d['source'] for d in data if 'tdmq_id' not in d))
+        #  If we get a lot of external_ids, using the IN clause might not be so efficient
+        q = "SELECT external_id, tdmq_id FROM source WHERE external_id IN %s"
+        cursor.execute(q, (external_ids,))
+        # The following `fetchall` and transforming the result to a dict is also at risk
+        # of explosion
+        map_external_to_tdm_id = dict(cur.fetchall())
+        for d in data:
+            if 'tdmq_id' not in d:
+                d['tdmq_id'] = map_external_to_tdm_id[ d['source'] ]
+        return data
 
-    def fix_geom_and_json(d):
-        gf = "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003)"
-        return sql.SQL("({})").format(sql.SQL(', ').join([
-            sql.Literal(d['code']),
-            sql.Literal(d['stypecode']), sql.Literal(d['nodecode']),
-            sql.SQL(gf % json.dumps(d['geometry'])),
-            sql.Literal(json.dumps(d))]))
+    def gen_record_tuple(d):
+        s_time = d['time']
+        tdmq_id = d['tdmq_id']
+        return (s_time, tdmq_id, d.get('footprint'), psycopg2.extras.Json(d['data']))
 
-    def fix_value(d):
-        def fix_measure(m):
-            # FIXME brute force rendering
-            if 'reference' in m and m['reference'] is not None:
-                return (None, m['reference'], m['index'])
-            else:
-                return (m['value'], None, None)
+    sql = "INSERT INTO records (time, source_id, footprint, data) VALUES %s"
+    template = "(to_timestamp(%s), %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003), %s)"
+    with db:
+        with db.cursor() as cur:
+            tuples = [ gen_record_tuple(t) for t in add_internal_source_ids(cur, records) ]
+            logger.debug('load_records: start loading %d records', len(records))
+            psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
+            db.commit()
 
-        sensorcode = uuid.uuid5(NAMESPACE_TDMQ, d['sensor'])
-        return format_to_sql_tuple((d['time'], str(sensorcode)) +
-                                   fix_measure(d['measure']))
-
-    into = "INSERT INTO measures (time, sensorcode, value, url, index)"
-    logger.debug('load_measures: start loading %d measures', len(data))
-    load_data_by_chunks(db, data, chunk_size, into, fix_value)
-    logger.debug('load_measures: done.')
-    return len(data)
+    logger.debug('load_records: done.')
+    return len(records)
 
 
 def get_db():
@@ -320,9 +304,8 @@ def init_db(drop=False):
 
 
 loader = {}
-loader['sensor_types'] = load_sensor_types
 loader['sensors'] = load_sensors
-loader['measures'] = load_measures
+loader['records'] = load_records
 
 
 def load_file(filename):
@@ -338,7 +321,7 @@ def load_file(filename):
             try:
                 n = len(rval)
             except TypeError:
-                n = rval  # measures
+                n = rval  # records
             stats[k] = n
     logger.debug('load_file: done.')
     return stats
@@ -403,6 +386,18 @@ def list_sensors_in_cylinder(db, args):
         with db.cursor() as cur:
             cur.execute(query, data)
             return cur.fetchall()
+
+
+def list_entity_types():
+    raise NotImplementedError()
+
+
+def list_entity_categories():
+    raise NotImplementedError()
+
+
+def list_geometry_types():
+    raise NotImplementedError()
 
 
 def get_object(db, tname, oid):

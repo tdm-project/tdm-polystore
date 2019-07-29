@@ -2,7 +2,8 @@
     {"id": "tdm/sensor_0",
      "type": "PointWeatherObserver",
      "category": "Station",
-     "geometry": {"type": "Point", "coordinates": [9.221, 30.0]},
+     "default_footprint": {"type": "Point", "coordinates": [9.221, 30.0]},
+     "stationary": true,
      "description": {
         "type": "TemperatureSensorDTH11",
         "alias": "my desk",
@@ -16,7 +17,7 @@
     {"id": "tdm/sensor_1",
      "type": "PointWeatherObserver",
      "category": "Station",
-     "geometry": {"type": "Point", "coordinates": [9.222, 30.003]},
+     "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
      "description": {
         "type": "HumiditySensorDHT11",
         "alias": "B221",
@@ -30,7 +31,7 @@
     {"id": "tdm/sensor_2",
      "type": "PointWeatherObserver",
      "category": "Station",
-     "geometry": {"type": "Point", "coordinates": [9.201, 29.6]},
+     "default_footprint": {"type": "Point", "coordinates": [9.201, 29.6]},
      "description": {
         "type": "multisensor",
         "brandName": "ProSensor",
@@ -43,7 +44,7 @@
     {"id": "tdm/sensor_3",
      "type": "EnergyConsumptionMonitor",
      "category": "Station",
-     "geometry": {"type": "Point", "coordinates": [9.551, 32.0]},
+     "default_footprint": {"type": "Point", "coordinates": [9.551, 32.0]},
      "description": {
         "type": "power sensor",
         "brandName": "ProSensor",
@@ -56,7 +57,7 @@
     {"id": "tdm/sensor_4",
      "type": "PointWeatherObserver",
      "category": "Station",
-     "geometry": {"type": "Point", "coordinates": [9.343, 31.2]},
+     "default_footprint": {"type": "Point", "coordinates": [9.343, 31.2]},
      "description": {
         "type": "TemperatureSensorDTH11",
         "brandName": "Acme",
@@ -69,7 +70,8 @@
     {"id": "tdm/sensor_5",
      "type": "PointWeatherObserver",
      "category": "Station",
-     "geometry": {"type": "Point", "coordinates": [9.119, 29.0]},
+     "default_footprint": {"type": "Point", "coordinates": [9.119, 29.0]},
+     "stationary": false,
      "description": {
         "type": "HumiditySensorDHT11",
         "brandName": "Acme",
