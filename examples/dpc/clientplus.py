@@ -1,6 +1,8 @@
-import tdmq.client.client as tdmqc
-import numpy as np
 import logging
+
+import numpy as np
+
+import tdmq.client.client as tdmqc
 
 # FIXME need to do this to patch a overzealous logging by urllib3
 logger = logging.getLogger('urllib3.connectionpool')
@@ -13,9 +15,8 @@ import tiledb
 from datetime import datetime
 # FIXME this is a patch for a missing handler.
 from tdmq.client.client import sensor_classes
+
 sensor_classes['temperatureSensorNetwork'] = sensor_classes['meteoRadar']
-
-
 
 
 def ingest(sensor, t, data_fetcher):
@@ -30,7 +31,7 @@ def ingest(sensor, t, data_fetcher):
     array_path = sensor.client.sensor_data_path(sensor.code)
     with tiledb.DenseArray(array_path, mode='w',
                            ctx=sensor.client.tiledb_ctx) as A:
-        A[i:i+1, :, :] = data
+        A[i:i + 1, :, :] = data
     return sensor.client.register_measure(
         {'time': t.strftime('%Y-%m-%dT%H:%M:%SZ'),
          'sensor': sensor.description['name'],
