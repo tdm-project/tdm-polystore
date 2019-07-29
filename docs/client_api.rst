@@ -1,24 +1,61 @@
 Usage examples
 ==============
 
-Basic information
------------------
+Basic operations
+----------------
 
-Get available entity types
+Get available entity types:
 ::
    c = tdmq.Client()
    print(c.get_entity_categories())
    print(c.get_entity_types())   
    print(c.get_geometry_types())
    
-Get sources
+Get sources:
 ::
    sources = c.get_sources()
    src_by_type = dict((s.entity_type, s) for s in sources)
    src_by_type2 = dict((t, c.get_sources({'entity_type': t}))
                        for t in c.get_entity_types())
 
-       
+Create a new source:
+::
+   desc = {
+   'id': 'weather-station-tdmq-01',
+   'entity_type': 'PointWeatherObserver',
+   'controlledProperties': ['temperature', 'humidity'],
+   'geometry_type': 'Point',
+   'default_footprint': {'type': 'Point', 'coordinates': [8.966416, 39.334331]},
+   'stationary': True,
+   }
+   s = c.create_source(desc)
+   assert s.id = desc['id']
+
+
+Create a new, more complex, source.
+We assume that the source will provide a sequence of geotiff images
+with a given geotiff_tags and data matrix shape. Then:
+::
+   T = np.array(geotiff_tags['ModelTransformation']).reshape(4, 4)
+   ysize, xsize = data_shape
+   # Note the nesting level:
+   # http://wiki.geojson.org/GeoJSON_draft_version_6#Polygon
+   coordinates = [[T.dot(v).tolist()
+                   for v in
+                   [[0, 0, 0, 1], [xsize, 0, 0, 1], [xsize, ysize, 0, 1],
+                    [0, ysize, 0, 1], [0, 0, 0, 1]]]]
+   desc = {
+   'id': 'weather-radar-tdmq-01',
+   'entity_type': 'MeteoRadar',
+   'controlledProperties': ['precipitation', 'dblogZ'],
+   'geometry_type': 'Polygon',
+   'default_footprint': {"type": "Polygon", "coordinates": coordinates},
+   'stationary': True,
+   'geotiff_tags': geotiff_tags,
+   'shape': data_shape,
+   }
+   s = c.create_source(desc)
+   assert s.id = desc['id']
 
    
 Footprint and geometry
