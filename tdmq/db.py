@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
 
+# need to register_uuid to enable psycopg2's conversion from Python UUID
+# type to PgSQL
+psycopg2.extras.register_uuid()
+
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
 
@@ -45,7 +49,14 @@ def create_db(drop=False):
             if drop:
                 cur.execute(
                     sql.SQL('DROP DATABASE IF EXISTS {}').format(db_name))
-            cur.execute(sql.SQL('CREATE DATABASE {} IF NOT EXISTS').format(db_name))
+                cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
+            else:
+                cur.execute(
+                    'SELECT count(*) FROM pg_catalog.pg_database '
+                    'WHERE datname = %s',
+                    [current_app.config['DB_NAME']])
+                if not cur.fetchone()[0]:
+                    cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
 
     con.close()
     logger.debug('drop_and_create_db:done.')
@@ -64,16 +75,12 @@ def add_extensions(db):
 
 def add_tables(db):
     SQL = """
-      CREATE TABLE geom_type (
-          name TEXT PRIMARY KEY
-      );
-
       CREATE TABLE entity_category (
           category CITEXT PRIMARY KEY
       );
 
       CREATE TABLE entity_type (
-          category TEXT REFERENCES entity_category(category),
+          category CITEXT REFERENCES entity_category(category),
           entity_type CITEXT,
           schema JSONB,
           PRIMARY KEY (category, entity_type)
@@ -82,20 +89,19 @@ def add_tables(db):
       CREATE TABLE source (
           tdmq_id UUID,
           external_id TEXT NOT NULL UNIQUE,
-          default_footprint GEOM NOT NULL,
+          default_footprint GEOMETRY NOT NULL,
           stationary BOOLEAN NOT NULL DEFAULT TRUE, -- source.stationary is true => record.geom is NULL
-          entity_category TEXT NOT NULL,
+          entity_category CITEXT NOT NULL,
           entity_type CITEXT NOT NULL,
           description JSONB,
-          PRIMARY KEY (source_id),
+          PRIMARY KEY (tdmq_id),
           FOREIGN KEY (entity_category, entity_type) REFERENCES entity_type(category, entity_type)
-          FOREIGN KEY (geometry_type) REFERENCES geom_type(name)
       );
 
       CREATE TABLE record (
           time TIMESTAMP(0) NOT NULL,
           source_id UUID NOT NULL REFERENCES source(tdmq_id),
-          footprint GEOM, -- source.stationary is true => record.footprint is NULL
+          footprint GEOMETRY, -- source.stationary is true => record.footprint is NULL
           data JSONB NOT NULL
       );
 
@@ -103,7 +109,7 @@ def add_tables(db):
       -- index on (source_id, time DESC) as suggested by TimescaleDB best practices:
       -- https://docs.timescale.com/v1.2/using-timescaledb/schema-management#indexing-best-practices
       SELECT create_hypertable('record', 'time', create_default_indexes => FALSE, if_not_exists => TRUE);
-      CREATE INDEX ON record (tdmq_id, time DESC);
+      CREATE INDEX ON record (source_id, time DESC);
       CREATE INDEX ON source USING GIST (default_footprint);
 
       INSERT INTO entity_category VALUES
@@ -115,26 +121,9 @@ def add_tables(db):
       INSERT INTO entity_type VALUES
           ('Radar', 'MeteoRadarMosaic'),
           ('Station', 'PointWeatherObserver'),
-          ('Station', 'TemperatureMosaic')
+          ('Station', 'TemperatureMosaic'),
           ('Station', 'EnergyConsumptionMonitor')
           ;
-
-      INSERT INTO geom_type VALUES
-          ('Point'),
-          ('LineString'),
-          ('Polygon'),
-          ('MultiPoint'),
-          ('MultiLineString'),
-          ('MultiPolygon'),
-          ('GeometryCollection'),
-          ('CircularString'),
-          ('CompoundCurve'),
-          ('CurvePolygon'),
-          ('MultiCurve'),
-          ('MultiSurface'),
-          ('PolyhedralSurface'),
-          ('Triangle'),
-          ('Tin');
     """
     with db:
         with db.cursor() as cur:
@@ -195,15 +184,20 @@ def load_sources(db, data, validate=False, chunk_size=500):
         external_id = d['id']
         entity_type = d['type']
         entity_cat = d['category']
-        geom_type = d['geometry']['type']
-        return ( tdmq_id, external_id, geom_type, entity_cat, entity_type, psycopg2.extras.Json(d) )
+        footprint = d['default_footprint']
+        stationary = d.get('stationary', True)
+        return ( tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d) )
 
     logger.debug('load_sources: start loading %d sensors', len(data))
     tuples = [ gen_source_tuple(t) for t in data ]
-    sql = "INSERT INTO sensors (tdmq_id, external_id, geometry_type, entity_category, entity_type, description) VALUES %s"
+    sql = """
+          INSERT INTO source
+              (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description)
+              VALUES %s"""
+    template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s)"
     with db:
         with db.cursor() as cur:
-            psycopg2.extras.execute_values(cur, sql, tuples, page_size=chunk_size)
+            psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
             db.commit()
     logger.debug('load_sources: done.')
     return [ t[0] for t in tuples ]
@@ -241,6 +235,7 @@ def load_records(db, records, validate=False, chunk_size=500):
         # The following `fetchall` and transforming the result to a dict is also at risk
         # of explosion
         map_external_to_tdm_id = dict(cur.fetchall())
+        logging.debug("Fetched map_external_to_tdm_id: %s", map_external_to_tdm_id)
         for d in data:
             if 'tdmq_id' not in d:
                 d['tdmq_id'] = map_external_to_tdm_id[ d['source'] ]
@@ -249,10 +244,10 @@ def load_records(db, records, validate=False, chunk_size=500):
     def gen_record_tuple(d):
         s_time = d['time']
         tdmq_id = d['tdmq_id']
-        return (s_time, tdmq_id, d.get('footprint'), psycopg2.extras.Json(d['data']))
+        return (s_time, tdmq_id, json.dumps(d.get('footprint')) if d.get('footprint') else None, psycopg2.extras.Json(d['data']))
 
-    sql = "INSERT INTO records (time, source_id, footprint, data) VALUES %s"
-    template = "(to_timestamp(%s), %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), 3003), %s)"
+    sql = "INSERT INTO record (time, source_id, footprint, data) VALUES %s"
+    template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s)"
     with db:
         with db.cursor() as cur:
             tuples = [ gen_record_tuple(t) for t in add_internal_source_ids(cur, records) ]
@@ -304,7 +299,7 @@ def init_db(drop=False):
 
 
 loader = {}
-loader['sensors'] = load_sensors
+loader['sources'] = load_sources
 loader['records'] = load_records
 
 
