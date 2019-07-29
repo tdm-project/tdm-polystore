@@ -3,7 +3,7 @@ version: "3"
 services:
 
   timescaledb:
-    image: timescale/timescaledb-postgis
+    image: timescale/timescaledb-postgis:1.4.0-pg11
     ports:
       - "5432"
     environment:

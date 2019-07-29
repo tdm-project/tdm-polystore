@@ -2,13 +2,26 @@ PSWD=foobar
 #IMAGE=timescale/timescaledb
 IMAGE=timescale/timescaledb-postgis
 
+all: images
+
 # FIXME copying tests/data twice...
-images:
+docker/tdmq-dist: apidocs setup.py tdmq tests/data
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
 	cp -rf apidocs setup.py tdmq tests/data docker/tdmq-dist
+
+tdmqc-deps: docker/Dockerfile.tdmqc
+	docker build -f docker/Dockerfile.tdmqc  --target=deps -t tdmproject/tdmqc-deps docker
+
+tdmqc: docker/tdmq-dist tdmqc-deps docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
+
+jupyter: docker/tdmq-dist tdmqc-deps docker/Dockerfile.jupyter
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
+
+web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
+
+images: tdmqc jupyter web
 
 docker/docker-compose.yml: docker/docker-compose.yml-tmpl
 	sed -e "s^LOCAL_PATH^$${PWD}^" -e "s^USER_UID^$$(id -u)^" \
@@ -25,3 +38,6 @@ stop:
 	docker-compose -f ./docker/docker-compose.yml down
 
 clean: stop
+
+
+.PHONY: all tdmqc-deps tdmqc jupyter web images run start stop clean

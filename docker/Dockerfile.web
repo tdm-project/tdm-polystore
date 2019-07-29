@@ -1,11 +1,15 @@
 FROM python:3.7
+
+RUN pip install --upgrade pip && \
+  pip install flask gunicorn pytest sphinx sphinxcontrib-httpdomain
+
 COPY ./tdmq-dist /tdmq-dist
 COPY web-entrypoint.sh /
 WORKDIR /tdmq-dist
-RUN chmod +x /web-entrypoint.sh
-RUN pip install --upgrade pip && \
-  pip install flask gunicorn pytest sphinx sphinxcontrib-httpdomain && \
-  pip install -e .
+
+RUN chmod +x /web-entrypoint.sh \
+ && pip install -e .
+
 EXPOSE 8000
 WORKDIR /tdmq-dist/tdmq
 CMD /web-entrypoint.sh
