@@ -51,7 +51,29 @@ class FakeDB:
         self.called = {}
         self._load_sources(sources_fname)
         self._load_records(records_fname)
+        self.entity_types = dict(('MeteoRadarMosaic', 'Radar'),
+                                 ('PointWeatherObserver', 'Station'),
+                                 ('TemperatureMosaic', 'Station'))
+        
+        self.geometry_types = [
+            'Point', 'LineString', 'Polygon',
+            'MultiPoint', 'MultiLineString', 'MultiPolygon',
+            'GeometryCollection', 'CircularString', 'CompoundCurve',
+            'CurvePolygon', 'MultiCurve', 'MultiSurface',
+            'PolyhedralSurface', 'Triangle', 'Tin']
 
+    def list_entity_types(self):
+        self.called['list_entity_types'] = ()
+        return list(self.entity_types.keys())
+        
+    def list_entity_categories(self):
+        self.called['list_entity_categories'] = ()
+        return list(self.entity_types.values())        
+    
+    def list_geometry_types(self):
+        self.called['list_geometry_types'] = ()
+        return self.geometry_types
+        
     def list_sources(self, args):
         self.called['list_sources'] = args
         return list(deepcopy(self.sources).items())

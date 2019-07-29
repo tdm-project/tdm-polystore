@@ -1,39 +1,53 @@
 import requests
 import tiledb
+import os
 import numpy as np
 
-from tdmq.client.sensors import NonScalarSensor
+from tdmq.client.sources import NonScalarSource
 
-sensor_classes = {
-    'meteoRadar': NonScalarSensor,
+source_classes = {
+    'meteoRadar': NonScalarSource,
 }
 
 
 class Client:
-    def __init__(self, tdmq_base_url, tiledb_ctx=None):
-        self.base_url = tdmq_base_url
+    TILEDB_HDFS_ROOT = 'hdfs://hdfs:9000/arrays'
+    TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
+
+    def __init__(self,
+                 tdmq_base_url=None, tiledb_ctx=None, tiledb_hdfs_root=None):
+        self.base_url = self.TDMQ_BASE_URL \
+            if tdmq_base_url is None else tdmq_base_url
+        self.tiledb_hdfs_root = self.TILEDB_HDFS_ROOT \
+            if tiledb_hdfs_root is None else tiledb_hdfs_root
         self.tiledb_ctx = tiledb_ctx
-        self.sensor_types = None
-        self.update_sensor_types()
 
-    def update_sensor_types(self):
-        stypes = requests.get(f'{self.base_url}/sensor_types').json()
-        self.sensor_types = dict((st['name'], st) for st in stypes)
+    def source_data_path(self, tdmq_id):
+        return os.path.join(self.tiledb_hdfs_root, tdmq_id)
 
-    def get_sensors(self, args):
-        res = requests.get(f'{self.base_url}/sensors', params=args).json()
-        return [self.get_sensor_proxy(r['code']) for r in res]
+    def get_entity_categories(self):
+        return requests.get(f'{self.base_url}/entity_categories').json()
 
-    def get_sensor_proxy(self, code):
-        res = requests.get(f'{self.base_url}/sensors/{code}').json()
-        assert res['code'] == code
+    def get_entity_types(self):
+        return requests.get(f'{self.base_url}/entity_types').json()
+
+    def get_geometry_types(self):
+        return requests.get(f'{self.base_url}/geometry_types').json()
+
+    def get_sources(self, args):
+        res = requests.get(f'{self.base_url}/sources', params=args).json()
+        return [self.get_source_proxy(r['tdmq_id']) for r in res]
+
+    def get_source_proxy(self, tdmq_id):
+        res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
+        assert res['tdmq_id'] == tdmq_id
         # FIXME we need to fix this 'type' thing
-        stype = self.sensor_types[res['type']]
-        return sensor_classes[stype['type']](
+        stype = self.source_types[res['type']]
+        return source_classes[stype['type']](
             self, code, stype, res)
 
     def get_timeseries(self, code, args):
-        return requests.get(f'{self.base_url}/sensors/{code}/timeseries',
+        return requests.get(f'{self.base_url}/sources/{code}/timeseries',
                             params=args).json()
 
     def fetch_data_block(self, block_of_refs, args):

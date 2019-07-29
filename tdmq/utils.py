@@ -1,11 +1,11 @@
 import re
 
 
-def convert_footprint(footprint):
+def convert_roi(roi):
     # Circle
     fnum = r'([-+]?\d+(\.\d*)?)'
     circle_re = r'circle\(\(' + fnum + ', ' + fnum + r'\), ' + fnum + r'\)'
-    m = re.match(circle_re, footprint)
+    m = re.match(circle_re, roi)
     if m:
         return {'type': 'circle',
                 'center': {'type': 'Point',
@@ -13,4 +13,4 @@ def convert_footprint(footprint):
                                            float(m.groups()[2])]},
                 'radius': float(m.groups()[4])}
     else:
-        raise ValueError('illegal footprint {}'.format(footprint))
+        raise ValueError('illegal roi {}'.format(roi))

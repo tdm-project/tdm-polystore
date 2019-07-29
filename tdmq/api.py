@@ -5,7 +5,7 @@ from flask import request
 from flask import url_for
 
 import tdmq.db as db
-from tdmq.utils import convert_footprint
+from tdmq.utils import convert_roi
 
 import logging
 logger = logging.getLogger(__name__)
@@ -16,26 +16,45 @@ def add_routes(app):
     def index():
         return 'The URL for this page is {}'.format(url_for('index'))
 
+    @app.route('/entity_types')
+    def entity_types():
+        return jsonify(db.list_entity_types())
+
+    @app.route('/entity_categories')
+    def entity_categories():
+        return jsonify(db.list_entity_categories())
+
+    @app.route('/geometry_types')
+    def geometry_types():
+        return jsonify(db.list_geometry_types())
+
     @app.route('/sources', methods=['GET', 'POST'])
     def sources():
         """Return a list of sources.
 
         .. :quickref: Get sources
 
-        With no parameters, return all sources. When ``footprint``, ``after``
-        and ``before`` are specified, return all sources that have reported an
-        event in the corresponding spatio-temporal region. Sources can also be
-        filtered by generic attributes stored in the description field.
+        With no parameters, return all sources. When ``roi``,
+        ``after`` and ``before`` are specified, return all sources
+        that have reported an event that intesect the corresponding
+        spatio-temporal region. It is
+        also possible to filter by any of the following:
 
-        The footprint should be specified using one of the following:
+          * entity_type;
+          * entity_category;
+          * stationary True/False.
+
+        Moreover, sources can also be filtered by generic attributes
+        stored in their description field.
+
+        The roi should be specified using one of the following:
          - circle((center_lon, center_lat), radius_in_meters)
          - FIXME: rectangle?
          - FIXME: arbitrary GeoJson?
 
-
         **Example request**::
 
-          GET /sources?footprint=circle((9.22, 30.0), 1000)
+          GET /sources?roi=circle((9.22, 30.0), 1000)
                       &after=2019-05-02T11:00:00Z
                       &before=2019-05-02T11:50:25Z HTTP/1.1
 
@@ -60,8 +79,8 @@ def add_routes(app):
 
         :resheader Content-Type: application/json
 
-        :query footprint: consider only sources within footprint
-          e.g., ``circle((9.3, 32), 1000)``
+        :query roi: consider only sources with footprint intersecting
+          the given roi e.g., ``circle((9.3, 32), 1000)``
 
         :query after: consider only sources reporting  after (included)
           this time, e.g., ``2019-02-21T11:03:25Z``
@@ -74,22 +93,29 @@ def add_routes(app):
             (top-level JSON key, e.g., controlledProperties=temperature)
         :status 200: no error
         :returns: list of sources
+
         """
         if request.method == "GET":
             args = {k: v for k, v in request.args.items()}
             logger.debug("source:  args is %s", args)
-            if 'footprint' in args:
-                args['footprint'] = convert_footprint(args['footprint'])
+            if 'roi' in args:
+                args['footprint'] = convert_roi(args['roi'])
             if 'controlledProperties' in args:
-                args['controlledProperties'] = args['controlledProperties'].split(',')
+                args['controlledProperties'] = \
+                    args['controlledProperties'].split(',')
             res = db.list_sources(args)
+            # res = []
+            # for tdmq_id, descr in db.list_sources(args):
+            #     descr["tdmq_id"] = tdmq_id
+            #     res.append(descr)
             return jsonify(res)
         elif request.method == "POST":
             data = request.json
             tdmq_ids = db.load_sources(db.get_db(), data)
             return jsonify(tdmq_ids)
         else:
-            raise NotImplementedError("{} not supported by this endpoint".format(request.method))
+            raise NotImplementedError(
+                f"{request.method} not supported by this endpoint")
 
     @app.route('/sources/<uuid:tdmq_id>')
     def source(tdmq_id):
@@ -123,8 +149,8 @@ def add_routes(app):
         elif len(sources) == 0:
             result = None
         else:
-            raise RuntimeError("Got more than one source for tdmq_id %s".format(tdmq_id))
-
+            raise RuntimeError(
+                f"Got more than one source for tdmq_id {tdmq_id}")
         return jsonify(result)
 
     @app.route('/sources/<uuid:tdmq_id>/timeseries')
