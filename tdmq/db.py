@@ -79,6 +79,27 @@ def get_sources(list_of_tdmq_ids):
             return cur.fetchall()
 
 
+def delete_records_of_sources(list_of_tdmq_ids):
+    q = sql.SQL("""
+        DELETE FROM record
+        WHERE source_id IN %s""")
+    with get_db() as db:
+        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(q, (tuple(list_of_tdmq_ids),))
+            return cur.fetchall()
+
+
+def delete_sources(list_of_tdmq_ids):
+    delete_records_of_sources(list_of_tdmq_ids)
+    q = sql.SQL("""
+        DELETE FROM source
+        WHERE tdmq_id IN %s""")
+    with get_db() as db:
+        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(q, (tuple(list_of_tdmq_ids),))
+            return cur.fetchall()
+
+
 def list_entity_types(category_start=None, type_start=None):
     q = sql.SQL("""
       SELECT
