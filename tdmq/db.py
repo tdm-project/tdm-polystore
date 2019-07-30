@@ -11,14 +11,15 @@ from flask import current_app, g
 from flask.cli import AppGroup
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+import tdmq.query_builder as qb
+
 from tdmq.query_builder import gather_nonscalar_timeseries
 from tdmq.query_builder import gather_scalar_timeseries
 from tdmq.query_builder import select_sensor_types
-from tdmq.query_builder import select_sensors
 from tdmq.query_builder import select_sensors_by_footprint
 
 # FIXME build a better logging infrastructure
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
@@ -29,14 +30,68 @@ psycopg2.extras.register_uuid()
 
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
-## Temp stubs used by tests/test_api.py 
-def list_sources():
-    pass
+
+def list_sources(args):
+    """
+    args:
+        'id'
+        'category'
+        'type'
+        'tdmq_id'
+        'controlledProperties'
+        'after'
+        'before'
+        'footprint'
+    """
+    with get_db() as db:
+        query = qb.select_sources_helper(db, args)
+
+    with get_db() as db:
+        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query)
+            return cur.fetchall()
 
 
-def get_source():
-    pass
+def get_sources(list_of_tdmq_ids):
+    q = sql.SQL("""
+        SELECT
+            tdmq_id,
+            external_id,
+            default_footprint,
+            stationary,
+            entity_category,
+            entity_type,
+            description
+        FROM source
+        WHERE tdmq_id IN %s""")
+    with get_db() as db:
+        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(q, (list_of_tdmq_ids,))
+            return cur.fetchall()
 
+
+def list_entity_types(category_start=None, type_start=None):
+    q = sql.SQL("""
+      SELECT
+        category,
+        entity_type,
+        schema
+      FROM entity_type""")
+
+    where = []
+
+    if category_start:
+        where.append(sql.SQL("starts_with(lower(category), {}))").format(sql.Literal(category_start.lower())))
+    if type_start:
+        where.append(sql.SQL("starts_with(lower(entity_type), {}))").format(sql.Literal(type_start.lower())))
+
+    if where:
+        q = q + sql.SQL(" WHERE ") + sql.SQL(' AND ').join(where)
+
+    with get_db() as db:
+        with db.cursor() as cur:
+            cur.execute(q)
+            return cur.fetchall()
 
 
 # FIXME move all of this to appropriate classes
@@ -197,7 +252,7 @@ def load_sources(db, data, validate=False, chunk_size=500):
         stationary = d.get('stationary', True)
         return ( tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d) )
 
-    logger.debug('load_sources: start loading %d sensors', len(data))
+    logger.debug('load_sources: start loading %d sources', len(data))
     tuples = [ gen_source_tuple(t) for t in data ]
     sql = """
           INSERT INTO source
@@ -226,13 +281,13 @@ def load_records(db, records, validate=False, chunk_size=500):
     Return the number of loaded objects.
 
     {"time": "2019-02-21T11:32:08Z",
-     "sensor": "sensor_0",
+     "source": "sensor_0",
      "data": {"prop1": 0.333}},
     {"time": "2019-02-21T11:34:08Z",
-     "sensor": "sensor_1",
+     "source": "sensor_1",
      "data": {"reference": "hdfs://xxxx", "index": 22}},
     {"time": "2019-02-21T12:14:01Z",
-     "sensor": "sensor_3",
+     "source": "sensor_3",
      "footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
      "data": {"something": 42 }
     """
@@ -366,22 +421,6 @@ def list_sensor_types_in_db(db, args):
         return exec_query(db, *select_sensor_types(args))
 
 
-def list_sensors_in_db(db, args):
-    if not args:
-        return list_descriptions_in_table(db, 'sensors')
-    elif "footprint" in args:
-        # FIXME this is restricted to the case where "footprint", "before",
-        # and "after" are ALL present
-        return list_sensors_in_cylinder(db, args)
-    else:
-        return exec_query(db, *select_sensors(args))
-
-
-def list_sensors(args):
-    db = get_db()
-    return list_sensors_in_db(db, args)
-
-
 def list_sensors_in_cylinder(db, args):
     """Return all sensors that have reported an event in a
        given spatio-temporal region."""
@@ -390,18 +429,6 @@ def list_sensors_in_cylinder(db, args):
         with db.cursor() as cur:
             cur.execute(query, data)
             return cur.fetchall()
-
-
-def list_entity_types():
-    raise NotImplementedError()
-
-
-def list_entity_categories():
-    raise NotImplementedError()
-
-
-def list_geometry_types():
-    raise NotImplementedError()
 
 
 def get_object(db, tname, oid):
