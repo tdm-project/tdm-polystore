@@ -1,4 +1,4 @@
-FROM tdmproject/tdmqc
+FROM tdmproject/tdmqc-deps
 
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends libnss-wrapper libproj-dev proj-data proj-bin libgeos-dev \
@@ -7,7 +7,7 @@ RUN apt-get update -q \
 RUN useradd -m jupyter && \
     pip3 install --no-cache-dir \
         ckanapi \
-    	folium \
+        folium \
         jupyter \
         matplotlib \
         cython \
@@ -31,6 +31,7 @@ RUN echo "export HADOOP_HOME=/opt/hadoop" >> /etc/profile.d/hadoop.sh && \
 ENV HADOOP_LOG_DIR="/home/jupyter/hadoop_logs"
 
 
+COPY ./tdmq-dist /tdmq-dist
 RUN cd /tdmq-dist \
  && find . -type f -print0 | xargs -0 chmod a+r \
  && find . -type d -print0 | xargs -0 chmod a+rx \

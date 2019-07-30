@@ -1,10 +1,12 @@
-FROM tdmproject/tiledb:0.1.1
+FROM tdmproject/tiledb:0.1.1 AS deps
 
-#FROM hd311
+RUN pip3 install --no-cache-dir requests pytest  flask click psycopg2-binary
+
+
+FROM deps
 
 COPY ./tdmq-dist /tdmq-dist
 WORKDIR /tdmq-dist
+RUN python3 setup.py install
 
-RUN pip3 install --no-cache-dir requests pytest && \
-    python3 setup.py install
 CMD ["tail", "-f", "/dev/null"]
