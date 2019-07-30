@@ -1,7 +1,7 @@
 import psycopg2 as psy
 import pytest
 from tdmq import create_app
-
+import datetime
 
 @pytest.fixture
 def app():
@@ -38,3 +38,26 @@ def db(app):
         'dbname': app.config['DB_NAME'],
     }
     return psy.connect(**db_settings)
+
+
+@pytext.fixture
+def create_simple_source_description(stype, scat):
+    uid = datetime.datetime.now().timestamp()
+    desc = {
+        "id": f"tdm/sensor_{uid}",
+        "type": stype,
+        "category": scat,
+        "default_footprint": {"type": "Point", "coordinates": [9.221, 30.0]},
+        "controlledProperties": ["temperature", "humidity"]
+        "stationary": true,
+        "description": {
+            "type": "DTH11",
+            "alias": "my desk",
+            "brandName": "Acme",
+            "modelName": "Acme multisensor DHT11",
+            "manufacturerName": "Acme Inc.",
+            "category": ["sensor"],
+            "function": ["sensing"]
+        }
+    }
+    return desc
