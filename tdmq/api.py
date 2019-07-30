@@ -144,7 +144,7 @@ def add_routes(app):
         :returns: source description
         """
         if request.method == "DELETE":
-            db.delete_sources([str(tdmq_id)])
+            result = db.delete_sources([str(tdmq_id)])
         else:
             sources = db.get_sources([str(tdmq_id)])
             if len(sources) == 1:
@@ -154,8 +154,7 @@ def add_routes(app):
             else:
                 raise RuntimeError(
                     f"Got more than one source for tdmq_id {tdmq_id}")
-            # result["tdmq_id"] = tdmq_id
-            return jsonify(result)
+        return jsonify(result)
 
     @app.route('/sources/<uuid:tdmq_id>/timeseries')
     def timeseries(tdmq_id):
