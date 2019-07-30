@@ -9,9 +9,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def select_sensors_by_footprint(args):
-    assert args['footprint']['type'] in ['circle']
-    if args['footprint']['type'] == 'circle':
+def select_sensors_by_roi(args):
+    assert args['roi']['type'] in ['circle']
+    if args['roi']['type'] == 'circle':
         return select_sensors_in_circle(args)
 
 
@@ -49,7 +49,7 @@ def select_sources_helper(db, args):
         'controlledProperties'
         'after'
         'before'
-        'footprint'
+        'roi'
 
     All applied conditions must match for an element to be returned.
 
@@ -58,7 +58,7 @@ def select_sources_helper(db, args):
 
     after and before:  specify temporal interal.  Specify any combination of the two.
 
-    footprint: value is GeoJSON with `center` and `radius`.  Tests on source.default_footprint.
+    roi: value is GeoJSON with `center` and `radius`.  Tests on source.default_footprint.
 
     All other arguments are tested for equality.
     """
@@ -66,7 +66,8 @@ def select_sources_helper(db, args):
         SELECT
             source.tdmq_id,
             source.external_id,
-            source.default_footprint,
+            ST_AsGeoJSON(ST_Transform(source.default_footprint, 4326)) 
+                as default_footprint,
             source.entity_category,
             source.entity_type
         FROM source""")
@@ -96,8 +97,8 @@ def select_sources_helper(db, args):
         where.append(
             SQL("source.description->'controlledProperties' ?& array[ {} ]").format(
                 SQL(', ').join([ sql.Literal(p) for p in required_properties ])))
-    if 'footprint' in args:
-        fp = args.pop('footprint')
+    if 'roi' in args:
+        fp = args.pop('roi')
         where.append(SQL(
             """
             ST_DWithin(

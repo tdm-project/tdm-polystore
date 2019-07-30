@@ -99,7 +99,7 @@ def add_routes(app):
             args = {k: v for k, v in request.args.items()}
             logger.debug("source:  args is %s", args)
             if 'roi' in args:
-                args['footprint'] = convert_roi(args['roi'])
+                args['roi'] = convert_roi(args['roi'])
             if 'controlledProperties' in args:
                 args['controlledProperties'] = \
                     args['controlledProperties'].split(',')
@@ -144,7 +144,7 @@ def add_routes(app):
         :returns: source description
         """
         if request.method == "DELETE":
-            db.delete_source(str(tdmq_id))
+            db.delete_sources([str(tdmq_id)])
         else:
             sources = db.get_sources([str(tdmq_id)])
             if len(sources) == 1:

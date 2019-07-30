@@ -16,7 +16,7 @@ import tdmq.query_builder as qb
 from tdmq.query_builder import gather_nonscalar_timeseries
 from tdmq.query_builder import gather_scalar_timeseries
 from tdmq.query_builder import select_sensor_types
-from tdmq.query_builder import select_sensors_by_footprint
+from tdmq.query_builder import select_sensors_by_roi
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.DEBUG)
@@ -50,7 +50,7 @@ def list_sources(args):
         'controlledProperties'
         'after'
         'before'
-        'footprint'
+        'roi'
     """
     with get_db() as db:
         query = qb.select_sources_helper(db, args)
@@ -66,7 +66,7 @@ def get_sources(list_of_tdmq_ids):
         SELECT
             tdmq_id,
             external_id,
-            default_footprint,
+            ST_AsGeoJSON(default_footprint),
             stationary,
             entity_category,
             entity_type,
