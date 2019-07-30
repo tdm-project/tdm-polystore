@@ -84,10 +84,12 @@ def add_routes(app):
                 args['controlledProperties'] = args['controlledProperties'].split(',')
             res = db.list_sources(args)
             return jsonify(res)
-        else:
+        elif request.method == "POST":
             data = request.json
             tdmq_ids = db.load_sources(db.get_db(), data)
             return jsonify(tdmq_ids)
+        else:
+            raise NotImplementedError("{} not supported by this endpoint".format(request.method))
 
     @app.route('/sources/<uuid:tdmq_id>')
     def source(tdmq_id):
@@ -115,9 +117,15 @@ def add_routes(app):
         :status 200: no error
         :returns: source description
         """
-        res = db.get_source(str(tdmq_id))
-        res["tdmq_id"] = tdmq_id
-        return jsonify(res)
+        sources = db.get_sources([str(tdmq_id)])
+        if len(sources) == 1:
+            result = sources[0]
+        elif len(sources) == 0:
+            result = None
+        else:
+            raise RuntimeError("Got more than one source for tdmq_id %s".format(tdmq_id))
+
+        return jsonify(result)
 
     @app.route('/sources/<uuid:tdmq_id>/timeseries')
     def timeseries(tdmq_id):

@@ -66,7 +66,7 @@ def get_sources(list_of_tdmq_ids):
         WHERE tdmq_id IN %s""")
     with get_db() as db:
         with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(q, (list_of_tdmq_ids,))
+            cur.execute(q, (tuple(list_of_tdmq_ids),))
             return cur.fetchall()
 
 
