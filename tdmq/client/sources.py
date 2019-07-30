@@ -4,14 +4,16 @@ import abc
 
 
 class Source(abc.ABC):
-    def __init__(self, client, tdmq_id, source_entity_type, description):
+    def __init__(self, client, tdmq_id,
+                 source_category_type, source_entity_type, description):
         self.client = client
         self.tdmq_id = tdmq_id
+        self.source_category_type = source_category_type
         self.source_entity_type = source_entity_type
         self.description = description
 
-    def geometry(self):
-        return self.description['geometry']
+    def default_footprint(self):
+        return self.description['default_footprint']
 
     def get_timeseries(self, args):
         return self.client.get_timeseries(self.tdmq_id, args)

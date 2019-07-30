@@ -117,7 +117,7 @@ def add_routes(app):
             raise NotImplementedError(
                 f"{request.method} not supported by this endpoint")
 
-    @app.route('/sources/<uuid:tdmq_id>')
+    @app.route('/sources/<uuid:tdmq_id>', methods=['GET', 'DELETE'])    
     def source(tdmq_id):
         """Return description of source with uuid ``tdmq_id``.
 
@@ -143,15 +143,19 @@ def add_routes(app):
         :status 200: no error
         :returns: source description
         """
-        sources = db.get_sources([str(tdmq_id)])
-        if len(sources) == 1:
-            result = sources[0]
-        elif len(sources) == 0:
-            result = None
+        if request.method == "DELETE":
+            db.delete_source(str(tdmq_id))
         else:
-            raise RuntimeError(
-                f"Got more than one source for tdmq_id {tdmq_id}")
-        return jsonify(result)
+            sources = db.get_sources([str(tdmq_id)])
+            if len(sources) == 1:
+                result = sources[0]
+            elif len(sources) == 0:
+                result = None
+            else:
+                raise RuntimeError(
+                    f"Got more than one source for tdmq_id {tdmq_id}")
+            # result["tdmq_id"] = tdmq_id
+            return jsonify(result)
 
     @app.route('/sources/<uuid:tdmq_id>/timeseries')
     def timeseries(tdmq_id):

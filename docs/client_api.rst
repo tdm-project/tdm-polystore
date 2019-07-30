@@ -21,14 +21,22 @@ Get sources:
 Create a new source:
 ::
    desc = {
-   'id': 'weather-station-tdmq-01',
-   'entity_type': 'PointWeatherObserver',
-   'controlledProperties': ['temperature', 'humidity'],
-   'geometry_type': 'Point',
-   'default_footprint': {'type': 'Point', 'coordinates': [8.966416, 39.334331]},
-   'stationary': True,
+    "id": "tdm/sensor_0",
+    "type": "PointWeatherObserver",
+    "category": "Station",
+    "default_footprint": {"type": "Point", "coordinates": [9.221, 30.0]},
+    "stationary": true,
+    "description": {
+        "type": "DTH11",
+        "alias": "my desk",
+        "brandName": "Acme",
+        "modelName": "Acme multisensor DHT11",
+        "manufacturerName": "Acme Inc.",
+        "category": ["sensor"],
+        "function": ["sensing"],
+        "controlledProperty": ["temperature", "humidity"] }
    }
-   s = c.create_source(desc)
+   s = c.register_source(desc)
    assert s.id = desc['id']
 
 

@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
 
-from tdmq.client.sources import NonScalarSource
+from tdmq.client.sources import ScalarSource
 
 source_classes = {
-    'meteoRadar': NonScalarSource,
+    ('Station', 'PointWeatherObserver'): ScalarSource,
 }
 
 
@@ -28,9 +28,10 @@ class Client:
         self.tiledb_hdfs_root = self.TILEDB_HDFS_ROOT \
             if tiledb_hdfs_root is None else tiledb_hdfs_root
         self.tiledb_ctx = tiledb_ctx
+        self.managed_objects = {}
 
     def _destroy_source(self, tdmq_id):
-        r = requests.delete(f'{self.base_url}/{tdmq_id}')
+        r = requests.delete(f'{self.base_url}/sources/{tdmq_id}')
         if r.status_code == 500:
             raise ValueError('Internal error')
 
@@ -45,12 +46,20 @@ class Client:
         description['tdmq_id'] = r.json()[0]
         return description
 
-    def register_source(self, sid, entity_type, geometry_type,
-                        description, nslots=None):
+    def deregister_source(self, s):
+        if s in self.managed_objects:
+            self._destroy_source(s.tdmq_id)
+            del self.managed_objects[s.tmdq_id]
+            del s
+        else:
+            # NO-OP
+            pass
+
+    def register_source(self, description, nslots=None):
         """Register a new data source
         .. :quickref: Register a new data source
         """
-        description = self.register_thing('sensors', description)
+        description = self.register_thing('sources', description)
         if 'shape' in description and len(description['shape']) > 0:
             assert nslots is not None
             try:
@@ -58,8 +67,8 @@ class Client:
             except Exception as e:
                 logger.error(
                     f'Failure in creating tiledb array: {e}, cleaning up')
-                self._destroy_source(description['tdmq_id'])                
-        return description
+                self._destroy_source(description['tdmq_id'])
+        return self.get_source_proxy(description['tmdq_id'])
 
     def get_entity_categories(self):
         return requests.get(f'{self.base_url}/entity_categories').json()
@@ -78,9 +87,11 @@ class Client:
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
         # FIXME we need to fix this 'type' thing
-        stype = self.source_types[res['type']]
-        return source_classes[stype['type']](
-            self, tdmq_id, stype, res)
+        scat = res['category']
+        stype = res['type']
+        s = source_classes[(scat, stype)](self, tdmq_id, stype, res)
+        self.managed_objects[s.tdmq_id] = s
+        return s
 
     def get_timeseries(self, code, args):
         return requests.get(f'{self.base_url}/sources/{code}/timeseries',
