@@ -1,4 +1,4 @@
-{"sensors": [
+{"sources": [
     {"id": "tdm/sensor_0",
      "type": "PointWeatherObserver",
      "category": "Station",
