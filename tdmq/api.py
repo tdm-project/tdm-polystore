@@ -7,6 +7,9 @@ from flask import url_for
 import tdmq.db as db
 from tdmq.utils import convert_footprint
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def add_routes(app):
     @app.route('/')
@@ -36,6 +39,7 @@ def add_routes(app):
                       &after=2019-05-02T11:00:00Z
                       &before=2019-05-02T11:50:25Z HTTP/1.1
 
+          GET /sources?controlledProperties=temperature,humidity
         (unencoded URL)
 
         **Example response**:
@@ -47,11 +51,11 @@ def add_routes(app):
 
           [{"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5a",
             "id": "source_0",
-            "geometry_ype": "Point",
+            "geometry_type": "Point",
             "entity_type": "entity_type0},
            {"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5b",
             "id": "source_1",
-            "geometry_ype": "Point",
+            "geometry_type": "Point",
             "entity_type": "entity_type_1"}]
 
         :resheader Content-Type: application/json
@@ -67,18 +71,18 @@ def add_routes(app):
 
         :query {attribute}: select sources whose description has the
             specified value(s) for the chosen attribute
-            (top-level JSON key, e.g., controlledProperty=temperature)
+            (top-level JSON key, e.g., controlledProperties=temperature)
         :status 200: no error
         :returns: list of sources
         """
         if request.method == "GET":
             args = {k: v for k, v in request.args.items()}
+            logger.debug("source:  args is %s", args)
             if 'footprint' in args:
                 args['footprint'] = convert_footprint(args['footprint'])
-            res = []
-            for tdmq_id, descr in db.list_sources(args):
-                descr["tdmq_id"] = tdmq_id
-                res.append(descr)
+            if 'controlledProperties' in args:
+                args['controlledProperties'] = args['controlledProperties'].split(',')
+            res = db.list_sources(args)
             return jsonify(res)
         else:
             data = request.json
