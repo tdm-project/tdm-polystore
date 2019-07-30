@@ -1,18 +1,21 @@
+import os
+from datetime import datetime, timedelta
+
+import numpy as np
 from clientplus import Client, ingest
 from dpc import data_fetcher
 # from dpc import dpc_mradar_mosaic_type
 from dpc import dpc_temp_mosaic_type
 from dpc import get_dpc_sensor
-from datetime import datetime, timedelta
-import numpy as np
 
 # FIXME
 # tdmq constants
-TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
+tdmq_base_url = 'http://web:8000/api/v0.0'
 
 
-def main():
-    client = Client(TDMQ_BASE_URL)
+def main(tdmq_base_url, hdfs_url, api_version='0.0'):
+    tdmq_url = os.path.join(tdmq_base_url, 'api', f'v{api_version}')
+    client = Client(tdmq_url, hdfs_url)
     # --
     # if dpc_mradar_mosaic_type['name'] not in client.sensor_types:
     #     client.register_sensor_type(dpc_mradar_mosaic_type)
@@ -43,4 +46,16 @@ def main():
         ingest(temp, t, data_fetcher)
 
 
-main()
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tdmq", dest='tdmq', help="tdmq web server address",
+                        required=True)
+    parser.add_argument("-V", dest='tdmq_version', help="tdmq version",
+                        default='0.0')
+    parser.add_argument("--hdfs", dest='hdfs', help="hdfs address",
+                        required=True)
+
+    args = parser.parse_args()
+    main(args.tdmq, args.hdfs, args.tdmq_version)

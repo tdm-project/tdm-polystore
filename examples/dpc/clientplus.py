@@ -1,6 +1,8 @@
-import tdmq.client.client as tdmqc
-import numpy as np
 import logging
+
+import numpy as np
+
+import tdmq.client.client as tdmqc
 
 # FIXME need to do this to patch a overzealous logging by urllib3
 logger = logging.getLogger('urllib3.connectionpool')
@@ -13,10 +15,8 @@ import tiledb
 from datetime import datetime
 # FIXME this is a patch for a missing handler.
 from tdmq.client.client import sensor_classes
+
 sensor_classes['temperatureSensorNetwork'] = sensor_classes['meteoRadar']
-
-
-TILEDB_HDFS_ROOT = 'hdfs://hdfs:9000/arrays'
 
 
 def ingest(sensor, t, data_fetcher):
@@ -31,7 +31,7 @@ def ingest(sensor, t, data_fetcher):
     array_path = sensor.client.sensor_data_path(sensor.code)
     with tiledb.DenseArray(array_path, mode='w',
                            ctx=sensor.client.tiledb_ctx) as A:
-        A[i:i+1, :, :] = data
+        A[i:i + 1, :, :] = data
     return sensor.client.register_measure(
         {'time': t.strftime('%Y-%m-%dT%H:%M:%SZ'),
          'sensor': sensor.description['name'],
@@ -40,12 +40,13 @@ def ingest(sensor, t, data_fetcher):
 
 class Client(tdmqc.Client):
 
-    def __init__(self, tdmq_base_url):
+    def __init__(self, tdmq_base_url, hdfs_url):
+        self.hdfs_url = hdfs_url
         super().__init__(tdmq_base_url,
                          tiledb.Ctx({'vfs.hdfs.username': 'root'}))
 
     def sensor_data_path(self, code):
-        return os.path.join(TILEDB_HDFS_ROOT, code)
+        return os.path.join(self.hdfs_url, code)
 
     def create_tiledb_array(self, n_slots, description):
         array_name = self.sensor_data_path(description['code'])
