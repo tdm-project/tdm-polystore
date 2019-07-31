@@ -66,7 +66,7 @@ def select_sources_helper(db, args):
         SELECT
             source.tdmq_id,
             source.external_id,
-            ST_AsGeoJSON(ST_Transform(source.default_footprint, 4326)) 
+            ST_AsGeoJSON(ST_Transform(source.default_footprint, 4326))
                 as default_footprint,
             source.entity_category,
             source.entity_type

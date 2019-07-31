@@ -30,15 +30,6 @@ psycopg2.extras.register_uuid()
 
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
-## Temp stubs used by tests/test_api.py 
-def list_sources():
-    pass
-
-
-def get_source():
-    pass
-
-
 
 def list_sources(args):
     """
@@ -53,10 +44,8 @@ def list_sources(args):
         'roi'
     """
     with get_db() as db:
-        query = qb.select_sources_helper(db, args)
-
-    with get_db() as db:
         with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            query = qb.select_sources_helper(db, args)
             cur.execute(query)
             return cur.fetchall()
 
@@ -80,22 +69,12 @@ def get_sources(list_of_tdmq_ids):
             return cur.fetchall()
 
 
-def delete_records_of_sources(list_of_tdmq_ids):
-    q = sql.SQL("""
-        DELETE FROM record
-        WHERE source_id IN %s""")
-    with get_db() as db:
-        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(q, (tuple(list_of_tdmq_ids),))
-    return list_of_tdmq_ids
-
 def delete_sources(list_of_tdmq_ids):
-    delete_records_of_sources(list_of_tdmq_ids)
     q = sql.SQL("""
         DELETE FROM source
         WHERE tdmq_id IN %s""")
     with get_db() as db:
-        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        with db.cursor() as cur:
             cur.execute(q, (tuple(list_of_tdmq_ids),))
     return list_of_tdmq_ids
 
@@ -194,7 +173,7 @@ def add_tables(db):
 
       CREATE TABLE record (
           time TIMESTAMP(0) NOT NULL,
-          source_id UUID NOT NULL REFERENCES source(tdmq_id),
+          source_id UUID NOT NULL REFERENCES source(tdmq_id) ON DELETE CASCADE,
           footprint GEOMETRY, -- source.stationary is true => record.footprint is NULL
           data JSONB NOT NULL
       );
@@ -454,7 +433,7 @@ def list_sensor_types_in_db(db, args):
 def list_sensors_in_cylinder(db, args):
     """Return all sensors that have reported an event in a
        given spatio-temporal region."""
-    query, data = select_sensors_by_footprint(args)
+    query, data = select_sensors_by_roi(args)
     with db:
         with db.cursor() as cur:
             cur.execute(query, data)

@@ -117,7 +117,7 @@ def add_routes(app):
             raise NotImplementedError(
                 f"{request.method} not supported by this endpoint")
 
-    @app.route('/sources/<uuid:tdmq_id>', methods=['GET', 'DELETE'])    
+    @app.route('/sources/<uuid:tdmq_id>', methods=['GET', 'DELETE'])
     def source(tdmq_id):
         """Return description of source with uuid ``tdmq_id``.
 
