@@ -24,10 +24,6 @@ def add_routes(app):
     def entity_categories():
         return jsonify(db.list_entity_categories())
 
-    @app.route('/geometry_types')
-    def geometry_types():
-        return jsonify(db.list_geometry_types())
-
     @app.route('/sources', methods=['GET', 'POST'])
     def sources():
         """Return a list of sources.

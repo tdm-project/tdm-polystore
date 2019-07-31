@@ -31,6 +31,18 @@ psycopg2.extras.register_uuid()
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
 
+def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
+    with get_db() as db:
+        with db.cursor(cursor_factory=cursor_factory) as cur:
+            cur.execute(q, (args,))
+            result = cur.fetchall() if fetch else None
+
+    if one and result is not None:
+        return result[0]
+    else:
+        return result
+
+
 def list_sources(args):
     """
     args:
@@ -43,11 +55,8 @@ def list_sources(args):
         'before'
         'roi'
     """
-    with get_db() as db:
-        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            query = qb.select_sources_helper(db, args)
-            cur.execute(query)
-            return cur.fetchall()
+    query = qb.select_sources_helper(args)
+    return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 def get_sources(list_of_tdmq_ids):
@@ -63,20 +72,28 @@ def get_sources(list_of_tdmq_ids):
             description
         FROM source
         WHERE tdmq_id IN %s""")
-    with get_db() as db:
-        with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(q, (tuple(list_of_tdmq_ids),))
-            return cur.fetchall()
+
+    return query_db_all(q, tuple(list_of_tdmq_ids), cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 def delete_sources(list_of_tdmq_ids):
     q = sql.SQL("""
         DELETE FROM source
         WHERE tdmq_id IN %s""")
-    with get_db() as db:
-        with db.cursor() as cur:
-            cur.execute(q, (tuple(list_of_tdmq_ids),))
+    query_db_all(q, tuple(list_of_tdmq_ids), fetch=False)
     return list_of_tdmq_ids
+
+
+def list_entity_catories(category_start=None):
+    q = sql.SQL("""
+      SELECT category
+      FROM entity_category""")
+
+    if category_start:
+        starts_with = sql.SQL("starts_with(lower(category), {}))").format(sql.Literal(category_start.lower()))
+        q = q + sql.SQL(" WHERE ") + starts_with
+
+    return query_db_all(q)
 
 
 def list_entity_types(category_start=None, type_start=None):
@@ -97,10 +114,7 @@ def list_entity_types(category_start=None, type_start=None):
     if where:
         q = q + sql.SQL(" WHERE ") + sql.SQL(' AND ').join(where)
 
-    with get_db() as db:
-        with db.cursor() as cur:
-            cur.execute(q)
-            return cur.fetchall()
+    return query_db_all(q)
 
 
 # FIXME move all of this to appropriate classes

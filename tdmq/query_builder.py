@@ -39,7 +39,7 @@ def select_sensor_types(args):
     return filter_by_description('sensor_types', args)
 
 
-def select_sources_helper(db, args):
+def select_sources_helper(args):
     """
     Possible args:
         'id'
