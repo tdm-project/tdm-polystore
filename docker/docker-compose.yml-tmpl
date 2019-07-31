@@ -25,8 +25,13 @@ services:
       - "timescaledb"
     ports:
       - "8000:8000"
+    #DEV user: USER_UID:USER_GID
     environment:
     - "CREATE_DB=true"
+    - "DEV=false"
+    #DEV volumes:
+    #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
+
   namenode:
     image: crs4/namenode:3.2.0
     ports:

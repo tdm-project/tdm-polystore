@@ -23,4 +23,15 @@ if [[ "$CREATE_DB" == "true" ]]; then
   create_db
 fi
 
-gunicorn -b 0.0.0.0:8000 wsgi:app
+if [[ "${DEV}" == "true" ]]; then
+    printf "DEV is ${DEV}. Starting container in development mode\n" >&2
+    printf "Do not run this configuration in production!\n" >&2
+    set -x
+    export FLASK_APP=/tdmq-dist/tdmq/wsgi
+    export FLASK_ENV=development
+    export FLASK_RUN_PORT=8000 # by default in dev mode it changes its port to 5000
+    export FLASK_RUN_HOST=0.0.0.0
+    flask run "${@}"
+else
+    gunicorn -b 0.0.0.0:8000 wsgi:app
+fi

@@ -1,6 +1,6 @@
+
+
 PSWD=foobar
-#IMAGE=timescale/timescaledb
-IMAGE=timescale/timescaledb-postgis
 
 all: images
 
@@ -23,13 +23,29 @@ web: docker/tdmq-dist docker/Dockerfile.web
 
 images: tdmqc jupyter web
 
+docker/docker-compose-dev.yml: docker/docker-compose.yml-tmpl
+	sed -e "s^LOCAL_PATH^$${PWD}^" \
+	    -e "s^USER_UID^$$(id -u)^" \
+	    -e "s^USER_GID^$$(id -g)^" \
+	    -e "s^DEV=false^DEV=true^" \
+	    -e "s^#DEV *^^" \
+	       < docker/docker-compose.yml-tmpl > docker/docker-compose-dev.yml
+
+
 docker/docker-compose.yml: docker/docker-compose.yml-tmpl
-	sed -e "s^LOCAL_PATH^$${PWD}^" -e "s^USER_UID^$$(id -u)^" \
-            -e "s^USER_GID^$$(id -g)^"  \
-            < docker/docker-compose.yml-tmpl > docker/docker-compose.yml
+	sed -e "s^LOCAL_PATH^$${PWD}^" \
+	    -e "s^USER_UID^$$(id -u)^" \
+	    -e "s^USER_GID^$$(id -g)^" \
+	     < docker/docker-compose.yml-tmpl > docker/docker-compose.yml
 
 run: images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up
+
+startdev: images docker/docker-compose-dev.yml
+	docker-compose -f ./docker/docker-compose-dev.yml up -d
+
+stopdev:
+	docker-compose -f ./docker/docker-compose-dev.yml down
 
 start: images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up -d
@@ -40,4 +56,4 @@ stop:
 clean: stop
 
 
-.PHONY: all tdmqc-deps tdmqc jupyter web images run start stop clean
+.PHONY: all tdmqc-deps tdmqc jupyter web images run start stop startdev stopdev clean
