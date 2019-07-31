@@ -64,7 +64,7 @@ def get_sources(list_of_tdmq_ids):
         SELECT
             tdmq_id,
             external_id,
-            ST_AsGeoJSON(ST_Transform(default_footprint, 4326))
+            ST_AsGeoJSON(ST_Transform(default_footprint, 4326))::json
                 as default_footprint,
             stationary,
             entity_category,
