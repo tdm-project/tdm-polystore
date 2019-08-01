@@ -7,7 +7,7 @@
      "stationary": true,
      "controlledProperties": ["temperature", "humidity"],
      "description": {
-        "entity_type": "multisensor",
+        "type": "multisensor",
         "brandName": "ProSensor",
         "modelName": "R2D2",
         "manufacturerName": "CRS4"
@@ -20,7 +20,7 @@
      "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
      "controlledProperties": ["humidity", "temperature"],
      "description": {
-        "entity_type": "multisensor",
+        "type": "multisensor",
         "brandName": "ProSensor",
         "modelName": "R2D2",
         "manufacturerName": "CRS4"
@@ -32,7 +32,7 @@
      "default_footprint": {"type": "Point", "coordinates": [9.551, 32.0]},
      "controlledProperties": ["power"],
      "description": {
-        "entity_type": "power sensor",
+        "type": "power sensor",
         "brandName": "ProSensor",
         "modelName": "C3PO",
         "manufacturerName": "CRS4" }
@@ -43,7 +43,7 @@
      "default_footprint": {"type": "Point", "coordinates": [9.343, 31.2]},
      "controlledProperties": ["temperature"],
      "description": {
-        "entity_type": "TemperatureSensorDTH11",
+        "type": "TemperatureSensorDTH11",
         "brandName": "Acme",
         "modelName": "Acme multisensor DHT11",
         "manufacturerName": "Acme Inc." }
@@ -56,7 +56,7 @@
      "stationary": false,
      "controlledProperties": ["humidity"],
      "description": {
-        "entity_type": "HumiditySensorDHT11",
+        "type": "HumiditySensorDHT11",
         "brandName": "Acme",
         "modelName": "Acme multisensor DHT11",
         "manufacturerName": "Acme Inc." }
