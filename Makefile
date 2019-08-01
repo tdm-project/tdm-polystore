@@ -2,10 +2,12 @@
 
 PSWD=foobar
 
+TDMQ_FILES=$(wildcard tdmq/*.py tdmq/client/*.py)
+
 all: images
 
 # FIXME copying tests/data twice...
-docker/tdmq-dist: apidocs setup.py tdmq tests/data
+docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests/data
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
 	cp -rf apidocs setup.py tdmq tests/data docker/tdmq-dist
 
