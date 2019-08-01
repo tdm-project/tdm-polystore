@@ -43,8 +43,8 @@ def select_sources_helper(args):
     """
     Possible args:
         'id'
-        'category'
-        'type'
+        'entity_category'
+        'entity_type'
         'tdmq_id'
         'controlledProperties'
         'after'
@@ -80,10 +80,10 @@ def select_sources_helper(args):
 
     if 'id' in args:
         add_where_lit('source.external_id', '=', args.pop('id'))
-    if 'category' in args:
-        add_where_lit('source.entity_category', '=', args.pop('category'))
-    if 'type' in args:
-        add_where_lit('source.entity_type', '=', args.pop('type'))
+    if 'entity_category' in args:
+        add_where_lit('source.entity_category', '=', args.pop('entity_category'))
+    if 'entity_type' in args:
+        add_where_lit('source.entity_type', '=', args.pop('entity_type'))
     if 'tdmq_id' in args:
         add_where_lit('source.tdmq_id', '=', args.pop('tdmq_id'))
     if 'stationary' in args:

@@ -47,8 +47,8 @@ def list_sources(args):
     """
     args:
         'id'
-        'category'
-        'type'
+        'entity_category'
+        'entity_type'
         'tdmq_id'
         'controlledProperties'
         'after'
@@ -86,11 +86,11 @@ def delete_sources(list_of_tdmq_ids):
 
 def list_entity_catories(category_start=None):
     q = sql.SQL("""
-      SELECT category
+      SELECT entity_category
       FROM entity_category""")
 
     if category_start:
-        starts_with = sql.SQL("starts_with(lower(category), {}))").format(sql.Literal(category_start.lower()))
+        starts_with = sql.SQL("starts_with(lower(entity_category), {}))").format(sql.Literal(category_start.lower()))
         q = q + sql.SQL(" WHERE ") + starts_with
 
     return query_db_all(q)
@@ -99,7 +99,7 @@ def list_entity_catories(category_start=None):
 def list_entity_types(category_start=None, type_start=None):
     q = sql.SQL("""
       SELECT
-        category,
+        entity_category,
         entity_type,
         schema
       FROM entity_type""")
@@ -107,7 +107,7 @@ def list_entity_types(category_start=None, type_start=None):
     where = []
 
     if category_start:
-        where.append(sql.SQL("starts_with(lower(category), {}))").format(sql.Literal(category_start.lower())))
+        where.append(sql.SQL("starts_with(lower(entity_category), {}))").format(sql.Literal(category_start.lower())))
     if type_start:
         where.append(sql.SQL("starts_with(lower(entity_type), {}))").format(sql.Literal(type_start.lower())))
 
@@ -163,14 +163,14 @@ def add_extensions(db):
 def add_tables(db):
     SQL = """
       CREATE TABLE entity_category (
-          category CITEXT PRIMARY KEY
+          entity_category CITEXT PRIMARY KEY
       );
 
       CREATE TABLE entity_type (
-          category CITEXT REFERENCES entity_category(category),
+          entity_category CITEXT REFERENCES entity_category(entity_category),
           entity_type CITEXT,
           schema JSONB,
-          PRIMARY KEY (category, entity_type)
+          PRIMARY KEY (entity_category, entity_type)
       );
 
       CREATE TABLE source (
@@ -182,7 +182,7 @@ def add_tables(db):
           entity_type CITEXT NOT NULL,
           description JSONB,
           PRIMARY KEY (tdmq_id),
-          FOREIGN KEY (entity_category, entity_type) REFERENCES entity_type(category, entity_type)
+          FOREIGN KEY (entity_category, entity_type) REFERENCES entity_type(entity_category, entity_type)
       );
 
       CREATE TABLE record (
@@ -269,8 +269,8 @@ def load_sources(db, data, validate=False, chunk_size=500):
     def gen_source_tuple(d):
         tdmq_id = uuid.uuid5(NAMESPACE_TDMQ, d['id'])
         external_id = d['id']
-        entity_type = d['type']
-        entity_cat = d['category']
+        entity_type = d['entity_type']
+        entity_cat = d['entity_category']
         footprint = d['default_footprint']
         stationary = d.get('stationary', True)
         return ( tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d) )

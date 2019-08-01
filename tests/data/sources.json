@@ -1,8 +1,8 @@
 {"sources": [
     {"id": "tdm/sensor_0",
      "alias": "my desk",
-     "type": "PointWeatherObserver",
-     "category": "Station",
+     "entity_type": "PointWeatherObserver",
+     "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.221, 30.0]},
      "stationary": true,
      "controlledProperties": ["temperature", "humidity"],
@@ -15,8 +15,8 @@
     },
     {"id": "tdm/sensor_1",
      "alias": "B221",
-     "type": "PointWeatherObserver",
-     "category": "Station",
+     "entity_type": "PointWeatherObserver",
+     "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
      "controlledProperties": ["humidity", "temperature"],
      "description": {
@@ -27,8 +27,8 @@
      }
     },
     {"id": "tdm/sensor_3",
-     "type": "EnergyConsumptionMonitor",
-     "category": "Station",
+     "entity_type": "EnergyConsumptionMonitor",
+     "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.551, 32.0]},
      "controlledProperties": ["power"],
      "description": {
@@ -38,8 +38,8 @@
         "manufacturerName": "CRS4" }
     },
     {"id": "tdm/sensor_4",
-     "type": "PointWeatherObserver",
-     "category": "Station",
+     "entity_type": "PointWeatherObserver",
+     "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.343, 31.2]},
      "controlledProperties": ["temperature"],
      "description": {
@@ -50,8 +50,8 @@
     },
     {"id": "tdm/sensor_5",
      "alias": "Mobile sensor",
-     "type": "PointWeatherObserver",
-     "category": "Station",
+     "entity_type": "PointWeatherObserver",
+     "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.119, 29.0]},
      "stationary": false,
      "controlledProperties": ["humidity"],
