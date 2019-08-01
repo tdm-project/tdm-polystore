@@ -27,7 +27,7 @@ services:
       - "8000:8000"
     #DEV user: USER_UID:USER_GID
     environment:
-    - "CREATE_DB=true"
+    - "CREATE_DB=false"
     - "DEV=false"
     #DEV volumes:
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
