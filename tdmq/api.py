@@ -5,6 +5,7 @@ from flask import request
 from flask import url_for
 
 import tdmq.db as db
+import tdmq.errors
 from tdmq.utils import convert_roi
 
 import logging
@@ -212,8 +213,11 @@ def add_routes(app):
         if args['fields'] is not None:
             args['fields'] = args['fields'].split(',')
 
-        res = db.get_timeseries(tdmq_id, args)
-        return jsonify(res)
+        try:
+            res = db.get_timeseries(tdmq_id, args)
+            return jsonify(res)
+        except tdmq.errors.RequestException as e:
+            return str(e), 400  # BAD_REQUEST
 
     @app.route('/records', methods=["POST"])
     def records():

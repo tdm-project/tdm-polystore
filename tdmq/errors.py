@@ -4,9 +4,13 @@ class TdmqError(Exception):
     pass
 
 
-class DuplicateItemException(TdmqError):
+class RequestException(TdmqError):
     pass
 
 
-class ItemNotFoundException(TdmqError):
+class DuplicateItemException(RequestException):
+    pass
+
+
+class ItemNotFoundException(RequestException):
     pass

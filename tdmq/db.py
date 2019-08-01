@@ -520,7 +520,7 @@ def get_timeseries(tdmq_id, args=None):
         properties = set(properties) & fields
         if fields != properties:
             unknown_fields = ', '.join(fields - properties)
-            raise ValueError(f"The following field(s) requested for source do not exist: {unknown_fields}")
+            raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
 
     select_list = []
 
@@ -528,7 +528,7 @@ def get_timeseries(tdmq_id, args=None):
         bucket_interval = args['bucket']
         bucket_op = args['op']
         if bucket_op not in supported_bucket_ops:
-            raise ValueError(f"Unsupported bucketing operation '{bucket_op}'")
+            raise tdmq.errors.RequestException(f"Unsupported bucketing operation '{bucket_op}'")
 
         # select_list.append( sql.SQL("time_bucket({}, record.time) AS time_bucket").format(sql.Literal(bucket_interval)) )
         select_list.append( sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)) )
