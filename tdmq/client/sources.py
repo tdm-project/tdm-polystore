@@ -4,13 +4,15 @@ import abc
 
 
 class Source(abc.ABC):
-    def __init__(self, client, tdmq_id,
-                 source_category_type, source_entity_type, description):
+    def __init__(self, client, tdmq_id, desc):
         self.client = client
         self.tdmq_id = tdmq_id
-        self.source_category_type = source_category_type
-        self.source_entity_type = source_entity_type
-        self.description = description
+        self.id = desc['external_id']
+        self.entity_category = desc['entity_category']
+        self.entity_type = desc['entity_type']
+        self.is_stationary = desc['stationary']
+        self.default_footprint = desc['default_footprint']
+        self.description = desc
 
     def default_footprint(self):
         return self.description['default_footprint']

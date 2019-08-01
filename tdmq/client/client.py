@@ -5,10 +5,16 @@ import numpy as np
 
 # FIXME build a better logging infrastructure
 import logging
+# FIXME need to do this to patch a overzealous logging by urllib3
+logger = logging.getLogger('urllib3.connectionpool')
+logger.setLevel(logging.ERROR)
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
+
+
 
 from tdmq.client.sources import ScalarSource
 
@@ -43,8 +49,9 @@ class Client:
         r = requests.post(f'{self.base_url}/{thing}', json=[description])
         if r.status_code == 500:
             raise ValueError('Internal error')
-        description['tdmq_id'] = r.json()[0]
-        return description
+        res = dict(description)
+        res['tdmq_id'] = r.json()[0]
+        return res
 
     def deregister_source(self, s):
         if s in self.managed_objects:
@@ -59,7 +66,7 @@ class Client:
         """Register a new data source
         .. :quickref: Register a new data source
         """
-        description = self.register_thing('sources', description)
+        description = self._register_thing('sources', description)
         if 'shape' in description and len(description['shape']) > 0:
             assert nslots is not None
             try:
@@ -68,7 +75,7 @@ class Client:
                 logger.error(
                     f'Failure in creating tiledb array: {e}, cleaning up')
                 self._destroy_source(description['tdmq_id'])
-        return self.get_source_proxy(description['tmdq_id'])
+        return self.get_source_proxy(description['tdmq_id'])
 
     def get_entity_categories(self):
         return requests.get(f'{self.base_url}/entity_categories').json()
@@ -79,7 +86,7 @@ class Client:
     def get_geometry_types(self):
         return requests.get(f'{self.base_url}/geometry_types').json()
 
-    def get_sources(self, args):
+    def get_sources(self, args=None):
         res = requests.get(f'{self.base_url}/sources', params=args).json()
         return [self.get_source_proxy(r['tdmq_id']) for r in res]
 
@@ -87,9 +94,9 @@ class Client:
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
         # FIXME we need to fix this 'type' thing
-        scat = res['category']
-        stype = res['type']
-        s = source_classes[(scat, stype)](self, tdmq_id, stype, res)
+        scat = res['entity_category']
+        stype = res['entity_type']
+        s = source_classes[(scat, stype)](self, tdmq_id, res)
         self.managed_objects[s.tdmq_id] = s
         return s
 
