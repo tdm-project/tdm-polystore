@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 def add_routes(app):
+    @app.before_request
+    def print_args():
+        logger.debug("request.args: %s", request.args)
+
     @app.route('/')
     def index():
         return 'The URL for this page is {}'.format(url_for('index'))
@@ -193,17 +197,22 @@ def add_routes(app):
         :query op: aggregation operation on data contained in bucket,
                    e.g., `sum`, `count`.
 
+         :query fields: comma-separated controlledProperties from the source,
+                    or nothing to select all of them.
+
         :status 200: no errors
         :returns: list of sources
         """
         rargs = request.args
         args = dict((k, rargs.get(k, None))
-                    for k in ['after', 'before', 'bucket', 'op'])
+                    for k in ['after', 'before', 'bucket', 'fields', 'op'])
         if args['bucket'] is not None:
             assert args['op'] is not None
             args['bucket'] = timedelta(seconds=float(args['bucket']))
+        if args['fields'] is not None:
+            args['fields'] = args['fields'].split(',')
 
-        res = db.get_timeseries(str(tdmq_id), args)
+        res = db.get_timeseries(tdmq_id, args)
         return jsonify(res)
 
     @app.route('/records', methods=["POST"])

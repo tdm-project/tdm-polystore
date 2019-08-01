@@ -11,17 +11,16 @@ from flask import current_app, g
 from flask.cli import AppGroup
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+import tdmq.errors
 import tdmq.query_builder as qb
 
 from tdmq.query_builder import gather_nonscalar_timeseries
 from tdmq.query_builder import gather_scalar_timeseries
-from tdmq.query_builder import select_sensor_types
 from tdmq.query_builder import select_sensors_by_roi
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
 
 # need to register_uuid to enable psycopg2's conversion from Python UUID
@@ -93,7 +92,7 @@ def list_entity_catories(category_start=None):
         starts_with = sql.SQL("starts_with(lower(entity_category), {}))").format(sql.Literal(category_start.lower()))
         q = q + sql.SQL(" WHERE ") + starts_with
 
-    return query_db_all(q)
+    return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 def list_entity_types(category_start=None, type_start=None):
@@ -114,7 +113,7 @@ def list_entity_types(category_start=None, type_start=None):
     if where:
         q = q + sql.SQL(" WHERE ") + sql.SQL(' AND ').join(where)
 
-    return query_db_all(q)
+    return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 # FIXME move all of this to appropriate classes
@@ -252,13 +251,6 @@ def dump_table(db, tname, path, itersize=100000):
     return counter
 
 
-def load_sensors(db, data, validate=False, chunk_size=500):
-    """
-    Deprecated
-    """
-    return load_sources(db, data, validate, chunk_size)
-
-
 def load_sources(db, data, validate=False, chunk_size=500):
     """
     Load sensors objects.
@@ -282,19 +274,17 @@ def load_sources(db, data, validate=False, chunk_size=500):
               (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description)
               VALUES %s"""
     template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s)"
-    with db:
-        with db.cursor() as cur:
-            psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
-            db.commit()
+    try:
+        with db:
+            with db.cursor() as cur:
+                psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
+                db.commit()
+    except psycopg2.errors.UniqueViolation as e:
+        logger.debug(e)
+        raise tdmq.errors.DuplicateItemException(f"{e.pgerror}\n{e.diag.message_detail}")
+
     logger.debug('load_sources: done.')
     return [ t[0] for t in tuples ]
-
-
-def load_measures(db, data, validate=False, chunk_size=500):
-    """
-    Deprecated
-    """
-    return load_records(db, data, validate, chunk_size)
 
 
 def load_records(db, records, validate=False, chunk_size=500):
@@ -415,35 +405,6 @@ def dump_field(field, path):
     return dump_table(db, field, path, itersize=100000)
 
 
-def list_descriptions_in_table(db, tname):
-    query = sql.SQL('SELECT code, description FROM {}').format(
-        sql.Identifier(tname))
-    with db:
-        with db.cursor() as cur:
-            cur.execute(query)
-            return cur.fetchall()
-
-
-def list_sensor_types(args):
-    """List known sensor_types"""
-    db = get_db()
-    return list_sensor_types_in_db(db, args)
-
-
-def exec_query(db, query, data):
-    with db:
-        with db.cursor() as cur:
-            cur.execute(query, data)
-            return cur.fetchall()
-
-
-def list_sensor_types_in_db(db, args):
-    if not args:
-        return list_descriptions_in_table(db, 'sensor_types')
-    else:
-        return exec_query(db, *select_sensor_types(args))
-
-
 def list_sensors_in_cylinder(db, args):
     """Return all sensors that have reported an event in a
        given spatio-temporal region."""
@@ -452,28 +413,6 @@ def list_sensors_in_cylinder(db, args):
         with db.cursor() as cur:
             cur.execute(query, data)
             return cur.fetchall()
-
-
-def get_object(db, tname, oid):
-    query = sql.SQL("SELECT description FROM {} t WHERE t.code = {}").format(
-        sql.Identifier(tname), sql.Placeholder()
-    )
-    with db:
-        with db.cursor() as cur:
-            cur.execute(query, [oid])
-            return cur.fetchall()[0][0]
-
-
-def get_sensor(sid):
-    """Provide sensor sid description """
-    db = get_db()
-    return get_object(db, 'sensors', sid)
-
-
-def get_sensor_type(sid):
-    """Provide sensor_type sid description """
-    db = get_db()
-    return get_object(db, 'sensor_type', sid)
 
 
 def get_scalar_timeseries_data(db, args):
@@ -513,7 +452,40 @@ def get_tiledb_timeseries_data(db, args):
     return result
 
 
-def get_timeseries(code, args=None):
+supported_bucket_ops = {
+    "avg",
+    "count_records",
+    "count_values",
+    "max",
+    "min",
+    "sum",
+    "stddev",
+    "stddev_pop",
+    "stddev_samp",
+    "variance",
+    "var_pop",
+    "var_samp"
+}
+
+
+def _get_source_info(tdmq_id):
+    q = sql.SQL("""
+        SELECT
+            source.description->'controlledProperties',
+            source.description->'shape'
+        FROM source
+        WHERE tdmq_id = %s""")
+    result = query_db_all(q, args=(tdmq_id,), one=True)
+    if result is None:
+        raise tdmq.errors.ItemNotFoundException(f"tdmq_id {tdmq_id} not found in DB")
+
+    assert isinstance(result[0], list)
+    assert isinstance(result[1], list)
+
+    return dict(properties=result[0], shape=result[1])
+
+
+def get_timeseries(tdmq_id, args=None):
     """
      {'timebase': '2019-02-21T11:03:25Z',
       'timedelta':[0.11, 0.22, 0.33, 0.44],
@@ -529,21 +501,72 @@ def get_timeseries(code, args=None):
      :query op: aggregation operation on data contained in bucket,
                 e.g., `sum`,  `average`, `count` FIXME.
 
+     :query fields: list of controlledProperties from the source,
+                    or nothing to select all of them.
     """
-    db = get_db()
-    sensor = get_object(db, 'sensors', code)
-    args['code'] = code
-    if sensor['geometry']['type'] == 'Point':
-        return get_scalar_timeseries_data(db, args)
-    elif sensor['geometry']['type'] == 'Polygon':
-        # FIXME we should be really checking on the sensor_type and
-        # call the right gathering function e.g., we could have data
-        # that it is not stored on a tiledb, maybe graph snapshots or
-        # something like that
-        return get_tiledb_timeseries_data(db, args)
+
+    logger.debug("get_timeseries -- here are the args: %s", args)
+
+    info = _get_source_info(tdmq_id)
+
+    properties = info['properties']
+    shape = info['shape']
+
+    if shape:
+        raise NotImplementedError(f"Only scalar timeseries are implemented at the moment. Item {tdmq_id} has shape {shape}")
+
+    if args.get('fields', []):
+        fields = set(args['fields'])
+        properties = set(properties) & fields
+        if fields != properties:
+            unknown_fields = ', '.join(fields - properties)
+            raise ValueError(f"The following field(s) requested for source do not exist: {unknown_fields}")
+
+    select_list = []
+
+    if args.get('bucket'):
+        bucket_interval = args['bucket']
+        bucket_op = args['op']
+        if bucket_op not in supported_bucket_ops:
+            raise ValueError(f"Unsupported bucketing operation '{bucket_op}'")
+
+        # select_list.append( sql.SQL("time_bucket({}, record.time) AS time_bucket").format(sql.Literal(bucket_interval)) )
+        select_list.append( sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)) )
+        select_list.append( sql.SQL("ST_Centroid(ST_Collect(record.footprint)) AS footprint_centroid") )
+        select_list.extend(
+            [ sql.SQL("{}( (data->{})::real ) AS {}").format(
+                sql.Identifier(bucket_op),
+                sql.Literal(field),
+                sql.Identifier(f"{bucket_op}_{field}"))
+              for field in properties ] )
     else:
-        raise ValueError(
-            'timeseries on sensor {} are not supported'.format(code))
+        bucket_op = None
+
+        select_list.append( sql.SQL("EXTRACT(epoch FROM record.time), record.footprint") )
+        # select_list.append( sql.SQL("record.time, record.footprint") )
+        select_list.extend(
+            [ sql.SQL("data->{} AS {}").format(sql.Literal(field), sql.Identifier(field))
+                for field in properties ])
+
+    where = [ sql.SQL("source_id = {}").format(sql.Literal(tdmq_id)) ]
+
+    if args.get('after'):
+        where.append( sql.SQL("record.time >= {}").format(sql.Literal(args['after'])) )
+    if args.get('before'):
+        where.append( sql.SQL("record.time < {}").format(sql.Literal(args['before'])) )
+
+    q = sql.SQL(" ").join( (
+            sql.SQL("SELECT"),
+            sql.SQL(", ").join(select_list),
+            sql.SQL(" FROM record WHERE "), sql.SQL(" AND ").join(where)))
+
+    if bucket_op:
+        q += sql.SQL(" GROUP BY time_bucket ")
+        q += sql.SQL(" ORDER BY time_bucket ")
+    else:
+        q += sql.SQL(" ORDER BY record.time ")
+
+    return query_db_all(q)
 
 
 def add_db_cli(app):

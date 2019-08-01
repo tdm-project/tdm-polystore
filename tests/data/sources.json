@@ -6,6 +6,7 @@
      "default_footprint": {"type": "Point", "coordinates": [9.221, 30.0]},
      "stationary": true,
      "controlledProperties": ["temperature", "humidity"],
+     "shape": [],
      "description": {
         "type": "multisensor",
         "brandName": "ProSensor",
@@ -19,6 +20,7 @@
      "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
      "controlledProperties": ["humidity", "temperature"],
+     "shape": [],
      "description": {
         "type": "multisensor",
         "brandName": "ProSensor",
@@ -31,6 +33,7 @@
      "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.551, 32.0]},
      "controlledProperties": ["power"],
+     "shape": [],
      "description": {
         "type": "power sensor",
         "brandName": "ProSensor",
@@ -42,6 +45,7 @@
      "entity_category": "Station",
      "default_footprint": {"type": "Point", "coordinates": [9.343, 31.2]},
      "controlledProperties": ["temperature"],
+     "shape": [],
      "description": {
         "type": "TemperatureSensorDTH11",
         "brandName": "Acme",
@@ -55,6 +59,7 @@
      "default_footprint": {"type": "Point", "coordinates": [9.119, 29.0]},
      "stationary": false,
      "controlledProperties": ["humidity"],
+     "shape": [],
      "description": {
         "type": "HumiditySensorDHT11",
         "brandName": "Acme",
