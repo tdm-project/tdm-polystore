@@ -9,17 +9,22 @@ import logging
 logger = logging.getLogger('urllib3.connectionpool')
 logger.setLevel(logging.ERROR)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 logger.info('Logging is active.')
-
 
 
 from tdmq.client.sources import ScalarSource
 
+
+class AlreadyRegisteredId(RuntimeError):
+    pass
+
+
 source_classes = {
     ('Station', 'PointWeatherObserver'): ScalarSource,
+    ('Station', 'EnergyConsumptionMonitor'): ScalarSource,    
 }
 
 
@@ -36,27 +41,34 @@ class Client:
         self.tiledb_ctx = tiledb_ctx
         self.managed_objects = {}
 
+    def _check_sanity(self, r):
+        try:
+            r.raise_for_status()
+        except requests.HTTPError as e:
+            raise AlreadyRegisteredId(e.args)
+
     def _destroy_source(self, tdmq_id):
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}')
-        if r.status_code == 500:
-            raise ValueError('Internal error')
+        self._check_sanity(r)
 
     def _source_data_path(self, tdmq_id):
         return os.path.join(self.tiledb_hdfs_root, tdmq_id)
 
     def _register_thing(self, thing, description):
         assert isinstance(description, dict)
+        logger.debug('registering %s %s', thing, description)
         r = requests.post(f'{self.base_url}/{thing}', json=[description])
-        if r.status_code == 500:
-            raise ValueError('Internal error')
+        self._check_sanity(r)
         res = dict(description)
         res['tdmq_id'] = r.json()[0]
         return res
 
     def deregister_source(self, s):
-        if s in self.managed_objects:
+        logger.debug('deregistering %s %s', s.tdmq_id, s)
+        if s.tdmq_id in self.managed_objects:
+            logger.debug('removing from managed_objects')
             self._destroy_source(s.tdmq_id)
-            del self.managed_objects[s.tmdq_id]
+            del self.managed_objects[s.tdmq_id]
             del s
         else:
             # NO-OP
@@ -91,12 +103,14 @@ class Client:
         return [self.get_source_proxy(r['tdmq_id']) for r in res]
 
     def get_source_proxy(self, tdmq_id):
+        if tdmq_id in self.managed_objects:
+            logger.debug('reusing managed object %s', tdmq_id)
+            return self.managed_objects[tdmq_id]
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
-        # FIXME we need to fix this 'type' thing
-        scat = res['entity_category']
-        stype = res['entity_type']
-        s = source_classes[(scat, stype)](self, tdmq_id, res)
+        s = source_classes[(res['entity_category'], res['entity_type'])](
+            self, tdmq_id, res)
+        logger.debug('new managed object %s', s.tdmq_id)
         self.managed_objects[s.tdmq_id] = s
         return s
 
