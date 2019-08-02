@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 
-from tdmq.db import add_db_cli
+from tdmq.db import add_db_cli, close_db
 from tdmq.api import add_routes
 
 
@@ -26,5 +26,11 @@ def create_app(test_config=None):
 
     add_db_cli(app)
     add_routes(app)
+
+    @app.teardown_appcontext
+    def teardown_db(arg):
+        import logging
+        logging.info("teardown_db:  here are the args: %s", arg)
+        close_db()
 
     return app
