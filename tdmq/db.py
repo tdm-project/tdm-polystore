@@ -462,6 +462,7 @@ supported_bucket_ops = {
     "stddev",
     "stddev_pop",
     "stddev_samp",
+    "string_agg",
     "variance",
     "var_pop",
     "var_samp"
@@ -533,8 +534,15 @@ def get_timeseries(tdmq_id, args=None):
         # select_list.append( sql.SQL("time_bucket({}, record.time) AS time_bucket").format(sql.Literal(bucket_interval)) )
         select_list.append( sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)) )
         select_list.append( sql.SQL("ST_Centroid(ST_Collect(record.footprint)) AS footprint_centroid") )
+
+        if bucket_op == 'string_agg':
+            operation_args = "(data->>{}), ','"
+        else:
+            operation_args = "(data->{})::real"
+        access_template = "{}( " + operation_args + " ) AS {}"
+
         select_list.extend(
-            [ sql.SQL("{}( (data->{})::real ) AS {}").format(
+            [ sql.SQL(access_template).format(
                 sql.Identifier(bucket_op),
                 sql.Literal(field),
                 sql.Identifier(f"{bucket_op}_{field}"))
