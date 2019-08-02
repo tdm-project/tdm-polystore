@@ -566,7 +566,7 @@ def get_timeseries(tdmq_id, args=None):
     else:
         q += sql.SQL(" ORDER BY record.time ")
 
-    return query_db_all(q)
+    return properties, query_db_all(q)
 
 
 def add_db_cli(app):

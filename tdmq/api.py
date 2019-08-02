@@ -11,6 +11,13 @@ from tdmq.utils import convert_roi
 import logging
 logger = logging.getLogger(__name__)
 
+def restructure_timeseries(res, properties):
+    result = {}
+    t = zip(*res)
+    result['time'] = next(t)
+    result['footprint'] = next(t)
+    result['data'] = dict((p, next(t)) for p in properties)
+    return result
 
 def add_routes(app):
     @app.before_request
@@ -214,7 +221,8 @@ def add_routes(app):
             args['fields'] = args['fields'].split(',')
 
         try:
-            res = db.get_timeseries(tdmq_id, args)
+            properties, res = db.get_timeseries(tdmq_id, args)
+            res = restructure_timeseries(res, properties)
             return jsonify(res)
         except tdmq.errors.RequestException as e:
             return str(e), 400  # BAD_REQUEST
