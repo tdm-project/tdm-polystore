@@ -11,13 +11,14 @@ from tdmq.utils import convert_roi
 import logging
 logger = logging.getLogger(__name__)
 
-def restructure_timeseries(res, properties):
-    result = {}
+
+def restructure_timeseries(res, ts_names):
+    result = { 'data': None }
     t = zip(*res)
-    result['times'] = next(t)
-    result['footprints'] = next(t)
-    result['data'] = dict((p, next(t)) for p in properties)
+    result['data'] = dict((p, next(t)) for p in ts_names)
+
     return result
+
 
 def add_routes(app):
     @app.before_request
@@ -187,9 +188,21 @@ def add_routes(app):
           HTTP/1.1 200 OK
           Content-Type: application/json
 
-          {"timebase": "2019-02-21T11:03:25Z",
-           "timedelta": [0.11, 0.22, 0.33, 0.44],
-           "data": {'temperature':[12000, 12100, 12200, 12300]}}
+          {
+            "source_id": "...",
+            "default_footprint": {...},
+            "shape": [...],
+            "bucket": null,
+          <oppure>
+            "bucket": { "interval": 10, "op": "avg" },
+
+            "data": {
+              "humidity": [...],
+              "temperature": [...],
+              "footprint": [...],
+              "time": [...]
+            }
+          }
 
         :resheader Content-Type: application/json
 
@@ -215,17 +228,28 @@ def add_routes(app):
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'fields', 'op'])
         if args['bucket'] is not None:
-            assert args['op'] is not None
             args['bucket'] = timedelta(seconds=float(args['bucket']))
         if args['fields'] is not None:
             args['fields'] = args['fields'].split(',')
 
         try:
-            properties, res = db.get_timeseries(tdmq_id, args)
-            res = restructure_timeseries(res, properties)
-            return jsonify(res)
+            source_description, properties, rows = db.get_timeseries(tdmq_id, args)
         except tdmq.errors.RequestException as e:
             return str(e), 400  # BAD_REQUEST
+
+        ts_names = [ 'time', 'footprint' ]
+        ts_names.extend(properties)
+        res = restructure_timeseries(rows, ts_names)
+
+        res["tdmq_id"] = tdmq_id
+        res["default_footprint"] = source_description['default_footprint']
+        res["shape"] = source_description['shape']
+        if args['bucket']:
+            res["bucket"] = { "interval": args['bucket'].total_seconds(), "op": args.get("op") }
+        else:
+            res['bucket'] = None
+
+        return jsonify(res)
 
     @app.route('/records', methods=["POST"])
     def records():

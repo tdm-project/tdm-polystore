@@ -21,6 +21,7 @@
      "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
      "controlledProperties": ["humidity", "temperature"],
      "shape": [],
+     "storage": null,
      "description": {
         "type": "multisensor",
         "brandName": "ProSensor",
@@ -46,6 +47,7 @@
      "default_footprint": {"type": "Point", "coordinates": [9.343, 31.2]},
      "controlledProperties": ["temperature"],
      "shape": [],
+     "storage": "timescaledb",
      "description": {
         "type": "TemperatureSensorDTH11",
         "brandName": "Acme",
@@ -60,10 +62,36 @@
      "stationary": false,
      "controlledProperties": ["humidity"],
      "shape": [],
+     "storage": null,
      "description": {
         "type": "HumiditySensorDHT11",
         "brandName": "Acme",
         "modelName": "Acme multisensor DHT11",
         "manufacturerName": "Acme Inc." }
+    },
+    {"id": "tdm/tiledb_sensor_6",
+     "alias": "Mosaic of dpc meteo radars",
+     "entity_category": "Radar",
+     "entity_type": "MeteoRadarMosaic",
+     "default_footprint": {
+         "coordinates": [[
+             [4.537000517753033, 47.856095810774605, 0.0, 1.0],
+             [4.537000517753033, 35.07686201381699, 0.0, 1.0],
+             [20.436762466677894, 35.07686201381699, 0.0, 1.0],
+             [20.436762466677894, 47.856095810774605, 0.0, 1.0],
+             [4.537000517753033, 47.856095810774605, 0.0, 1.0]]],
+         "type": "Polygon" },
+     "stationary": true,
+     "controlledProperties": ["VMI", "SRI"], 
+     "shape": [1, 1, 1],
+     "storage": "tiledb",
+     "description": {
+        "type": "meteoRadar",
+        "brandName": "DPC",
+        "modelName": "dpc-radar-mosaic",
+        "manufacturerName": "Dipartimento Protezione Civile",
+        "category": ["sensor"],
+        "function": ["sensing"],
+        "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar" }
     }
 ]}

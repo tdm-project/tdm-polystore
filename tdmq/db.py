@@ -469,28 +469,61 @@ supported_bucket_ops = {
 }
 
 
-def _get_source_info(tdmq_id):
+def _get_source_description(tdmq_id):
     q = sql.SQL("""
         SELECT
-            source.description->'controlledProperties',
-            source.description->'shape'
+            source.description
         FROM source
         WHERE tdmq_id = %s""")
-    result = query_db_all(q, args=(tdmq_id,), one=True)
-    if result is None:
+    row = query_db_all(q, args=(tdmq_id,), one=True)
+    if row is None:
         raise tdmq.errors.ItemNotFoundException(f"tdmq_id {tdmq_id} not found in DB")
 
-    assert isinstance(result[0], list)
-    assert isinstance(result[1], list)
+    return row[0]
 
-    return dict(properties=result[0], shape=result[1])
+
+def _timeseries_select(properties):
+    select_list = [ sql.SQL("EXTRACT(epoch FROM record.time), record.footprint") ]
+    # select_list.append( sql.SQL("record.time, record.footprint") )
+    select_list.extend(
+        [ sql.SQL("data->{} AS {}").format(sql.Literal(field), sql.Identifier(field))
+            for field in properties ])
+
+    grouping_clause = sql.SQL(" ORDER BY record.time ASC ")
+
+    return dict(select_list=sql.SQL(", ").join(select_list), grouping_clause=grouping_clause)
+
+
+def _bucketed_timeseries_select(properties, bucket_interval, bucket_op):
+    select_list = []
+    # select_list.append( sql.SQL("time_bucket({}, record.time) AS time_bucket").format(sql.Literal(bucket_interval)) )
+    select_list.append( sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)) )
+    select_list.append( sql.SQL("ST_Collect(record.footprint) AS footprint_centroid") )
+
+    if bucket_op == 'string_agg':
+        operation_args = "(data->>{}), ','"
+    elif bucket_op == 'jsonb_agg':
+        operation_args = "(data->{})"
+    else:
+        operation_args = "(data->{})::real"
+    access_template = "{}( " + operation_args + " ) AS {}"
+
+    select_list.extend(
+        [ sql.SQL(access_template).format(
+            sql.Identifier(bucket_op),
+            sql.Literal(field),
+            sql.Identifier(f"{bucket_op}_{field}"))
+          for field in properties ] )
+
+    grouping_clause = sql.SQL("""
+        GROUP BY time_bucket
+        ORDER BY time_bucket ASC""")
+
+    return dict(select_list=sql.SQL(", ").join(select_list), grouping_clause=grouping_clause)
 
 
 def get_timeseries(tdmq_id, args=None):
     """
-     {'timebase': '2019-02-21T11:03:25Z',
-      'timedelta':[0.11, 0.22, 0.33, 0.44],
-      'data': [12000, 12100, 12200, 12300]}
      :query after: consider only sensors reporting strictly after
                    this time, e.g., '2019-02-21T11:03:25Z'
 
@@ -499,62 +532,49 @@ def get_timeseries(tdmq_id, args=None):
 
      :query bucket: time bucket for data aggregation, e.g., '20 min'
 
-     :query op: aggregation operation on data contained in bucket,
-                e.g., `sum`,  `average`, `count` FIXME.
+     :query op: aggregation operation on data contained in bucket. One of the
+                values in supported_bucket_ops
 
      :query fields: list of controlledProperties from the source,
                     or nothing to select all of them.
+
+     :returns: array of arrays: time, footprint, field+
+               Fields are in the same order as specified in args.
     """
 
-    logger.debug("get_timeseries -- here are the args: %s", args)
+    info = _get_source_description(tdmq_id)
 
-    info = _get_source_info(tdmq_id)
+    if info.get('shape'):
+        properties = ['tiledb_index']
+    else:
+        properties = info['controlledProperties']
+        if args.get('fields', []):
+            fields = set(args['fields'])
+            properties = set(properties) & fields
+            if fields != properties:
+                unknown_fields = ', '.join(fields - properties)
+                raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
 
-    properties = info['properties']
-    shape = info['shape']
-
-    if shape:
-        raise NotImplementedError(f"Only scalar timeseries are implemented at the moment. Item {tdmq_id} has shape {shape}")
-
-    if args.get('fields', []):
-        fields = set(args['fields'])
-        properties = set(properties) & fields
-        if fields != properties:
-            unknown_fields = ', '.join(fields - properties)
-            raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
-
-    select_list = []
+    query_template = sql.SQL("""
+        SELECT {select_list}
+            FROM record
+            WHERE {where_clause}
+            {grouping_clause}""")
 
     if args.get('bucket'):
         bucket_interval = args['bucket']
-        bucket_op = args['op']
-        if bucket_op not in supported_bucket_ops:
-            raise tdmq.errors.RequestException(f"Unsupported bucketing operation '{bucket_op}'")
 
-        # select_list.append( sql.SQL("time_bucket({}, record.time) AS time_bucket").format(sql.Literal(bucket_interval)) )
-        select_list.append( sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)) )
-        select_list.append( sql.SQL("ST_Centroid(ST_Collect(record.footprint)) AS footprint_centroid") )
-
-        if bucket_op == 'string_agg':
-            operation_args = "(data->>{}), ','"
+        if info.get('shape'):
+            bucket_op = 'jsonb_agg'
         else:
-            operation_args = "(data->{})::real"
-        access_template = "{}( " + operation_args + " ) AS {}"
+            bucket_op = args['op']
+            if bucket_op not in supported_bucket_ops:
+                raise tdmq.errors.RequestException(f"Unsupported bucketing operation '{bucket_op}'")
 
-        select_list.extend(
-            [ sql.SQL(access_template).format(
-                sql.Identifier(bucket_op),
-                sql.Literal(field),
-                sql.Identifier(f"{bucket_op}_{field}"))
-              for field in properties ] )
+        clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
     else:
         bucket_op = None
-
-        select_list.append( sql.SQL("EXTRACT(epoch FROM record.time), record.footprint") )
-        # select_list.append( sql.SQL("record.time, record.footprint") )
-        select_list.extend(
-            [ sql.SQL("data->{} AS {}").format(sql.Literal(field), sql.Identifier(field))
-                for field in properties ])
+        clauses = _timeseries_select(properties)
 
     where = [ sql.SQL("source_id = {}").format(sql.Literal(tdmq_id)) ]
 
@@ -563,18 +583,11 @@ def get_timeseries(tdmq_id, args=None):
     if args.get('before'):
         where.append( sql.SQL("record.time < {}").format(sql.Literal(args['before'])) )
 
-    q = sql.SQL(" ").join( (
-            sql.SQL("SELECT"),
-            sql.SQL(", ").join(select_list),
-            sql.SQL(" FROM record WHERE "), sql.SQL(" AND ").join(where)))
+    clauses['where_clause'] = sql.SQL(" AND ").join(where)
 
-    if bucket_op:
-        q += sql.SQL(" GROUP BY time_bucket ")
-        q += sql.SQL(" ORDER BY time_bucket ")
-    else:
-        q += sql.SQL(" ORDER BY record.time ")
+    query = query_template.format(**clauses)
 
-    return properties, query_db_all(q)
+    return info, properties, query_db_all(query)
 
 
 def add_db_cli(app):

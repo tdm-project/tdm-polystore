@@ -13,6 +13,9 @@
   {"time": "2019-05-02T11:00:00Z", "source": "tdm/sensor_4", "data": {"temperature": 27}},
   {"time": "2019-05-02T11:00:05Z", "source": "tdm/sensor_4", "data": {"temperature": 28}},
   {"time": "2019-05-02T11:00:00Z", "source": "tdm/sensor_5", "footprint": {"type": "Point", "coordinates": [9.222, 30.003]}, "data": {"humidity": 0.029}},
-  {"time": "2019-05-02T11:00:05Z", "source": "tdm/sensor_5", "footprint": {"type": "Point", "coordinates": [9.223, 30.004]}, "data": {"humidity": 0.127}}
+  {"time": "2019-05-02T11:00:05Z", "source": "tdm/sensor_5", "footprint": {"type": "Point", "coordinates": [9.223, 30.004]}, "data": {"humidity": 0.127}},
+  {"time": "2019-05-02T11:00:00Z", "source": "tdm/tiledb_sensor_6", "data": { "tiledb_index":1 } },
+  {"time": "2019-05-02T12:00:00Z", "source": "tdm/tiledb_sensor_6", "data": { "tiledb_index":2 } },
+  {"time": "2019-05-02T13:00:00Z", "source": "tdm/tiledb_sensor_6", "data": { "tiledb_index":3 } }
  ]
 }
