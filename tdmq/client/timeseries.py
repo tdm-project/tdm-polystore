@@ -1,5 +1,6 @@
 import abc
 import numpy as np
+from datetime import datetime
 
 
 class TimeSeries(abc.ABC):
@@ -8,7 +9,9 @@ class TimeSeries(abc.ABC):
         args = {'after': self.after, 'before': self.before,
                 'bucket': self.bucket, 'op': self.op}
         res = self.source.get_timeseries(args)
-        self.times = np.array(res['times'], dtype=np.float64)
+        self.time = np.array([datetime.fromtimestamp(v)
+                              for v in res['coords']['time']])
+        # FIXME manage footprint depending on self.source.is_static
         return res['data']
 
     @abc.abstractmethod
@@ -31,7 +34,7 @@ class TimeSeries(abc.ABC):
         self.fetch()
 
     def get_shape(self):
-        return (len(self.data),) + self.source.get_shape()
+        return (len(self.time),) + self.source.get_shape()
 
 
 class ScalarTimeSeries(TimeSeries):
@@ -42,7 +45,7 @@ class ScalarTimeSeries(TimeSeries):
 
     def get_item(self, args):
         assert len(args) == 1
-        return (self.times[args],
+        return (self.time[args],
                 dict((f, self.data[f][args]) for f in self.data))
 
 

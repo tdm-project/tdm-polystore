@@ -12,11 +12,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def restructure_timeseries(res, ts_names):
-    result = { 'data': None }
+def restructure_timeseries(res, properties):
+    # The arrays time and footprint define the scaffolding on which
+    # the actual data (properties) are defined.
+    result = {'coords': None, 'data': None}
     t = zip(*res)
-    result['data'] = dict((p, next(t)) for p in ts_names)
-
+    result['coords'] = dict((p, next(t)) for p in ['time', 'footprint'])
+    result['data'] = dict((p, next(t)) for p in properties)
     return result
 
 
@@ -233,19 +235,18 @@ def add_routes(app):
             args['fields'] = args['fields'].split(',')
 
         try:
-            source_description, properties, rows = db.get_timeseries(tdmq_id, args)
+            src_desc, properties, rows = db.get_timeseries(tdmq_id, args)
         except tdmq.errors.RequestException as e:
             return str(e), 400  # BAD_REQUEST
 
-        ts_names = [ 'time', 'footprint' ]
-        ts_names.extend(properties)
-        res = restructure_timeseries(rows, ts_names)
+        res = restructure_timeseries(rows, properties)
 
         res["tdmq_id"] = tdmq_id
-        res["default_footprint"] = source_description['default_footprint']
-        res["shape"] = source_description['shape']
+        res["default_footprint"] = src_desc['default_footprint']
+        res["shape"] = src_desc['shape']
         if args['bucket']:
-            res["bucket"] = { "interval": args['bucket'].total_seconds(), "op": args.get("op") }
+            res["bucket"] = {"interval": args['bucket'].total_seconds(),
+                             "op": args.get("op")}
         else:
             res['bucket'] = None
 

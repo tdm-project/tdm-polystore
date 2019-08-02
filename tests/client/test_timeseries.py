@@ -43,8 +43,7 @@ def test_check_timeseries_range():
             ts_times, data = ts[u:v]
             assert np.array_equal(data['temperature'], temps[u:v])
             assert np.array_equal(data['humidity'], hums[u:v])
-            assert np.array_equal(ts_times,
-                                  [t.timestamp() for t in times[u:v]])
+            assert np.array_equal(ts_times, times[u:v])
     tid = s.tdmq_id
     c.deregister_source(s)
     sources = dict((_.tdmq_id, _) for _ in c.get_sources())
@@ -76,12 +75,10 @@ def test_check_timeseries_bucket():
         data['humidity'],
         np.reshape(np.array(hums, dtype=np.float32),
                    (-1, bucket)).sum(axis=1))
-    assert np.allclose(
+    assert np.array_equal(
         ts_times,
-        np.reshape([t.timestamp() for t in times],
-                   (-1, bucket)).min(axis=1))
+        np.reshape(np.array(times), (-1, bucket)).min(axis=1))
     tid = s.tdmq_id
     c.deregister_source(s)
     sources = dict((_.tdmq_id, _) for _ in c.get_sources())
     assert tid not in sources
-

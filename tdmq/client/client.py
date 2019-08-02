@@ -16,6 +16,7 @@ logger.info('Logging is active.')
 
 
 from tdmq.client.sources import ScalarSource
+from tdmq.client.sources import NonScalarSource
 
 
 class AlreadyRegisteredId(RuntimeError):
@@ -25,6 +26,7 @@ class AlreadyRegisteredId(RuntimeError):
 source_classes = {
     ('Station', 'PointWeatherObserver'): ScalarSource,
     ('Station', 'EnergyConsumptionMonitor'): ScalarSource,
+    ('Radar', 'MeteoRadarMosaic'): NonScalarSource,
 }
 
 

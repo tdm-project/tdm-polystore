@@ -18,7 +18,10 @@ def register_sources(c):
     with open('../data/sources.json') as f:
         descs = json.load(f)['sources']
     srcs = []
+    nslots = 10 # FIXME just for testing
     for d in descs:
+        if 'shape' in d and len(d['shape']) > 0:
+            continue
         s = c.register_source(d)
         check_source(s, d)
         srcs.append(s)

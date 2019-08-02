@@ -80,7 +80,7 @@ def test_check_timeseries():
     ts_times, data = ts[:]
     assert np.array_equal(data['temperature'], temps)
     assert np.array_equal(data['humidity'], hums)
-    assert np.array_equal(ts_times, [t.timestamp() for t in times])
+    assert np.array_equal(ts_times, times)
     tid = s.tdmq_id
     c.deregister_source(s)
     sources = dict((_.tdmq_id, _) for _ in c.get_sources())
