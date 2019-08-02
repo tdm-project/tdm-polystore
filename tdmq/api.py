@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 def restructure_timeseries(res, properties):
     result = {}
     t = zip(*res)
-    result['time'] = next(t)
-    result['footprint'] = next(t)
+    result['times'] = next(t)
+    result['footprints'] = next(t)
     result['data'] = dict((p, next(t)) for p in properties)
     return result
 

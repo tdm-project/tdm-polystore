@@ -120,6 +120,7 @@ class Client:
         return s
 
     def get_timeseries(self, code, args):
+        args = dict((k, v) for k, v in args.items() if v is not None)
         return requests.get(f'{self.base_url}/sources/{code}/timeseries',
                             params=args).json()
 
