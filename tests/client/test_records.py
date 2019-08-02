@@ -45,7 +45,6 @@ def test_add_scalar_records():
     sources = dict((_.tdmq_id, _) for _ in c.get_sources())
     for tid in tdmq_ids:
         assert tid not in sources
-    assert False
 
 
 def test_add_scalar_record():

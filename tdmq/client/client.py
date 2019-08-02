@@ -121,6 +121,7 @@ class Client:
 
     def get_timeseries(self, code, args):
         args = dict((k, v) for k, v in args.items() if v is not None)
+        logger.debug('get_timeseries(%s, %s)', code, args)
         return requests.get(f'{self.base_url}/sources/{code}/timeseries',
                             params=args).json()
 

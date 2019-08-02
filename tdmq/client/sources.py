@@ -55,7 +55,7 @@ class ScalarSource(Source):
 
 
 class NonScalarSource(Source):
-    def timeseries(self, after, before, bucket=None, op=None):
+    def timeseries(self, after=None, before=None, bucket=None, op=None):
         return NonScalarTimeSeries(self, after, before, bucket, op)
 
     def get_shape(self):
