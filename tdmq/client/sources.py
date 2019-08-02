@@ -32,6 +32,15 @@ class Source(abc.ABC):
         "Returns the shape of the source record."
         pass
 
+    def add_record(self, record):
+        return self.add_records([record])
+
+    def add_records(self, records):
+        sid = {'source': self.id}
+        # sid will override potential pre-existing values for r['source']
+        to_be_shipped = [{**r, **sid} for r in records]
+        self.client.add_records(to_be_shipped)
+
 
 class ScalarSource(Source):
     def timeseries(self, after, before, bucket=None, op=None):

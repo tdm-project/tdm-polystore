@@ -24,7 +24,7 @@ class AlreadyRegisteredId(RuntimeError):
 
 source_classes = {
     ('Station', 'PointWeatherObserver'): ScalarSource,
-    ('Station', 'EnergyConsumptionMonitor'): ScalarSource,    
+    ('Station', 'EnergyConsumptionMonitor'): ScalarSource,
 }
 
 
@@ -56,11 +56,13 @@ class Client:
 
     def _register_thing(self, thing, description):
         assert isinstance(description, dict)
-        logger.debug('registering %s %s', thing, description)
+        logger.debug('registering %s id=%s', thing, description['id'])
         r = requests.post(f'{self.base_url}/{thing}', json=[description])
         self._check_sanity(r)
         res = dict(description)
         res['tdmq_id'] = r.json()[0]
+        logger.debug('%s (%s) registered as tdmq_id=%s',
+                     thing, description['id'], res['tdmq_id'])
         return res
 
     def deregister_source(self, s):
@@ -88,6 +90,9 @@ class Client:
                     f'Failure in creating tiledb array: {e}, cleaning up')
                 self._destroy_source(description['tdmq_id'])
         return self.get_source_proxy(description['tdmq_id'])
+
+    def add_records(self, records):
+        return requests.post(f'{self.base_url}/records', json=records)
 
     def get_entity_categories(self):
         return requests.get(f'{self.base_url}/entity_categories').json()
