@@ -26,9 +26,61 @@ All sources have a set of common properties:
    sequences of geometrical footprints, e.g., a moving sensor
    acquisition-positions)
  * a list of **controlledProperties**, e.g., [temperature, humidity]
+   they should **ALL** be interpretable as float32 numbers.
 
    
 Source could also have other, EntityType specific, properties.
+
+Example source description
+""""""""""""""""""""""""""
+
+The Italian DPC (FIXME) provides a service that every 5 minutes
+releases a new dataset build as a mosaic of data coming from DPC meteo
+radars.  Each record will consist of a 1400 by 1200 'image' with two
+float32 bands, VMI and SRI that represent, respectively, the
+precipitation (in mm/hour) and the maximum signal intensity (in db?
+FIXME).  The section 'geomapping' contains information needed to map
+the image grid to geography.
+::
+   {
+    "id": "tdm/tiledb_sensor_6",
+    "alias": "Mosaic of dpc meteo radars",
+    "entity_category": "Radar",
+    "entity_type": "MeteoRadarMosaic",
+    "default_footprint": {
+         "coordinates": [[
+             [4.537000517753033, 47.856095810774605, 0.0, 1.0],
+             [4.537000517753033, 35.07686201381699, 0.0, 1.0],
+             [20.436762466677894, 35.07686201381699, 0.0, 1.0],
+             [20.436762466677894, 47.856095810774605, 0.0, 1.0],
+             [4.537000517753033, 47.856095810774605, 0.0, 1.0]]],
+         "type": "Polygon" },
+    "stationary": True,
+    "controlledProperties": ["VMI", "SRI"], 
+    "shape": [1400, 1200],
+    "storage": "tiledb",
+    "geomapping": {
+        'SRID': 'EPSG:4326',
+        'grid': {'xsize': 1200, 'ysize': 1400},
+        'ModelTransformation': [
+            [0.013249801624104052, 0.0, 0.0, 4.537000517753033],
+            [0.0, -0.009128024140684008, 0.0, 47.856095810774605],
+            [0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0]]
+    },
+    "description": {
+        "type": "meteoRadar",
+        "brandName": "DPC",
+        "modelName": "dpc-radar-mosaic",
+        "manufacturerName": "Dipartimento Protezione Civile",
+        "category": ["sensor"],
+        "function": ["sensing"],
+        "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar" }
+   }
+
+See https://en.wikipedia.org/wiki/Spatial_reference_system
+
+
 
 A source acquires a timeseries of geo-located(?) datasets.
 
@@ -58,6 +110,9 @@ Possible footprint scenarios:
 
 The timeseries acquisition could be open-ended (e.g., weather stations
 sensors) or limited (i.e., a simulation).
+
+
+
 
 
 Data access
