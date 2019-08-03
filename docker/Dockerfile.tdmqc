@@ -9,4 +9,7 @@ COPY ./tdmq-dist /tdmq-dist
 WORKDIR /tdmq-dist
 RUN python3 setup.py install
 
-CMD ["tail", "-f", "/dev/null"]
+COPY tdmqc-entrypoint.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/tdmqc-entrypoint.sh
+
+ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]

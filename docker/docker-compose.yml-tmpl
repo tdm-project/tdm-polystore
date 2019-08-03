@@ -59,9 +59,9 @@ services:
     - "LOCAL_PATH/examples:/tdmq-dist/examples"
     #DEV - "LOCAL_PATH/tests:/tdmq-dist/tests"
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"    
-    entrypoint:
-      - bash
-      - -c
-      - "sleep 36000"
+    # entrypoint:
+    #  - bash
+    #  - -c
+    #  - "sleep 36000"
     environment:
       - NAMENODE_HOSTNAME=namenode
