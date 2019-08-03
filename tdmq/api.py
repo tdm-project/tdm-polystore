@@ -4,12 +4,20 @@ from flask import jsonify
 from flask import request
 from flask import url_for
 
+import werkzeug.exceptions
+
 import tdmq.db as db
 import tdmq.errors
 from tdmq.utils import convert_roi
 
+
 import logging
 logger = logging.getLogger(__name__)
+
+
+class DuplicateItemException(werkzeug.exceptions.HTTPException):
+    code = 512
+    description = 'Attemp to duplicate unique field.'
 
 
 def restructure_timeseries(res, properties):
@@ -122,7 +130,10 @@ def add_routes(app):
             return jsonify(res)
         elif request.method == "POST":
             data = request.json
-            tdmq_ids = db.load_sources(db.get_db(), data)
+            try:
+                tdmq_ids = db.load_sources(db.get_db(), data)
+            except tdmq.errors.DuplicateItemException as e:
+                raise DuplicateItemException(e.args)
             return jsonify(tdmq_ids)
         else:
             raise NotImplementedError(

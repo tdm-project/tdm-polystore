@@ -3,6 +3,7 @@ from flask import Flask
 
 from tdmq.db import add_db_cli, close_db
 from tdmq.api import add_routes
+from tdmq.api import DuplicateItemException
 
 
 def create_app(test_config=None):
@@ -26,6 +27,13 @@ def create_app(test_config=None):
 
     add_db_cli(app)
     add_routes(app)
+
+    @app.errorhandler(DuplicateItemException)
+    def handle_duplicate(e):
+        import logging
+        logging.error('duplicate item exception %s', e.args)
+        close_db()
+        return f'{e.args}', 512
 
     @app.teardown_appcontext
     def teardown_db(arg):
