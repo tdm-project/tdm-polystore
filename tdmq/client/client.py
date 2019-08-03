@@ -165,14 +165,6 @@ class Client:
         tiledb.DenseArray.create(array_name, schema)
         return array_name
 
-    def register_measure(self, measure):
-        assert isinstance(measure, dict)
-        # FIXME check if thing already exists and manage errors
-        r = requests.post(f'{self.base_url}/measures', json=[measure])
-        if r.status_code == 500:
-            raise ValueError('Illegal value')
-        return r.json()
-
     def register_sensor_type(self, description):
         description = self.register_thing('sensor_types', description)
         self.update_sensor_types()
