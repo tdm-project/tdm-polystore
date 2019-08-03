@@ -164,9 +164,3 @@ class Client:
         # Create the (empty) array on disk.
         tiledb.DenseArray.create(array_name, schema)
         return array_name
-
-    def register_sensor_type(self, description):
-        description = self.register_thing('sensor_types', description)
-        self.update_sensor_types()
-        return description
-
