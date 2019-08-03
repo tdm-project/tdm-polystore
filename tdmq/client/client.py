@@ -2,6 +2,9 @@ import requests
 import tiledb
 import os
 import numpy as np
+from tdmq.errors import TdmqError
+from tdmq.errors import DuplicateItemException
+
 
 # FIXME build a better logging infrastructure
 import logging
@@ -19,10 +22,6 @@ from tdmq.client.sources import ScalarSource
 from tdmq.client.sources import NonScalarSource
 
 
-class AlreadyRegisteredId(RuntimeError):
-    pass
-
-
 source_classes = {
     ('Station', 'PointWeatherObserver'): ScalarSource,
     ('Station', 'EnergyConsumptionMonitor'): ScalarSource,
@@ -31,7 +30,7 @@ source_classes = {
 
 
 class Client:
-    TILEDB_HDFS_ROOT = 'hdfs://hdfs:9000/arrays'
+    TILEDB_HDFS_ROOT = 'hdfs://namenode:8020/arrays'
     TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
 
     def __init__(self,
@@ -40,18 +39,23 @@ class Client:
             if tdmq_base_url is None else tdmq_base_url
         self.tiledb_hdfs_root = self.TILEDB_HDFS_ROOT \
             if tiledb_hdfs_root is None else tiledb_hdfs_root
-        self.tiledb_ctx = tiledb_ctx
+        self.tiledb_ctx = tiledb.Ctx() if tiledb_ctx is None else tiledb_ctx
         self.managed_objects = {}
 
     def _check_sanity(self, r):
         try:
             r.raise_for_status()
         except requests.HTTPError as e:
-            raise AlreadyRegisteredId(e.args)
+            # FIXME check if it is an actual duplicate!
+            raise DuplicateItemException(e.args)
 
     def _destroy_source(self, tdmq_id):
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}')
         self._check_sanity(r)
+        array_name = self._source_data_path(tdmq_id)
+        if tiledb.object_type(self._source_data_path(tdmq_id),
+                              ctx=self.tiledb_ctx) == 'array':
+            tiledb.remove(array_name, ctx=self.tiledb_ctx)
 
     def _source_data_path(self, tdmq_id):
         return os.path.join(self.tiledb_hdfs_root, tdmq_id)
@@ -78,20 +82,21 @@ class Client:
             # NO-OP
             pass
 
-    def register_source(self, description, nslots=None):
+    def register_source(self, description, nslots=10000):
         """Register a new data source
         .. :quickref: Register a new data source
+
         """
-        description = self._register_thing('sources', description)
-        if 'shape' in description and len(description['shape']) > 0:
-            assert nslots is not None
+        d = self._register_thing('sources', description)
+        if 'shape' in d and len(d['shape']) > 0:
             try:
-                self._create_tiledb_array(nslots, description)
+                self._create_tiledb_array(nslots, d)
             except Exception as e:
-                logger.error(
-                    f'Failure in creating tiledb array: {e}, cleaning up')
-                self._destroy_source(description['tdmq_id'])
-        return self.get_source_proxy(description['tdmq_id'])
+                msg = f'Failure in creating tiledb array: {e}, cleaning up'
+                logger.error(msg)
+                self._destroy_source(d['tdmq_id'])
+                raise TdmqError(f"Internal failure in registering {d['id']}.")
+        return self.get_source_proxy(d['tdmq_id'])
 
     def add_records(self, records):
         return requests.post(f'{self.base_url}/records', json=records)
@@ -145,22 +150,29 @@ class Client:
         return data
 
     def _create_tiledb_array(self, n_slots, description):
-        array_name = self.sensor_data_path(description['code'])
+        array_name = self._source_data_path(description['tdmq_id'])
+        logger.debug(f'attempting creation of {array_name}')
         if tiledb.object_type(array_name) is not None:
-            raise ValueError('duplicate object with path %s' % array_name)
+            raise DuplicateItemException(
+                f'duplicate object with path {array_name}')
         shape = description['shape']
         assert len(shape) > 0 and n_slots > 0
-        dims = [tiledb.Dim(name="delta_t",
+        dims = [tiledb.Dim(name="slot",
                            domain=(0, n_slots),
                            tile=1, dtype=np.int32)]
         dims = dims + [tiledb.Dim(name=f"dim{i}", domain=(0, n - 1),
                                   tile=n, dtype=np.int32)
                        for i, n in enumerate(shape)]
+        logger.debug(f'trying domain creation for {array_name}')
         dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
+        logger.debug(f'trying attribute creation for {array_name}')
         attrs = [tiledb.Attr(name=aname, dtype=np.float32)
-                 for aname in description['controlledProperty']]
+                 for aname in description['controlledProperties']]
+        logger.debug(f'trying ArraySchema creation for {array_name}')
         schema = tiledb.ArraySchema(domain=dom, sparse=False,
                                     attrs=attrs, ctx=self.tiledb_ctx)
         # Create the (empty) array on disk.
-        tiledb.DenseArray.create(array_name, schema)
+        logger.debug(f'trying creation on disk of {array_name}')
+        tiledb.DenseArray.create(array_name, schema, ctx=self.tiledb_ctx)
+        logger.debug(f'{array_name} successfully created.')
         return array_name

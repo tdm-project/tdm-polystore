@@ -14,10 +14,8 @@ class Source(abc.ABC):
         self.entity_type = desc['entity_type']
         self.is_stationary = desc['stationary']
         self.default_footprint = desc['default_footprint']
-        self.description = desc
-
-    def default_footprint(self):
-        return self.description['default_footprint']
+        self.description = desc['description']
+        self.shape = tuple(self.description.get('shape', ()))
 
     def get_timeseries(self, args):
         return self.client.get_timeseries(self.tdmq_id, args)
@@ -27,11 +25,6 @@ class Source(abc.ABC):
 
     @abc.abstractmethod
     def timeseries(self, after, before, bucket=None, op=None):
-        pass
-
-    @abc.abstractmethod
-    def get_shape(self):
-        "Returns the shape of the source record."
         pass
 
     def add_record(self, record):
@@ -50,14 +43,7 @@ class ScalarSource(Source):
     def timeseries(self, after=None, before=None, bucket=None, op=None):
         return ScalarTimeSeries(self, after, before, bucket, op)
 
-    def get_shape(self):
-        return ()
-
 
 class NonScalarSource(Source):
     def timeseries(self, after=None, before=None, bucket=None, op=None):
         return NonScalarTimeSeries(self, after, before, bucket, op)
-
-    def get_shape(self):
-        shape = self.description['shape']
-        return tuple(shape)
