@@ -185,7 +185,7 @@ def add_tables(db):
       );
 
       CREATE TABLE record (
-          time TIMESTAMP(3) NOT NULL,
+          time TIMESTAMP(6) NOT NULL,
           source_id UUID NOT NULL REFERENCES source(tdmq_id) ON DELETE CASCADE,
           footprint GEOMETRY, -- source.stationary is true => record.footprint is NULL
           data JSONB NOT NULL
