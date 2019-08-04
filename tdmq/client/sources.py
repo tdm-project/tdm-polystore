@@ -1,5 +1,6 @@
 from tdmq.client.timeseries import ScalarTimeSeries
 from tdmq.client.timeseries import NonScalarTimeSeries
+from tdmq.errors import UnsupportedFunctionality
 import abc
 from collections.abc import Iterable
 from collections.abc import Mapping
@@ -16,15 +17,20 @@ class Source(abc.ABC):
         self.default_footprint = desc['default_footprint']
         self.description = desc['description']
         self.shape = tuple(self.description.get('shape', ()))
+        self.controlled_properties = self.description['controlledProperties']
 
     def get_timeseries(self, args):
         return self.client.get_timeseries(self.tdmq_id, args)
 
     def fetch_data_block(self, block_of_refs, args):
-        return self.client.fetch_data_block(block_of_refs, args)
+        return self.client.fetch_data_block(self.tdmq_id, block_of_refs, args)
 
     @abc.abstractmethod
     def timeseries(self, after, before, bucket=None, op=None):
+        pass
+
+    @abc.abstractmethod
+    def ingest(self, t, data, slot=None):
         pass
 
     def add_record(self, record):
@@ -43,7 +49,21 @@ class ScalarSource(Source):
     def timeseries(self, after=None, before=None, bucket=None, op=None):
         return ScalarTimeSeries(self, after, before, bucket, op)
 
+    def ingest(self, t, data, slot=None):
+        self.add_record({'time': t.strftime(self.client.TDMQ_DT_FMT),
+                         'data': data})
+
 
 class NonScalarSource(Source):
     def timeseries(self, after=None, before=None, bucket=None, op=None):
         return NonScalarTimeSeries(self, after, before, bucket, op)
+
+    def ingest(self, t, data, slot=None):
+        if slot is None:
+            raise UnsupportedFunctionality(f'No auto-slot support yet.')
+        for p in self.controlled_properties:
+            if p not in data:
+                raise ValueError(f'data is missing field {p}')
+        self.client.save_tiledb_frame(self.tdmq_id, slot, data)
+        self.add_record({'time': t.strftime(self.client.TDMQ_DT_FMT),
+                         'data': {'tiledb_index': slot}})

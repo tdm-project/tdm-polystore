@@ -62,6 +62,26 @@ def test_add_scalar_record():
         assert tid not in sources
 
 
+def test_ingest_scalar_record():
+    c = Client()
+    srcs = register_sources(c)
+    by_source = get_records()
+    tdmq_ids = []
+    for s in srcs:
+        for r in by_source[s.id]:
+            try:
+                t = datetime.strptime(r['time'], c.TDMQ_DT_FMT)
+            except ValueError:
+                t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
+            data = r['data']
+            s.ingest(t, data)
+        c.deregister_source(s)
+        tdmq_ids.append(s.tdmq_id)
+    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    for tid in tdmq_ids:
+        assert tid not in sources
+
+
 def test_check_timeseries():
     c = Client()
     s = c.register_source(source_desc)
@@ -72,10 +92,7 @@ def test_check_timeseries():
     temps = [20 + i for i in range(N)]
     hums = [i/N for i in range(N)]
     for t, tv, th in zip(times, temps, hums):
-        s.add_record({'time': t.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                      'source': s.id,
-                      'data': {'temperature': tv,
-                               'humidity': th}})
+        s.ingest(t, {'temperature': tv, 'humidity': th})
     ts = s.timeseries()
     ts_times, data = ts[:]
     assert np.array_equal(data['temperature'], temps)

@@ -55,18 +55,14 @@ class NonScalarTimeSeries(TimeSeries):
 
     def fetch_data_block(self, args):
         if self.bucket is None:
-            block_of_refs = self.data[args[0]]
-            block_of_refs = block_of_refs \
-                if isinstance(args[0], slice) else [block_of_refs]
-            return self.source.fetch_data_block(
-                block_of_refs, args)
+            return self.source.fetch_data_block(self.data, args)
         else:
             raise ValueError(f'bucket not supported')
 
     def get_item(self, args):
         assert len(args) > 0
-        times = self.times[args[0]]
-        if isinstance(args[0], slice) and len(times) == 0:
-            return (times, np.array([], dtype=np.int32))
+        time = self.time[args[0]]
+        if isinstance(args[0], slice) and len(time) == 0:
+            return (time, np.array([], dtype=np.int32))
         else:
-            return (times, self.fetch_data_block(args))
+            return (time, self.fetch_data_block(args))

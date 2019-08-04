@@ -49,11 +49,11 @@ the image grid to geography.
     "entity_type": "MeteoRadarMosaic",
     "default_footprint": {
          "coordinates": [[
-             [4.537000517753033, 47.856095810774605, 0.0, 1.0],
-             [4.537000517753033, 35.07686201381699, 0.0, 1.0],
-             [20.436762466677894, 35.07686201381699, 0.0, 1.0],
-             [20.436762466677894, 47.856095810774605, 0.0, 1.0],
-             [4.537000517753033, 47.856095810774605, 0.0, 1.0]]],
+             [4.537000517753033, 47.856095810774605],
+             [4.537000517753033, 35.07686201381699],
+             [20.436762466677894, 35.07686201381699],
+             [20.436762466677894, 47.856095810774605],
+             [4.537000517753033, 47.856095810774605]]],
          "type": "Polygon" },
     "stationary": True,
     "controlledProperties": ["VMI", "SRI"], 
@@ -111,6 +111,8 @@ Possible footprint scenarios:
 The timeseries acquisition could be open-ended (e.g., weather stations
 sensors) or limited (i.e., a simulation).
 
+**NOTE**
+Within TDMQ all datetime information is described by datetime.datetime objects.
 
 
 

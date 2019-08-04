@@ -4,6 +4,7 @@ import os
 import numpy as np
 from tdmq.errors import TdmqError
 from tdmq.errors import DuplicateItemException
+from tdmq.errors import UnsupportedFunctionality
 
 
 # FIXME build a better logging infrastructure
@@ -32,6 +33,8 @@ source_classes = {
 class Client:
     TILEDB_HDFS_ROOT = 'hdfs://namenode:8020/arrays'
     TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
+    TDMQ_DT_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'
+    TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'    
 
     def __init__(self,
                  tdmq_base_url=None, tiledb_ctx=None, tiledb_hdfs_root=None):
@@ -90,6 +93,10 @@ class Client:
         d = self._register_thing('sources', description)
         if 'shape' in d and len(d['shape']) > 0:
             try:
+                # FIXME add storage drivers
+                if d['storage'] !=  'tiledb':
+                    raise UnsupportedFunctionality(
+                        f'storage type {d["storage"]} not supported.')
                 self._create_tiledb_array(nslots, d)
             except Exception as e:
                 msg = f'Failure in creating tiledb array: {e}, cleaning up'
@@ -132,20 +139,27 @@ class Client:
         return requests.get(f'{self.base_url}/sources/{code}/timeseries',
                             params=args).json()
 
-    def fetch_data_block(self, block_of_refs, args):
-        urls = set(r[0] for r in block_of_refs)
-        # FIXME we support only trivial cases, for the time being
-        assert len(urls) == 1
-        indices = np.array([r[1] for r in block_of_refs], dtype=np.int32)
+    def save_tiledb_frame(self, tdmq_id, slot, data):
+        aname = self._source_data_path(tdmq_id)
+        with tiledb.DenseArray(aname, mode='w', ctx=self.tiledb_ctx) as A:
+            A[slot:slot+1] = data
+
+    def fetch_data_block(self, tdmq_id, data, args):
+        # FIXME hwired on tiledb
+        tiledb_index = data['tiledb_index']
+        block_of_indx = tiledb_index[args[0]]
+        block_of_indx = block_of_indx \
+            if isinstance(args[0], slice) else [block_of_indx]
+        aname = self._source_data_path(tdmq_id)
+        indices = np.array(block_of_indx, dtype=np.int32)
         assert len(indices) == 1 or np.all(indices[1:] - indices[:-1] == 1)
-        url = urls.pop()
         if isinstance(args[0], slice):
             args = (slice(int(indices.min()),
                           int(indices.max()) + 1), ) + args[1:]
         else:
             assert len(indices) == 1
             args = (int(indices[0]),) + args[1:]
-        with tiledb.DenseArray(url, mode='r', ctx=self.tiledb_ctx) as A:
+        with tiledb.DenseArray(aname, mode='r', ctx=self.tiledb_ctx) as A:
             data = A[args]
         return data
 

@@ -12,6 +12,7 @@ def check_source(s, d):
     assert sdf['type'] == ddf['type']
     assert sdf['coordinates'][0] == pytest.approx(ddf['coordinates'][0])
     assert sdf['coordinates'][1] == pytest.approx(ddf['coordinates'][1])
+    assert s.controlled_properties == d['controlledProperties']        
     assert s.shape == ()
 
 
