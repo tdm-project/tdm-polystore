@@ -14,3 +14,7 @@ class DuplicateItemException(RequestException):
 
 class ItemNotFoundException(RequestException):
     pass
+
+
+class UnsupportedFunctionality(TdmqError):
+    pass
