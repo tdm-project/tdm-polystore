@@ -5,9 +5,11 @@ RUN apt-get update -q \
         libnss-wrapper \
  && pip3 install --no-cache-dir requests pytest flask click psycopg2-binary
 
-ENV TDMQ_DIST=/tdmq-dist \
-    HADOOP_LOG_DIR="/tmp/hadoop_logs"
-ENV DATA_DIR="${TDMQ_DIST}/data"
+ENV TDMQ_DIST=/tdmq-dist
+
+ENV DATA_DIR="${TDMQ_DIST}/data" \
+    HADOOP_LOG_DIR="/tmp/hadoop_logs" \
+    LANG=C.UTF-8
 
 # TileDB doesn't seem to pass HADOOP_LOG_DIR to libhdfs, so we have trouble
 # overriding some default settings.  The sed command below comments out the
