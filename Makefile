@@ -55,6 +55,9 @@ start: images docker/docker-compose.yml
 stop:
 	docker-compose -f ./docker/docker-compose.yml down
 
+tests-dev: startdev
+	docker-compose -f ./docker/docker-compose-dev.yml exec --user $$(id -u) tdmqc /bin/bash -c 'cd $${TDMQ_DIST}/tests && fake_user.sh pytest -v'
+
 clean: stop
 
 
