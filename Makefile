@@ -7,9 +7,9 @@ TDMQ_FILES=$(wildcard tdmq/*.py tdmq/client/*.py)
 all: images
 
 # FIXME copying tests/data twice...
-docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests/data
+docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
-	cp -rf apidocs setup.py tdmq tests/data docker/tdmq-dist
+	cp -rf apidocs setup.py tdmq tests docker/tdmq-dist
 
 tdmqc-deps: docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc  --target=deps -t tdmproject/tdmqc-deps docker
