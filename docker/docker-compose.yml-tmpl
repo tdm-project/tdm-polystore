@@ -55,13 +55,10 @@ services:
     depends_on:
     - "namenode"
     - "web"
-    volumes:
-    - "LOCAL_PATH/examples:/tdmq-dist/examples"
+    #DEV user: USER_UID:USER_GID
+    #DEV volumes:
+    #DEV - "LOCAL_PATH/examples:/tdmq-dist/examples"
     #DEV - "LOCAL_PATH/tests:/tdmq-dist/tests"
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"    
-    # entrypoint:
-    #  - bash
-    #  - -c
-    #  - "sleep 36000"
     environment:
       - NAMENODE_HOSTNAME=namenode
