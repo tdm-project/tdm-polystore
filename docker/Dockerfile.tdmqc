@@ -1,15 +1,28 @@
 FROM tdmproject/tiledb:0.1.1 AS deps
 
-RUN pip3 install --no-cache-dir requests pytest  flask click psycopg2-binary
+RUN apt-get update -q \
+ && apt-get install -y --no-install-recommends \
+        libnss-wrapper \
+ && pip3 install --no-cache-dir requests pytest flask click psycopg2-binary
+
+ENV TDMQ_DIST=/tdmq-dist
+ENV DATA_DIR="${TDMQ_DIST}/data"
+
+
+COPY --chown=root tdmq_scripts.sh /usr/local/lib/
+RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
+ && chmod a+w -R /opt/hadoop/etc/hadoop/
 
 
 FROM deps
 
-COPY ./tdmq-dist /tdmq-dist
+ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
+
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
 WORKDIR /tdmq-dist
 RUN python3 setup.py install
 
-COPY tdmqc-entrypoint.sh /usr/local/bin/
+COPY --chown=root tdmqc-entrypoint.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/tdmqc-entrypoint.sh
 
-ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
+
