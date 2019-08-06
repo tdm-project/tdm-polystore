@@ -16,7 +16,7 @@ def test_db_init(runner, monkeypatch):
 def test_db_load(runner, monkeypatch):
     class Recorder:
         called = False
-        result = {'sensor_types': 2, 'nodes': 4, 'sensors': 10}
+        result = {'sources': 6, 'records': 17}
 
     def fake_load_file(fname):
         Recorder.called = fname

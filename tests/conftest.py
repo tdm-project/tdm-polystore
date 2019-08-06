@@ -1,7 +1,7 @@
 import psycopg2 as psy
 import pytest
 from tdmq import create_app
-import datetime
+
 
 @pytest.fixture
 def app():
@@ -37,6 +37,9 @@ def db(app):
         'host': app.config['DB_HOST'],
         'dbname': app.config['DB_NAME'],
     }
-    return psy.connect(**db_settings)
+    connection = psy.connect(**db_settings)
 
+    yield connection
 
+    print("Tearing down DB connection")
+    connection.close()
