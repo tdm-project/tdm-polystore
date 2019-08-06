@@ -206,6 +206,7 @@ def add_tables(db):
 
       INSERT INTO entity_type VALUES
           ('Radar', 'MeteoRadarMosaic'),
+          ('Station', 'WeatherObserver'),
           ('Station', 'PointWeatherObserver'),
           ('Station', 'TemperatureMosaic'),
           ('Station', 'EnergyConsumptionMonitor')
