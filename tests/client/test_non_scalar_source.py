@@ -1,6 +1,6 @@
 import pytest
 import json
-from tdmq.client.client import Client
+from tdmq.client import Client
 import numpy as np
 from datetime import datetime, timedelta
 
