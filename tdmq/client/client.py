@@ -30,11 +30,29 @@ source_classes = {
 }
 
 
+class ProxyFactory:
+    def __init__(self, src_classes=None):
+        self.src_classes = {} if src_classes is None else src_classes
+
+    def _guess_from_description(self, desc):
+        if 'shape' in desc and len(desc['shape']) > 0:
+            return NonScalarSource
+        else:
+            return ScalarSource
+
+    def make(self, client, tdmq_id, desc):
+        key = (desc['entity_category'], desc['entity_type'])
+        if key not in self.src_classes:
+            self.src_classes[key] = self._guess_from_description(desc)
+        class_ = self.src_classes[key]
+        return class_(client, tdmq_id, desc)
+
+
 class Client:
     TILEDB_HDFS_ROOT = 'hdfs://namenode:8020/arrays'
     TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
     TDMQ_DT_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'
-    TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'    
+    TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self,
                  tdmq_base_url=None, tiledb_ctx=None, tiledb_hdfs_root=None):
@@ -44,6 +62,7 @@ class Client:
             if tiledb_hdfs_root is None else tiledb_hdfs_root
         self.tiledb_ctx = tiledb.Ctx() if tiledb_ctx is None else tiledb_ctx
         self.managed_objects = {}
+        self.proxy_factory = ProxyFactory(source_classes)
 
     def _check_sanity(self, r):
         try:
@@ -127,8 +146,7 @@ class Client:
             return self.managed_objects[tdmq_id]
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
-        s = source_classes[(res['entity_category'], res['entity_type'])](
-            self, tdmq_id, res)
+        s = self.proxy_factory.make(self, tdmq_id, res)
         logger.debug('new managed object %s', s.tdmq_id)
         self.managed_objects[s.tdmq_id] = s
         return s
