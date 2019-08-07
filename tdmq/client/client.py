@@ -43,8 +43,11 @@ class ProxyFactory:
     def make(self, client, tdmq_id, desc):
         key = (desc['entity_category'], desc['entity_type'])
         if key not in self.src_classes:
-            self.src_classes[key] = self._guess_from_description(desc)
+            self.src_classes[key] = self._guess_from_description(
+                desc['description'])
+            logger.debug(f'Added new src_class {key} {self.src_classes[key]}.')
         class_ = self.src_classes[key]
+        logger.debug(f'Using class {class_} for {key}.')
         return class_(client, tdmq_id, desc)
 
 
@@ -110,10 +113,11 @@ class Client:
 
         """
         d = self._register_thing('sources', description)
+        logger.debug(d['shape'])
         if 'shape' in d and len(d['shape']) > 0:
             try:
                 # FIXME add storage drivers
-                if d['storage'] !=  'tiledb':
+                if d['storage'] != 'tiledb':
                     raise UnsupportedFunctionality(
                         f'storage type {d["storage"]} not supported.')
                 self._create_tiledb_array(nslots, d)
