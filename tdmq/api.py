@@ -24,7 +24,7 @@ def restructure_timeseries(res, properties):
     # The arrays time and footprint define the scaffolding on which
     # the actual data (properties) are defined.
     result = {'coords': None, 'data': None}
-    t = zip(*res)
+    t = zip(*res) if len(res) > 0 else iter([[]] * (2 + len(properties)))
     result['coords'] = dict((p, next(t)) for p in ['time', 'footprint'])
     result['data'] = dict((p, next(t)) for p in properties)
     return result

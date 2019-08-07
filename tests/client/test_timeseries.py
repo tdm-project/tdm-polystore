@@ -82,3 +82,12 @@ def test_check_timeseries_bucket():
     c.deregister_source(s)
     sources = dict((_.tdmq_id, _) for _ in c.get_sources())
     assert tid not in sources
+
+
+def test_empty_timeseries():
+    c = Client()
+    s = c.register_source(source_desc)
+    # empty timeseries
+    ts = s.timeseries()
+    assert len(ts) == 0
+    c.deregister_source(s)

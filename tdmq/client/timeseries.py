@@ -22,6 +22,9 @@ class TimeSeries(abc.ABC):
     def get_item(self, args):
         pass
 
+    def __len__(self):
+        return len(self.time)
+
     def __getitem__(self, indx):
         return self.get_item(np.index_exp[indx])
 
@@ -31,6 +34,7 @@ class TimeSeries(abc.ABC):
         self.before = before
         self.bucket = bucket
         self.op = op
+        self.time = []
         self.fetch()
 
     def get_shape(self):
