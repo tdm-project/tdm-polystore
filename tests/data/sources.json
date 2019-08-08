@@ -15,10 +15,10 @@
      }
     },
     {"id": "tdm/sensor_1",
-     "alias": "B221",
+     "alias": "porto conte",
      "entity_type": "PointWeatherObserver",
      "entity_category": "Station",
-     "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
+     "default_footprint": {"type": "Point", "coordinates": [8.246969, 40.584128]},
      "controlledProperties": ["humidity", "temperature"],
      "shape": [],
      "storage": null,

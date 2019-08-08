@@ -32,7 +32,6 @@ def create_app(test_config=None):
     def handle_duplicate(e):
         import logging
         logging.error('duplicate item exception %s', e.args)
-        close_db()
         return f'{e.args}', 512
 
     @app.teardown_appcontext

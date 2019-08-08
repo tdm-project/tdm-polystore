@@ -1,93 +1,8 @@
-import json
-import os
+
 import pytest
-import uuid
-from collections import OrderedDict
-from copy import deepcopy
-from datetime import datetime, timedelta
-from tdmq.utils import convert_roi
+from datetime import datetime
 
-pytestmark = pytest.mark.skip(reason="not up-to-date with json model migration")
-
-root = os.path.dirname(os.path.abspath(__file__))
-sources_fname = os.path.join(root, 'data/sources.json')
-records_fname = os.path.join(root, 'data/records.json')
-
-
-# FIXME move it to a fixture?
-class FakeDB:
-
-    NS = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
-
-    def _load_sources(self, fname):
-        table = OrderedDict()
-        with open(fname) as f:
-            data = json.load(f)
-        descriptions = next(iter(data.values()))
-        for d in descriptions:
-            tdmq_id = str(uuid.uuid5(self.NS, d['id']))
-            table[tdmq_id] = d
-        self.sources = table
-
-    def _load_records(self, fname):
-        with open(fname) as f:
-            records = json.load(f)['records']
-        data = {}
-        for m in records:
-            tdmq_id = str(uuid.uuid5(self.NS, m['source']))
-            data.setdefault(tdmq_id, []).append(
-                [datetime.strptime(m['time'], '%Y-%m-%dT%H:%M:%SZ'),
-                 # m['geometry'],
-                 m['dataset']])
-        self.timeseries = {}
-        for k in data:
-            ts = sorted(data[k])
-            time_origin = ts[0][0]
-            ts = [[(_[0] - time_origin).seconds, _[1:]] for _ in ts]
-            self.timeseries[k] = {
-                'time_origin': time_origin.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                'data': ts}
-        
-
-    def __init__(self):
-        self.called = {}
-        self._load_sources(sources_fname)
-        self._load_records(records_fname)
-        self.entity_types = dict(('MeteoRadarMosaic', 'Radar'),
-                                 ('PointWeatherObserver', 'Station'),
-                                 ('TemperatureMosaic', 'Station'))
-        
-        self.geometry_types = [
-            'Point', 'LineString', 'Polygon',
-            'MultiPoint', 'MultiLineString', 'MultiPolygon',
-            'GeometryCollection', 'CircularString', 'CompoundCurve',
-            'CurvePolygon', 'MultiCurve', 'MultiSurface',
-            'PolyhedralSurface', 'Triangle', 'Tin']
-
-    def list_entity_types(self):
-        self.called['list_entity_types'] = ()
-        return list(self.entity_types.keys())
-        
-    def list_entity_categories(self):
-        self.called['list_entity_categories'] = ()
-        return list(self.entity_types.values())        
-    
-    def list_geometry_types(self):
-        self.called['list_geometry_types'] = ()
-        return self.geometry_types
-        
-    def list_sources(self, args):
-        self.called['list_sources'] = args
-        return list(deepcopy(self.sources).items())
-
-    def get_source(self, tdmq_id):
-        self.called['get_source'] = {'tdmq_id': tdmq_id}
-        return deepcopy(self.sources[tdmq_id])
-
-    def get_timeseries(self, tdmq_id, args):
-        args['tdmq_id'] = tdmq_id
-        self.called['get_timeseries'] = args
-        return self.timeseries[tdmq_id]
+import logging
 
 
 def _checkresp(response, table=None):
@@ -102,82 +17,156 @@ def _checkresp(response, table=None):
             assert r == table[tdmq_id]
 
 
-# def test_source_types(client, monkeypatch):
-#     fakedb = FakeDB()
-#     monkeypatch.setattr('tdmq.db.list_source_types', fakedb.list_source_types)
-#     in_args = {"type": "multisource", "controlledProperty": "temperature"}
-#     q = "&".join(f"{k}={v}" for k, v in in_args.items())
-#     response = client.get(f'/source_types?{q}')
-#     assert 'list_source_types' in fakedb.called
-#     args = fakedb.called['list_source_types']
-#     assert {k: v for k, v in args.items()} == in_args
-#     _checkresp(response, table=fakedb.source_types)
-
-
-def test_sources_no_args(client, monkeypatch):
-    fakedb = FakeDB()
-    monkeypatch.setattr('tdmq.db.list_sources', fakedb.list_sources)
-    response = client.get('/sources')
-    assert 'list_sources' in fakedb.called
-    _checkresp(response, table=fakedb.sources)
-
-
-def test_sources(client, monkeypatch):
-    fakedb = FakeDB()
-    monkeypatch.setattr('tdmq.db.list_sources', fakedb.list_sources)
-    geom = 'circle((9.2, 33), 1000)'
-    after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    q = f'roi={geom}&after={after}&before={before}'
+def test_source_types(client, db_data):
+    in_args = {"type": "multisource", "controlledProperties": "temperature"}
+    q = "&".join(f"{k}={v}" for k, v in in_args.items())
     response = client.get(f'/sources?{q}')
-    assert 'list_sources' in fakedb.called
-    args = fakedb.called['list_sources']
-    assert args['roi'] == convert_roi(geom)
-    assert args['after'] == after and args['before'] == before
-    _checkresp(response, table=fakedb.sources)
+    _checkresp(response)
+    data = response.get_json()
+
+    for s in data:
+        assert s.description['type'] == in_args['type']
+        assert s.controlledProperties == in_args['controlledProperties'].split(',')
 
 
-def test_sources_fail(client, monkeypatch):
-    fakedb = FakeDB()
-    monkeypatch.setattr('tdmq.db.list_sources', fakedb.list_sources)
+def _parse_datetime(s):
+    d = datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")
+    return d
+
+
+def _filter_records_in_time_range(records, after=None, before=None):
+    if after:
+        after = _parse_datetime(after)
+    else:
+        after = datetime.min
+
+    if before:
+        before = _parse_datetime(before)
+    else:
+        before = datetime.max
+
+    return [ r for r in records if
+             _parse_datetime(r['time']) >= after and
+             _parse_datetime(r['time']) < before ]
+
+
+def _filter_records_in_time_range_and_source(records, after=None, before=None, source_id=None):
+    if source_id is not None:
+        return [ r for r in _filter_records_in_time_range(records, after, before) if r['source'] == source_id ]
+    else:
+        return _filter_records_in_time_range(records, after, before)
+
+
+def _get_active_sources_in_time_range(records, after=None, before=None):
+    filtered_records = _filter_records_in_time_range(records, after, before)
+    return set( r['source'] for r in filtered_records )
+
+
+def _validate_ids(data, expected):
+    assert set( s['external_id'] for s in data ) == expected
+
+
+def test_sources_no_args(client, db_data, source_data):
+    response = client.get('/sources')
+    _checkresp(response)
+    data = response.get_json()
+    assert isinstance(data, list)
+    assert len(data) == len(source_data['sources'])
+    _validate_ids(data, set( s['id'] for s in source_data['sources'] ))
+
+
+def test_sources_only_geom(client, db_data, source_data):
+    geom = 'circle((9.55, 32.0), 100)'
+    q = f'roi={geom}'
+    response = client.get(f'/sources?{q}')
+    _checkresp(response)
+    data = response.get_json()
+    _validate_ids(data, { 'tdm/sensor_3' })
+
+
+def test_sources_active_after_before(client, db_data, source_data):
+    after, before = '2019-05-02T11:30:00Z', '2019-05-02T12:30:00Z'
+    q = f'after={after}&before={before}'
+    response = client.get(f'/sources?{q}')
+    _checkresp(response)
+    #  expected = { 'tdm/tiledb_sensor_6' }
+    expected = _get_active_sources_in_time_range(source_data['records'], after, before)
+    _validate_ids(response.get_json(), expected)
+
+
+def test_sources_active_after(client, db_data, source_data):
+    after = '2019-05-02T11:00:22Z'
+    q = f'after={after}'
+    response = client.get(f'/sources?{q}')
+    _checkresp(response)
+    #  expected = { 'tdm/sensor_0', 'tdm/sensor_1', 'tdm/tiledb_sensor_6' }
+    expected = _get_active_sources_in_time_range(source_data['records'], after)
+    _validate_ids(response.get_json(), expected)
+
+
+def test_sources_active_before(client, db_data, source_data):
+    before = '2019-05-02T11:00:00Z'
+    q = f'before={before}'
+    response = client.get(f'/sources?{q}')
+    _checkresp(response)
+    #  expected = { 'tdm/sensor_0', 'tdm/sensor_1' }
+    expected = _get_active_sources_in_time_range(source_data['records'], None, before)
+    _validate_ids(response.get_json(), expected)
+
+
+def test_sources_active_after_geom(client, db_data, source_data):
+    geom = 'circle((9.22, 30.0), 100)'
+    after = '2019-05-02T11:00:22Z'
+    q = f'roi={geom}&after={after}'
+    response = client.get(f'/sources?{q}')
+    _checkresp(response)
+    #  expected = { 'tdm/sensor_0', 'tdm/tiledb_sensor_6' }
+    expected = _get_active_sources_in_time_range(source_data['records'], after, None)
+    expected.remove('tdm/sensor_1')  # sensor_1 is out of the selected geographic region
+    _validate_ids(response.get_json(), expected)
+
+
+def test_sources_fail(client):
     geom = 'circle((9.2 33), 1000)'  # note the missing comma
-    after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    type_ = 'foo'
-    q = f'roi={geom}&after={after}&before={before}&type={type_}'
+    q = f'roi={geom}'
     with pytest.raises(ValueError) as ve:
         client.get(f'/sources?{q}')
         assert "roi" in ve.value
         assert geom in ve.value
 
 
-def test_source(client, monkeypatch):
-    fakedb = FakeDB()
-    monkeypatch.setattr('tdmq.db.get_source', fakedb.get_source)
-    tdmq_id = next(iter(fakedb.sources))
-    response = client.get(f'/sources/{tdmq_id}')
-    args = fakedb.called['get_source']
-    assert args['tdmq_id'] == tdmq_id
-    assert 'get_source' in fakedb.called
-    _checkresp(response)
-    result = response.get_json()
-    assert "tdmq_id" in result
-    tdmq_id = result.pop("tdmq_id")
-    assert result == fakedb.sources[tdmq_id]
+def test_source_query_by_tdmq_id(client, db_data, source_data):
+    external_source_id = source_data['sources'][0]['id']
+    response_with_id = client.get(f'/sources?id={external_source_id}')
+    item_with_id = response_with_id.get_json()[0]
+    tdmq_id = item_with_id['tdmq_id']
+
+    # query again using tdmq_id
+    response_with_tdmq_id = client.get(f"/sources/{tdmq_id}")
+
+    assert item_with_id['external_id'] == response_with_tdmq_id.get_json()['external_id']
 
 
-def test_timeseries(client, monkeypatch):
-    fakedb = FakeDB()
-    monkeypatch.setattr('tdmq.db.get_timeseries', fakedb.get_timeseries)
-    tdmq_id = next(iter(fakedb.sources))
-    # FIXME these timepoints are random
-    after, before = '2019-02-21T11:03:25Z', '2019-02-21T11:50:25Z'
-    bucket, op = 20.22, 'sum'
-    q = f'after={after}&before={before}&bucket={bucket}&op={op}'
+def test_timeseries(client, db_data):
+    source_id = 'tdm/sensor_1'
+    response = client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+
+    bucket, op = 20 * 60, 'sum'
+    q = f'bucket={bucket}&op={op}'
     response = client.get(f'/sources/{tdmq_id}/timeseries?{q}')
-    assert 'get_timeseries' in fakedb.called
-    assert response.status == '200 OK'
-    assert response.is_json
-    args = fakedb.called['get_timeseries']
-    assert args['tdmq_id'] == tdmq_id
-    assert args['after'] == after and args['before'] == before
-    assert args['bucket'] == timedelta(seconds=bucket) and args['op'] == op
-    assert response.get_json() == fakedb.timeseries[tdmq_id]
+    _checkresp(response)
+    d = response.get_json()
+
+    for attr in ("tdmq_id", "default_footprint", "shape", "bucket", "coords", "data"):
+        assert attr in d
+
+    assert 'time' in d['coords']
+    assert 'footprint' in d['coords']
+
+    assert d['tdmq_id'] == tdmq_id
+    assert d['shape'] is None or len(d['shape']) == 0
+    assert d['bucket'] is not None
+    assert d['bucket']['op'] == op
+    assert d['bucket']['interval'] == bucket
+    assert 'temperature' in d['data'] and 'humidity' in d['data']

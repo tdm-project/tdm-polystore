@@ -1,4 +1,4 @@
-import itertools as it
+
 import json
 import logging
 import uuid
@@ -13,10 +13,6 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 import tdmq.errors
 import tdmq.query_builder as qb
-
-from tdmq.query_builder import gather_nonscalar_timeseries
-from tdmq.query_builder import gather_scalar_timeseries
-from tdmq.query_builder import select_sensors_by_roi
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.DEBUG)
@@ -53,6 +49,8 @@ def list_sources(args):
         'after'
         'before'
         'roi'
+        'limit'
+        'offset'
     """
     query = qb.select_sources_helper(args)
     return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
@@ -89,7 +87,7 @@ def list_entity_catories(category_start=None):
       FROM entity_category""")
 
     if category_start:
-        starts_with = sql.SQL("starts_with(lower(entity_category), {}))").format(sql.Literal(category_start.lower()))
+        starts_with = sql.SQL("starts_with(lower(entity_category), {})").format(sql.Literal(category_start.lower()))
         q = q + sql.SQL(" WHERE ") + starts_with
 
     return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)
@@ -106,9 +104,9 @@ def list_entity_types(category_start=None, type_start=None):
     where = []
 
     if category_start:
-        where.append(sql.SQL("starts_with(lower(entity_category), {}))").format(sql.Literal(category_start.lower())))
+        where.append(sql.SQL("starts_with(lower(entity_category), {})").format(sql.Literal(category_start.lower())))
     if type_start:
-        where.append(sql.SQL("starts_with(lower(entity_type), {}))").format(sql.Literal(type_start.lower())))
+        where.append(sql.SQL("starts_with(lower(entity_type), {})").format(sql.Literal(type_start.lower())))
 
     if where:
         q = q + sql.SQL(" WHERE ") + sql.SQL(' AND ').join(where)
@@ -180,6 +178,7 @@ def add_tables(db):
           entity_category CITEXT NOT NULL,
           entity_type CITEXT NOT NULL,
           description JSONB,
+          registration_time TIMESTAMP NOT NULL DEFAULT NOW(),
           PRIMARY KEY (tdmq_id),
           FOREIGN KEY (entity_category, entity_type) REFERENCES entity_type(entity_category, entity_type)
       );
@@ -215,18 +214,6 @@ def add_tables(db):
     with db:
         with db.cursor() as cur:
             cur.execute(SQL)
-
-
-def take_by_n(a, n):
-    c = it.cycle(range(2 * n))
-    for k, g_ in it.groupby(a, lambda _: next(c) < n):
-        yield [_ for _ in g_]
-
-
-def format_to_sql_tuple(t):
-    "Convert tuple t to an SQL.Composable."
-    return sql.SQL("({})").format(sql.SQL(', ').join(
-        sql.Literal(v) for v in t))
 
 
 def dump_table(db, tname, path, itersize=100000):
@@ -307,16 +294,17 @@ def load_records(db, records, validate=False, chunk_size=500):
     """
     def add_internal_source_ids(cursor, data):
         external_ids = tuple(set(d['source'] for d in data if 'tdmq_id' not in d))
-        #  If we get a lot of external_ids, using the IN clause might not be so efficient
-        q = "SELECT external_id, tdmq_id FROM source WHERE external_id IN %s"
-        cursor.execute(q, (external_ids,))
-        # The following `fetchall` and transforming the result to a dict is also at risk
-        # of explosion
-        map_external_to_tdm_id = dict(cur.fetchall())
-        logging.debug("Fetched map_external_to_tdm_id: %s", map_external_to_tdm_id)
-        for d in data:
-            if 'tdmq_id' not in d:
-                d['tdmq_id'] = map_external_to_tdm_id[ d['source'] ]
+        if external_ids:
+            #  If we get a lot of external_ids, using the IN clause might not be so efficient
+            q = "SELECT external_id, tdmq_id FROM source WHERE external_id IN %s"
+            cursor.execute(q, (external_ids,))
+            # The following `fetchall` and transforming the result to a dict is also at risk
+            # of explosion
+            map_external_to_tdm_id = dict(cur.fetchall())
+            logging.debug("Fetched map_external_to_tdm_id: %s", map_external_to_tdm_id)
+            for d in data:
+                if 'tdmq_id' not in d:
+                    d['tdmq_id'] = map_external_to_tdm_id[ d['source'] ]
         return data
 
     def gen_record_tuple(d):
@@ -372,7 +360,6 @@ def init_db(drop=False):
     db = get_db()
     add_extensions(db)
     add_tables(db)
-    close_db()
     logger.debug('init_db: done')
 
 
@@ -404,53 +391,6 @@ def dump_field(field, path):
     """Dump all record of field to file path"""
     db = get_db()
     return dump_table(db, field, path, itersize=100000)
-
-
-def list_sensors_in_cylinder(db, args):
-    """Return all sensors that have reported an event in a
-       given spatio-temporal region."""
-    query, data = select_sensors_by_roi(args)
-    with db:
-        with db.cursor() as cur:
-            cur.execute(query, data)
-            return cur.fetchall()
-
-
-def get_scalar_timeseries_data(db, args):
-    assert 'code' in args
-    assert 'after' in args
-    assert 'before' in args
-    result = {'timebase': args['after'],
-              'timedelta': [],
-              'data': []}
-    SQL = gather_scalar_timeseries(args)
-    with db:
-        with db.cursor() as cur:
-            cur.execute(SQL, args)
-            # FIXME
-            tuples = cur.fetchall()
-            for t in tuples:
-                result['timedelta'].append(t[0].total_seconds())
-                result['data'].append(t[1])
-    return result
-
-
-def get_tiledb_timeseries_data(db, args):
-    assert 'code' in args
-    assert 'after' in args
-    assert 'before' in args
-    result = {'timebase': args['after'],
-              'timedelta': [],
-              'data': []}
-    SQL = gather_nonscalar_timeseries(args)
-    with db.cursor() as cur:
-        cur.execute(SQL, args)
-        # FIXME in principle, it could blow up, but it is unlikely
-        tuples = cur.fetchall()
-    for t in tuples:
-        result['timedelta'].append(t[0].total_seconds())
-        result['data'].append(t[1:])
-    return result
 
 
 supported_bucket_ops = {
@@ -549,12 +489,15 @@ def get_timeseries(tdmq_id, args=None):
         properties = ['tiledb_index']
     else:
         properties = info['controlledProperties']
-        if args.get('fields', []):
-            fields = set(args['fields'])
-            properties = set(properties) & fields
+        if args and args.get('fields', []):
+            fields = args['fields']
+            # keep the order specified in fields
+            properties = [ f for f in fields if f in properties ]
             if fields != properties:
-                unknown_fields = ', '.join(fields - properties)
+                unknown_fields = ', '.join(set(fields).difference(properties))
                 raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
+            # Convert properties from a set to a list, since order is important
+            properties = list(properties)
 
     query_template = sql.SQL("""
         SELECT {select_list}
@@ -562,7 +505,7 @@ def get_timeseries(tdmq_id, args=None):
             WHERE {where_clause}
             {grouping_clause}""")
 
-    if args.get('bucket'):
+    if args and args.get('bucket'):
         bucket_interval = args['bucket']
 
         if info.get('shape'):
@@ -579,16 +522,16 @@ def get_timeseries(tdmq_id, args=None):
 
     where = [ sql.SQL("source_id = {}").format(sql.Literal(tdmq_id)) ]
 
-    if args.get('after'):
+    if args and args.get('after'):
         where.append( sql.SQL("record.time >= {}").format(sql.Literal(args['after'])) )
-    if args.get('before'):
+    if args and args.get('before'):
         where.append( sql.SQL("record.time < {}").format(sql.Literal(args['before'])) )
 
     clauses['where_clause'] = sql.SQL(" AND ").join(where)
 
     query = query_template.format(**clauses)
 
-    return info, properties, query_db_all(query)
+    return dict(source_info=info, properties=properties, rows=query_db_all(query))
 
 
 def add_db_cli(app):
@@ -600,6 +543,7 @@ def add_db_cli(app):
         click.echo('Starting initialization process.')
         init_db(drop)
         click.echo('Initialized the database.')
+        close_db()
 
     @db_cli.command('load')
     @click.argument('filename', type=click.Path(exists=True))

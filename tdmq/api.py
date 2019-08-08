@@ -123,10 +123,6 @@ def add_routes(app):
                 args['controlledProperties'] = \
                     args['controlledProperties'].split(',')
             res = db.list_sources(args)
-            # res = []
-            # for tdmq_id, descr in db.list_sources(args):
-            #     descr["tdmq_id"] = tdmq_id
-            #     res.append(descr)
             return jsonify(res)
         elif request.method == "POST":
             data = request.json
@@ -209,11 +205,13 @@ def add_routes(app):
           <oppure>
             "bucket": { "interval": 10, "op": "avg" },
 
+            "coords": {
+                "footprint": [...],
+                "time": [...]
+            },
             "data": {
               "humidity": [...],
               "temperature": [...],
-              "footprint": [...],
-              "time": [...]
             }
           }
 
@@ -246,15 +244,15 @@ def add_routes(app):
             args['fields'] = args['fields'].split(',')
 
         try:
-            src_desc, properties, rows = db.get_timeseries(tdmq_id, args)
+            result = db.get_timeseries(tdmq_id, args)
         except tdmq.errors.RequestException as e:
             return str(e), 400  # BAD_REQUEST
 
-        res = restructure_timeseries(rows, properties)
+        res = restructure_timeseries(result['rows'], result['properties'])
 
         res["tdmq_id"] = tdmq_id
-        res["default_footprint"] = src_desc['default_footprint']
-        res["shape"] = src_desc['shape']
+        res["default_footprint"] = result['source_info']['default_footprint']
+        res["shape"] = result['source_info']['shape']
         if args['bucket']:
             res["bucket"] = {"interval": args['bucket'].total_seconds(),
                              "op": args.get("op")}
@@ -268,3 +266,15 @@ def add_routes(app):
         data = request.json
         n = db.load_records(db.get_db(), data)
         return jsonify({"loaded": n})
+
+    @app.route('/client_info')
+    def client_info():
+        response = {
+            'version': '0.0',
+            'tiledb': {
+                'hdfs_root': 'hdfs://namenode:8020/arrays',
+                'vfs.hdfs.username': 'root'
+            }
+        }
+
+        return jsonify(response)

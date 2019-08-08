@@ -50,6 +50,8 @@ def select_sources_helper(args):
         'after'
         'before'
         'roi'
+        'limit'
+        'offset'
 
     All applied conditions must match for an element to be returned.
 
@@ -73,6 +75,8 @@ def select_sources_helper(args):
         FROM source""")
 
     where = []
+    limit = None
+    offset = None
 
     # where clauses
     def add_where_lit(column, condition, literal):
@@ -123,6 +127,11 @@ def select_sources_helper(args):
 
         where.append(in_subquery.format( SQL(" AND ").join(interval) ))
 
+    if 'limit' in args:
+        limit = sql.Literal(args.pop('limit'))
+    if 'offset' in args:
+        offset = sql.Literal(args.pop('offset'))
+
     if args:  # not empty, so we have additional filtering attributes to apply to description
         logger.debug("Left over args for JSON query: %s", args)
         for k, v in args.items():
@@ -132,6 +141,13 @@ def select_sources_helper(args):
     query = select
     if where:
         query += SQL(' WHERE ') + SQL(' AND ').join(where)
+
+    if limit or offset:
+        query += SQL(' ORDER BY source.tdmq_id ')
+        if limit:
+            query += SQL(' LIMIT ') + limit
+        if offset:
+            query += SQL(' OFFSET ') + offset
 
     return query
 
