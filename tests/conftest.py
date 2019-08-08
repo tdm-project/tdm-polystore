@@ -85,17 +85,27 @@ def db(app):
 
 
 @pytest.fixture
-def db_data(db, source_data):
+def clean_db(db):
     connection = get_db()
-    logging.debug("Loading sources and records")
-    load_sources(connection, source_data['sources'])
-    load_records(connection, source_data['records'])
+
+    with connection.cursor() as curs:
+        curs.execute("DELETE FROM source;")
 
     yield connection
 
     with connection.cursor() as curs:
         logging.debug("Deleting sources from DB")
         curs.execute("DELETE FROM source;")
+
+
+@pytest.fixture
+def db_data(clean_db, source_data):
+    connection = get_db()
+
+    load_sources(connection, source_data['sources'])
+    load_records(connection, source_data['records'])
+
+    yield connection
 
 
 def _rand_str(length=6):
