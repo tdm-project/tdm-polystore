@@ -50,7 +50,8 @@ def app(db_connection_config):
         'DB_PORT': db_connection_config['port'],
         'DB_NAME': db_connection_config['dbname'],
         'DB_USER': db_connection_config['user'],
-        'DB_PASSWORD': db_connection_config['password']
+        'DB_PASSWORD': db_connection_config['password'],
+        'LOG_LEVEL': 'DEBUG'
     })
 
     with app.app_context():

@@ -1,13 +1,12 @@
 
+import click
+import flask
 import json
 import logging
-import uuid
-
-import click
 import psycopg2 as psy
 import psycopg2.extras
 import psycopg2.sql as sql
-import flask
+import uuid
 
 from flask import current_app
 from psycopg2.sql import SQL
@@ -15,10 +14,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 import tdmq.errors
 
-# FIXME build a better logging infrastructure
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-logger.info('Logging is active.')
 
 # need to register_uuid to enable psycopg2's conversion from Python UUID
 # type to PgSQL
