@@ -39,6 +39,11 @@ def add_routes(app):
     def index():
         return 'The URL for this page is {}'.format(url_for('index'))
 
+    if app.debug:
+        @app.route('/init_db')
+        def init_db():
+            return jsonify(db.init_db(drop=True))
+
     @app.route('/entity_types')
     def entity_types():
         return jsonify(db.list_entity_types())
