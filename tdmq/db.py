@@ -7,12 +7,13 @@ import click
 import psycopg2 as psy
 import psycopg2.extras
 import psycopg2.sql as sql
-from flask import current_app, g
-from flask.cli import AppGroup
+import flask
+
+from flask import current_app
+from psycopg2.sql import SQL
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 import tdmq.errors
-import tdmq.query_builder as qb
 
 # FIXME build a better logging infrastructure
 logging.basicConfig(level=logging.DEBUG)
@@ -40,7 +41,7 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
 
 def list_sources(args):
     """
-    args:
+    Possible args:
         'id'
         'entity_category'
         'entity_type'
@@ -51,8 +52,102 @@ def list_sources(args):
         'roi'
         'limit'
         'offset'
+
+    All applied conditions must match for an element to be returned.
+
+    controlledProperties: value is an array, or None.  All specified
+                          elements must be in the controlledProperties of the source.
+
+    after and before:  specify temporal interal.  Specify any combination of the two.
+
+    roi: value is GeoJSON with `center` and `radius`.  Tests on source.default_footprint.
+
+    All other arguments are tested for equality.
     """
-    query = qb.select_sources_helper(args)
+    select = SQL("""
+        SELECT
+            source.tdmq_id,
+            source.external_id,
+            ST_AsGeoJSON(ST_Transform(source.default_footprint, 4326))::json
+                as default_footprint,
+            source.entity_category,
+            source.entity_type
+        FROM source""")
+
+    where = []
+    limit = None
+    offset = None
+
+    # where clauses
+    def add_where_lit(column, condition, literal):
+        where.append(SQL(" ").join( (SQL(column), SQL(condition), sql.Literal(literal)) ))
+
+    if 'id' in args:
+        add_where_lit('source.external_id', '=', args.pop('id'))
+    if 'entity_category' in args:
+        add_where_lit('source.entity_category', '=', args.pop('entity_category'))
+    if 'entity_type' in args:
+        add_where_lit('source.entity_type', '=', args.pop('entity_type'))
+    if 'tdmq_id' in args:
+        add_where_lit('source.tdmq_id', '=', args.pop('tdmq_id'))
+    if 'stationary' in args:
+        add_where_lit('source.stationary', 'is', (args.pop('stationary').lower() in { 't', 'true' }))
+    if 'controlledProperties' in args:
+        # require that all these exist in the controlledProperties array
+        # This is the PgSQL operator: ?&  text[]   Do all of these array strings exist as top-level keys?
+        required_properties = args.pop('controlledProperties')
+        assert isinstance(required_properties, list)
+        where.append(
+            SQL("source.description->'controlledProperties' ?& array[ {} ]").format(
+                SQL(', ').join([ sql.Literal(p) for p in required_properties ])))
+    if 'roi' in args:
+        fp = args.pop('roi')
+        where.append(SQL(
+            """
+            ST_DWithin(
+                source.default_footprint,
+                ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON({}), 4326), 3003),
+            {})""").format(
+                sql.Literal(json.dumps(fp['center'])),
+                sql.Literal(fp['radius'])))
+
+    if args.keys() & {'after', 'before'}:  # actually, for mobile sensors we'll also have to add 'footprint'
+        in_subquery = SQL("""
+          source.tdmq_id IN (
+            SELECT record.source_id
+            FROM record
+            WHERE {}
+          )""")
+        interval = []
+        if 'after' in args:
+            interval.append(SQL("record.time >= {}").format(sql.Literal(args.pop('after'))))
+        if 'before' in args:
+            interval.append(SQL("record.time < {}").format(sql.Literal(args.pop('before'))))
+
+        where.append(in_subquery.format( SQL(" AND ").join(interval) ))
+
+    if 'limit' in args:
+        limit = sql.Literal(args.pop('limit'))
+    if 'offset' in args:
+        offset = sql.Literal(args.pop('offset'))
+
+    if args:  # not empty, so we have additional filtering attributes to apply to description
+        logger.debug("Left over args for JSON query: %s", args)
+        for k, v in args.items():
+            term = { "description": { k: v } }
+            where.append(SQL('source.description @> {}::jsonb').format(sql.Literal(json.dumps(term))))
+
+    query = select
+    if where:
+        query += SQL(' WHERE ') + SQL(' AND ').join(where)
+
+    if limit or offset:
+        query += SQL(' ORDER BY source.tdmq_id ')
+        if limit:
+            query += SQL(' LIMIT ') + limit
+        if offset:
+            query += SQL(' OFFSET ') + offset
+
     return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
@@ -330,7 +425,7 @@ def get_db():
     is unique for each request and will be reused if this is called
     again.
     """
-    if 'db' not in g:
+    if 'db' not in flask.g:
         db_settings = {
             'user': current_app.config['DB_USER'],
             'password': current_app.config['DB_PASSWORD'],
@@ -338,15 +433,15 @@ def get_db():
             'dbname': current_app.config['DB_NAME'],
         }
         logger.debug('get_db:db_setting: %s', db_settings)
-        g.db = psy.connect(**db_settings)
-    return g.db
+        flask.g.db = psy.connect(**db_settings)
+    return flask.g.db
 
 
 def close_db(e=None):
     """If this request is connected to the database, close the
     connection.
     """
-    db = g.pop('db', None)
+    db = flask.g.pop('db', None)
 
     if db is not None:
         db.close()
@@ -535,7 +630,7 @@ def get_timeseries(tdmq_id, args=None):
 
 
 def add_db_cli(app):
-    db_cli = AppGroup('db')
+    db_cli = flask.cli.AppGroup('db')
 
     @db_cli.command('init')
     @click.option('--drop', default=False, is_flag=True)
@@ -543,7 +638,6 @@ def add_db_cli(app):
         click.echo('Starting initialization process.')
         init_db(drop)
         click.echo('Initialized the database.')
-        close_db()
 
     @db_cli.command('load')
     @click.argument('filename', type=click.Path(exists=True))
@@ -565,8 +659,3 @@ def add_db_cli(app):
         click.echo('Dumped {} records'.format(n))
 
     app.cli.add_command(db_cli)
-
-
-def init_app(app):
-    app.teardown_appcontext(close_db)
-    add_db_cli(app)
