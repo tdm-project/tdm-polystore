@@ -5,7 +5,6 @@ from datetime import datetime
 from datetime import timedelta
 import numpy as np
 import argparse
-import json
 import sys
 
 import logging
@@ -41,22 +40,24 @@ def main(args):
 
     c = Client()
     srcs = c.get_sources({'id': desc['id']})
-    assert len(srcs) > 0
-    s = srcs[0]
-    logger.info(f"Using source {s.tdmq_id} for {s.id}.")
-    # DPC keeps data only for a week, let's check if there are holes
-    # in the timeseries that can be filled We try to find at least one
-    # old datapoint that we will use as temporal reference.
-    window_start = now - timedelta(days=7)
-    ts = s.timeseries(after=window_start)
-    if len(ts) == 0:
-        # In principle, we could load the whole timeseries, but this
-        # is best handled manually...
-        logger.error(f'No data acquired since {window_start}, aborting.')
-        sys.exit(1)
-    window_start = ts.time[0]
-    times = np.arange(window_start, now - dt, dt)
-    filled = times[np.searchsorted(times, ts.time)]
+    if len(srcs) > 0:
+        assert len(srcs) == 1
+        s = srcs[0]
+        logger.info(f"Using source {s.tdmq_id} for {s.id}.")
+    else:
+        s = c.register_source(desc)
+        logger.info(f"Created source {s.tdmq_id} for {s.id}.")
+
+    ts = s.timeseries()
+
+    # The DPC source keeps data available for only one week
+    time_base = ts.time[0]\
+        if len(ts) > 0 else create_timebase(now, timedelta(seconds=6*24*3600))
+    # It is unlikely that the last frame will be ready, so we stop the
+    # request at now - dt.
+    times = np.arange(time_base, now - dt, dt)
+    filled = times[np.searchsorted(times, ts.time)]\
+        if len(ts) > 0 else []
     to_be_filled = set(times) - set(filled)
 
     for t in to_be_filled:
