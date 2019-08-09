@@ -5,6 +5,7 @@ from tdmq.client import Client
 from datetime import datetime
 from datetime import timedelta
 
+# pytestmark = pytest.mark.skip(reason="not up-to-date with new pytest setup")
 
 source_desc = {
     "id": "tdm/sensor_1/test_barfoo",
@@ -23,7 +24,7 @@ source_desc = {
 }
 
 
-def test_check_timeseries_range():
+def test_check_timeseries_range(reset_db):
     c = Client()
     s = c.register_source(source_desc)
     N = 10
@@ -50,7 +51,7 @@ def test_check_timeseries_range():
     assert tid not in sources
 
 
-def test_check_timeseries_bucket():
+def test_check_timeseries_bucket(reset_db):
     c = Client()
     s = c.register_source(source_desc)
     bucket = 10
@@ -84,7 +85,7 @@ def test_check_timeseries_bucket():
     assert tid not in sources
 
 
-def test_empty_timeseries():
+def test_empty_timeseries(reset_db):
     c = Client()
     s = c.register_source(source_desc)
     # empty timeseries

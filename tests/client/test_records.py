@@ -1,11 +1,11 @@
-import pytest
-import json
-import numpy as np
 from tdmq.client import Client
-from test_source import register_sources
+from test_source import register_sources_here
 from datetime import datetime
 from datetime import timedelta
+import numpy as np
 
+# import pytest
+# pytestmark = pytest.mark.skip(reason="not up-to-date with new pytest setup")
 
 source_desc = {
     "id": "tdm/sensor_1/test_barfoo",
@@ -24,19 +24,10 @@ source_desc = {
 }
 
 
-def get_records():
-    by_source = {}
-    with open('../data/records.json') as f:
-        records = json.load(f)['records']
-    for r in records:
-        by_source.setdefault(r['source'], []).append(r)
-    return by_source
-
-
-def test_add_scalar_records():
+def test_add_scalar_records(reset_db, source_data):
     c = Client()
-    srcs = register_sources(c)
-    by_source = get_records()
+    srcs = register_sources_here(c, source_data)
+    by_source = source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
         s.add_records(by_source[s.id])
@@ -47,13 +38,15 @@ def test_add_scalar_records():
         assert tid not in sources
 
 
-def test_add_scalar_record():
+import sys
+def test_add_scalar_record(reset_db, source_data):
     c = Client()
-    srcs = register_sources(c)
-    by_source = get_records()
+    srcs = register_sources_here(c, source_data)
+    by_source = source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:
+            sys.stderr.write(f'r: {r}\n')
             s.add_record(r)
         c.deregister_source(s)
         tdmq_ids.append(s.tdmq_id)
@@ -62,10 +55,10 @@ def test_add_scalar_record():
         assert tid not in sources
 
 
-def test_ingest_scalar_record():
+def test_ingest_scalar_record(reset_db, source_data):
     c = Client()
-    srcs = register_sources(c)
-    by_source = get_records()
+    srcs = register_sources_here(c, source_data)
+    by_source = source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:
@@ -82,7 +75,7 @@ def test_ingest_scalar_record():
         assert tid not in sources
 
 
-def test_check_timeseries():
+def test_check_timeseries(reset_db):
     c = Client()
     s = c.register_source(source_desc)
     N = 10

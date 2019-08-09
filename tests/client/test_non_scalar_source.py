@@ -4,20 +4,7 @@ from tdmq.client import Client
 import numpy as np
 from datetime import datetime, timedelta
 
-
-def register_sources(c, N=None):
-    with open('../data/sources.json') as f:
-        descs = json.load(f)['sources']
-    descs = [d for d in descs if 'shape' in d and len(d['shape']) > 0]
-    srcs = []
-    for d in descs:
-        if N is None:
-            s = c.register_source(d)
-        else:
-            s = c.register_source(d, N)
-        check_source(s, d)
-        srcs.append(s)
-    return srcs
+from test_source import register_sources, is_scalar
 
 
 def create_data_frame(shape, properties, slot):
@@ -68,10 +55,15 @@ def check_deallocation(c, tdmq_ids):
     for tid in tdmq_ids:
         assert tid not in sources
 
+def register_sources_here(c, source_data):
+    return register_sources(c, [d for d in source_data['sources']
+                                if not is_scalar(d)],
+                            check_source=check_source)
+        
 
-def test_nonscalar_source_register_deregister():
+def test_nonscalar_source_register_deregister(clean_hdfs, reset_db, source_data):
     c = Client()
-    srcs = register_sources(c)
+    srcs = register_sources_here(c, source_data)
     sources = dict((_.tdmq_id, _) for _ in c.get_sources())
     tdmq_ids = []
     for s in srcs:
@@ -87,10 +79,10 @@ def test_nonscalar_source_register_deregister():
     check_deallocation(c, tdmq_ids)
 
 
-def test_nonscalar_source_add_records():
+def test_nonscalar_source_add_records(clean_hdfs, reset_db, source_data):
     N = 10
     c = Client()
-    srcs = register_sources(c, N)
+    srcs = register_sources_here(c, source_data)    
     tdmq_ids = []
     for s in srcs:
         assert len(s.shape) > 0
