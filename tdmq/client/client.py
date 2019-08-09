@@ -53,17 +53,19 @@ class ProxyFactory:
 
 class Client:
     TILEDB_HDFS_ROOT = 'hdfs://namenode:8020/arrays'
+    TILEDB_CONFIG = {'vfs.hdfs.username': 'root'}
     TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
     TDMQ_DT_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self,
-                 tdmq_base_url=None, tiledb_ctx=None, tiledb_hdfs_root=None):
+                 tdmq_base_url=None, tiledb_config=None, tiledb_hdfs_root=None):
         self.base_url = self.TDMQ_BASE_URL \
             if tdmq_base_url is None else tdmq_base_url
         self.tiledb_hdfs_root = self.TILEDB_HDFS_ROOT \
             if tiledb_hdfs_root is None else tiledb_hdfs_root
-        self.tiledb_ctx = tiledb.Ctx() if tiledb_ctx is None else tiledb_ctx
+        self.tiledb_ctx = tiledb.Ctx(
+            self.TILEDB_CONFIG if tiledb_config is None else tiledb_config)
         self.managed_objects = {}
         self.proxy_factory = ProxyFactory(source_classes)
 
@@ -107,10 +109,13 @@ class Client:
             # NO-OP
             pass
 
-    def register_source(self, description, nslots=10000):
+    def register_source(self, description, nslots=10*24*3600*365):
         """Register a new data source
         .. :quickref: Register a new data source
 
+        :nslots: is the maximum expected number of slots that will be
+        needed. Actual storage allocation will be done at
+        ingestion. The default value is 10*24*3600*365
         """
         d = self._register_thing('sources', description)
         logger.debug(d['shape'])
