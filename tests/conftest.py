@@ -7,14 +7,15 @@ import psycopg2 as psy
 import pytest
 import random
 import string
+import requests
 from collections import defaultdict
-
 
 from tdmq import create_app
 from tdmq.db import close_db, get_db, init_db, load_sources, load_records
 
-
-@pytest.fixture(scope="session")
+# FIXME needed to reset this everytime because there is a side effect
+# from one of the tests that add stuff to the records and breaks other tests.
+@pytest.fixture # (scope="session")
 def source_data():
     root = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(root, 'data/sources.json')) as f:
@@ -24,9 +25,10 @@ def source_data():
 
     records_by_source = defaultdict(list)
     for r in records:
-        records_by_source[ r['source'] ].append(r)
+        records_by_source[r['source']].append(r)
 
-    return dict(sources=sources, records=records, records_by_source=records_by_source)
+    return dict(sources=sources, records=records,
+                records_by_source=records_by_source)
 
 
 @pytest.fixture(scope="session")
@@ -124,8 +126,33 @@ def _drop_db(app):
         'dbname': 'postgres'
     }
 
-    drop_cmd = psy.sql.SQL("DROP DATABASE ") + psy.sql.Identifier(app.config['DB_NAME'])
+    drop_cmd = (psy.sql.SQL("DROP DATABASE ") +
+                psy.sql.Identifier(app.config['DB_NAME']))
     with psy.connect(**db_config) as conn:
         conn.set_isolation_level(psy.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
         with conn.cursor() as curs:
             curs.execute(drop_cmd)
+
+#
+# Used by in testing tdmq.client
+#
+@pytest.fixture(scope="session")
+def tdmq_config():
+    return {
+        'tdmq_base_url': 'http://web:8000/api/v0.0',
+        'tiledb_config': {'vfs.hdfs.username': 'root'},
+        'tiledb_hdfs_root': 'hdfs://namenode:8020/arrays'
+    }
+
+
+@pytest.fixture
+def clean_hdfs(tdmq_config):
+    # FIXME make it configurable
+    url = tdmq_config['tiledb_hdfs_root']
+    hdfs_cmd = f'HADOOP_USER_NAME=root hdfs dfs -rm -r -f {url}'
+    os.system(hdfs_cmd)
+
+
+@pytest.fixture
+def reset_db(tdmq_config):
+    requests.get(f'{tdmq_config["tdmq_base_url"]}/init_db')
