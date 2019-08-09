@@ -38,7 +38,6 @@ def test_add_scalar_records(reset_db, source_data):
         assert tid not in sources
 
 
-import sys
 def test_add_scalar_record(reset_db, source_data):
     c = Client()
     srcs = register_sources_here(c, source_data)
