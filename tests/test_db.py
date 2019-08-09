@@ -1,5 +1,6 @@
 
 
+import copy
 import operator as op
 
 import tdmq.db as db_query
@@ -205,3 +206,54 @@ def test_get_empty_timeseries(db_data, source_data):
 
     result = db_query.get_timeseries(tdmq_id, { 'before': all_src_recs[0]['time'] })
     assert len(result['rows']) == 0
+
+
+def test_load_source(clean_db, source_data):
+    results = db_query.list_sources({})
+    assert len(results) == 0
+
+    one_src = copy.deepcopy(source_data['sources'][0])
+
+    tdmq_ids = db_query.load_sources([ one_src ])
+
+    assert isinstance(tdmq_ids, list)
+    assert len(tdmq_ids) == 1
+
+    results = db_query.list_sources({})
+    assert len(results) == 1
+    assert results[0]['external_id'] == one_src['id']
+    assert one_src == source_data['sources'][0]
+
+    query_src = db_query.get_sources(tdmq_ids)
+    assert len(query_src) == 1
+    assert query_src[0]['tdmq_id'] == tdmq_ids[0]
+
+
+def test_load_records_one_src(clean_db, source_data):
+    one_src = copy.deepcopy(source_data['sources'][0])
+    records = copy.deepcopy(source_data['records_by_source'][one_src['id']])
+
+    tdmq_id = db_query.load_sources([ one_src ])[0]
+
+    n = db_query.load_records(records)
+    assert n == len(records)
+    # assert that load_records doesn't modify the `records` argument
+    assert records == source_data['records_by_source'][one_src['id']]
+
+    ts_data = db_query.get_timeseries(tdmq_id)
+    assert len(ts_data['rows']) == n
+    assert ts_data['source_info']['id'] == one_src['id']
+
+
+def test_load_records_multiple_src(clean_db, source_data):
+    tdmq_ids = db_query.load_sources(source_data['sources'])
+
+    n = db_query.load_records(source_data['records'])
+    assert n == len(source_data['records'])
+
+    records_by_source = source_data['records_by_source']
+    for i in tdmq_ids:
+        src = db_query.get_sources([i])[0]
+        ts = db_query.get_timeseries(i)
+        assert len(ts['rows']) == len(records_by_source[src['external_id']])
+        assert ts['source_info']['id'] == src['external_id']

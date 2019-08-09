@@ -13,9 +13,8 @@ from collections import defaultdict
 from tdmq import create_app
 from tdmq.db import close_db, get_db, init_db, load_sources, load_records
 
-# FIXME needed to reset this everytime because there is a side effect
-# from one of the tests that add stuff to the records and breaks other tests.
-@pytest.fixture # (scope="session")
+
+@pytest.fixture(scope="session")
 def source_data():
     root = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(root, 'data/sources.json')) as f:
@@ -105,8 +104,8 @@ def clean_db(db):
 def db_data(clean_db, source_data):
     connection = get_db()
 
-    load_sources(connection, source_data['sources'])
-    load_records(connection, source_data['records'])
+    load_sources(source_data['sources'])
+    load_records(source_data['records'])
 
     yield connection
 
@@ -132,6 +131,7 @@ def _drop_db(app):
         conn.set_isolation_level(psy.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
         with conn.cursor() as curs:
             curs.execute(drop_cmd)
+
 
 #
 # Used by in testing tdmq.client

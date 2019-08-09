@@ -330,13 +330,12 @@ def dump_table(db, tname, path, itersize=100000):
     return counter
 
 
-def load_sources(db, data, validate=False, chunk_size=500):
+def load_sources(data, validate=False, chunk_size=500):
     """
     Load sensors objects.
 
     Return the list of UUIDs assigned to each object.
     """
-
     def gen_source_tuple(d):
         tdmq_id = uuid.uuid5(NAMESPACE_TDMQ, d['id'])
         external_id = d['id']
@@ -354,7 +353,7 @@ def load_sources(db, data, validate=False, chunk_size=500):
               VALUES %s"""
     template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s)"
     try:
-        with db:
+        with get_db() as db:
             with db.cursor() as cur:
                 psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
                 db.commit()
@@ -366,7 +365,7 @@ def load_sources(db, data, validate=False, chunk_size=500):
     return [ t[0] for t in tuples ]
 
 
-def load_records(db, records, validate=False, chunk_size=500):
+def load_records(records, validate=False, chunk_size=500):
     """
     Load records.
 
@@ -383,7 +382,7 @@ def load_records(db, records, validate=False, chunk_size=500):
      "footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
      "data": {"something": 42 }
     """
-    def add_internal_source_ids(cursor, data):
+    def get_required_internal_source_id_map(cursor, data):
         external_ids = tuple(set(d['source'] for d in data if 'tdmq_id' not in d))
         if external_ids:
             #  If we get a lot of external_ids, using the IN clause might not be so efficient
@@ -391,23 +390,25 @@ def load_records(db, records, validate=False, chunk_size=500):
             cursor.execute(q, (external_ids,))
             # The following `fetchall` and transforming the result to a dict is also at risk
             # of explosion
-            map_external_to_tdm_id = dict(cur.fetchall())
-            logging.debug("Fetched map_external_to_tdm_id: %s", map_external_to_tdm_id)
-            for d in data:
-                if 'tdmq_id' not in d:
-                    d['tdmq_id'] = map_external_to_tdm_id[ d['source'] ]
-        return data
+            map_external_to_tdm_id = dict(cur.fetchall())  # creates a mapping external_ids -> tdmq_id
+        else:
+            map_external_to_tdm_id = dict()
 
-    def gen_record_tuple(d):
+        return map_external_to_tdm_id
+
+    def gen_record_tuple(d, id_to_tdmq_id):
         s_time = d['time']
-        tdmq_id = d['tdmq_id']
-        return (s_time, tdmq_id, json.dumps(d.get('footprint')) if d.get('footprint') else None, psycopg2.extras.Json(d['data']))
+        tdmq_id = d['tdmq_id'] if 'tdmq_id' in d else id_to_tdmq_id[ d['source'] ]
+        footprint = json.dumps(d.get('footprint')) if d.get('footprint') else None
+
+        return (s_time, tdmq_id, footprint, psycopg2.extras.Json(d['data']))
 
     sql = "INSERT INTO record (time, source_id, footprint, data) VALUES %s"
     template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s)"
-    with db:
+    with get_db() as db:
         with db.cursor() as cur:
-            tuples = [ gen_record_tuple(t) for t in add_internal_source_ids(cur, records) ]
+            id_to_tdmq_id = get_required_internal_source_id_map(cur, records)
+            tuples = [ gen_record_tuple(t, id_to_tdmq_id) for t in records ]
             logger.debug('load_records: start loading %d records', len(records))
             psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
             db.commit()

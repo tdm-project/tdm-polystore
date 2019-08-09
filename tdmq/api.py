@@ -132,7 +132,7 @@ def add_routes(app):
         elif request.method == "POST":
             data = request.json
             try:
-                tdmq_ids = db.load_sources(db.get_db(), data)
+                tdmq_ids = db.load_sources(data)
             except tdmq.errors.DuplicateItemException as e:
                 raise DuplicateItemException(e.args)
             return jsonify(tdmq_ids)
@@ -269,7 +269,7 @@ def add_routes(app):
     @app.route('/records', methods=["POST"])
     def records():
         data = request.json
-        n = db.load_records(db.get_db(), data)
+        n = db.load_records(data)
         return jsonify({"loaded": n})
 
     @app.route('/client_info')
