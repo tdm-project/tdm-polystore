@@ -464,12 +464,13 @@ def load_file(filename):
     """Load objects from a json file."""
     logger.debug('load_file: start')
     stats = {}
+
     with open(filename) as f:
         data = json.load(f)
-    db = get_db()
+
     for k in loader.keys():
         if k in data:
-            rval = loader[k](db, data[k])
+            rval = loader[k](data[k])
             try:
                 n = len(rval)
             except TypeError:
