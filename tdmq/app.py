@@ -52,14 +52,11 @@ def create_app(test_config=None):
 
     @app.errorhandler(DuplicateItemException)
     def handle_duplicate(e):
-        import logging
-        logging.error('duplicate item exception %s', e.args)
+        app.logger.error('duplicate item exception %s', e.args)
         return f'{e.args}', 512
 
     @app.teardown_appcontext
     def teardown_db(arg):
-        import logging
-        logging.info("teardown_db:  here are the args: %s", arg)
         close_db()
 
     return app
