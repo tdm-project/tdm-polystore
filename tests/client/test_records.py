@@ -46,7 +46,6 @@ def test_add_scalar_record(reset_db, source_data):
     tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:
-            sys.stderr.write(f'r: {r}\n')
             s.add_record(r)
         c.deregister_source(s)
         tdmq_ids.append(s.tdmq_id)
