@@ -2,8 +2,6 @@
 import pytest
 from datetime import datetime
 
-import logging
-
 
 def _checkresp(response, table=None):
     assert response.status == '200 OK'
@@ -76,12 +74,12 @@ def test_sources_no_args(client, db_data, source_data):
 
 
 def test_sources_only_geom(client, db_data, source_data):
-    geom = 'circle((9.55, 32.0), 100)'
+    geom = 'circle((9.132, 39.248), 1000)'
     q = f'roi={geom}'
     response = client.get(f'/sources?{q}')
     _checkresp(response)
     data = response.get_json()
-    _validate_ids(data, { 'tdm/sensor_3' })
+    _validate_ids(data, { 'tdm/sensor_3', 'tdm/tiledb_sensor_6' })
 
 
 def test_sources_active_after_before(client, db_data, source_data):
@@ -115,7 +113,7 @@ def test_sources_active_before(client, db_data, source_data):
 
 
 def test_sources_active_after_geom(client, db_data, source_data):
-    geom = 'circle((9.22, 30.0), 100)'
+    geom = 'circle((8.93, 39.0), 10000)'  # point is near the town of Pula
     after = '2019-05-02T11:00:22Z'
     q = f'roi={geom}&after={after}'
     response = client.get(f'/sources?{q}')
