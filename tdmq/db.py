@@ -299,7 +299,8 @@ def add_tables(db):
           ('Station', 'WeatherObserver'),
           ('Station', 'PointWeatherObserver'),
           ('Station', 'TemperatureMosaic'),
-          ('Station', 'EnergyConsumptionMonitor')
+          ('Station', 'EnergyConsumptionMonitor'),
+          ('Station', 'TrafficObserver')
           ;
     """
     with db:
