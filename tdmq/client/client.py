@@ -13,9 +13,9 @@ import logging
 logger = logging.getLogger('urllib3.connectionpool')
 logger.setLevel(logging.ERROR)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.info('Logging is active.')
 
 
