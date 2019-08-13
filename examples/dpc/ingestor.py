@@ -45,7 +45,7 @@ def main(args):
     s = srcs[0]
     logger.info(f"Using source {s.tdmq_id} for {s.id}.")
     # DPC keeps data only for a week, let's check if there are holes
-    # in the timeseries that can be filled We try to find at least one
+    # in the timeseries that can be filled. We try to find at least one
     # old datapoint that we will use as temporal reference.
     window_start = now - timedelta(days=7)
     ts = s.timeseries(after=window_start)
@@ -55,16 +55,18 @@ def main(args):
         logger.error(f'No data acquired since {window_start}, aborting.')
         sys.exit(1)
     window_start = ts.time[0]
+    # FIXME this is a dirty trick
+    start_slot = ts.data['tiledb_index'][0]
     times = np.arange(window_start, now - dt, dt)
     filled = times[np.searchsorted(times, ts.time)]
     to_be_filled = set(times) - set(filled)
-
     for t in to_be_filled:
         t = t if isinstance(t, datetime) else t.tolist()
         data = {}
         for f in s.controlled_properties:
             data[f] = fetch_dpc_data(s, t, f)
-        slot = int((t - time_base).total_seconds() // dt.total_seconds())
+        slot = start_slot + int((t - window_start).total_seconds() //
+                                dt.total_seconds())
         logger.info(f"Ingesting data at time {t}, slot {slot}.")
         s.ingest(t, data, slot)
     logger.info(f"Done ingesting.")
