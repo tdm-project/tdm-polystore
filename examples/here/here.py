@@ -78,14 +78,14 @@ def analyze_flow_item(pbt, fi):
             'pbt': pbt,
             'geojson': get_shape(b['SHP']),
             'TMC': [b['TMC']],
-            'CF': b['CF']})
+            'CF': b['CF'][0]})
     for b, e in zip(fi[:-1], fi[1:]):
         m.append({
             'id': f'here/segment/{b["TMC"]["PC"]}:{e["TMC"]["PC"]}',
             'pbt': pbt,
             'geojson': get_shape(b['SHP']),
             'TMC': [b['TMC'], e['TMC']],
-            'CF': b['CF']})
+            'CF': b['CF'][0]})
     return m
 
 
