@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 
 import logging
+import os
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,8 +14,9 @@ def load_desc(opt):
         fname = 'dpc-temperature.json'
     else:
         assert False
-    logger.debug(f'loading source description from {fname}.')
-    with open(fname) as f:
+    full_path = os.path.join(os.path.dirname(__file__), fname)
+    logger.debug('loading source description from %s.', full_path)
+    with open(full_path) as f:
         return json.load(f)
 
 
