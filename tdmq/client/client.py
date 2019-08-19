@@ -226,6 +226,7 @@ class Client:
                                     attrs=attrs, ctx=self.tiledb_ctx)
         # Create the (empty) array on disk.
         _logger.debug('trying creation on disk of %s', array_name)
+        self.tiledb_vfs.create_dir(self.tiledb_hdfs_root)
         tiledb.DenseArray.create(array_name, schema, ctx=self.tiledb_ctx)
         _logger.debug('%s successfully created.', array_name)
         return array_name
