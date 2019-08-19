@@ -1,19 +1,17 @@
-from tdmq.client.client import Client
-from dpc import fetch_dpc_data
+
+import argparse
+import logging
+import numpy as np
+import sys
 
 from datetime import datetime
 from datetime import timedelta
-import numpy as np
-import argparse
-import sys
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.info('Logging is active.')
-
+from tdmq.client.client import Client
+from dpc import fetch_dpc_data
 from utils import load_desc, create_timebase
+
+logger = None
 
 
 def build_parser():
@@ -27,12 +25,26 @@ def build_parser():
                         default='0.0', required=False)
     parser.add_argument("--hdfs", dest='hdfs', help="hdfs address",
                         required=False)
+    parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"],
+                        default="INFO", help="Logging level")
+
     return parser
+
+
+def setup_logging(level_name):
+    global logger
+    level = getattr(logging, level_name)
+
+    logging.basicConfig(level=level)
+    logger = logging.getLogger('setup_source')
+    logger.info('Logging is active (level %s).', level_name)
 
 
 def main(args):
     parser = build_parser()
     opts = parser.parse_args(args)
+    setup_logging(opts.log_level)
+
     desc = load_desc(opts.source)
 
     now = datetime.now()
@@ -51,8 +63,8 @@ def main(args):
     ts = s.timeseries()
 
     # The DPC source keeps data available for only one week
-    time_base = ts.time[0]\
-        if len(ts) > 0 else create_timebase(now, timedelta(seconds=6*24*3600))
+    time_base = ts.time[0] \
+        if len(ts) > 0 else create_timebase(now, timedelta(seconds=6 * 24 * 3600))
     # It is unlikely that the last frame will be ready, so we stop the
     # request at now - dt.
     times = np.arange(time_base, now - dt, dt)
