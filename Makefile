@@ -30,7 +30,7 @@ docker/docker-compose-dev.yml: docker/docker-compose.yml-tmpl
 	    -e "s^USER_UID^$$(id -u)^" \
 	    -e "s^USER_GID^$$(id -g)^" \
 	    -e "s^DEV=false^DEV=true^" \
-	    -e "s^#DEV *^^" \
+	    -e "s^#DEV ^^" \
 	       < docker/docker-compose.yml-tmpl > docker/docker-compose-dev.yml
 
 

@@ -15,7 +15,7 @@ services:
       - "8888:8888"
     volumes:
       - "LOCAL_PATH/notebooks:/home/jupyter/notebooks"
-    #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
+    #DEV   - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
     user: USER_UID:USER_GID
     environment:
       - NAMENODE_HOSTNAME=namenode
