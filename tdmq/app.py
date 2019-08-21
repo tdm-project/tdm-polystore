@@ -2,7 +2,7 @@
 
 import logging
 import os
-from flask import Flask
+import flask
 
 from tdmq.db import add_db_cli, close_db
 from tdmq.api import add_routes
@@ -26,7 +26,7 @@ def configure_logging(app):
 
 
 def create_app(test_config=None):
-    app = Flask(__name__, instance_relative_config=True)
+    app = flask.Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
         DB_HOST='timescaledb',

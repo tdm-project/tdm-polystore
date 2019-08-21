@@ -8,7 +8,6 @@ import psycopg2.extras
 import psycopg2.sql as sql
 import uuid
 
-from flask import current_app
 from psycopg2.sql import SQL
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -21,6 +20,36 @@ logger = logging.getLogger(__name__)
 psycopg2.extras.register_uuid()
 
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
+
+
+def get_db():
+    """
+    Requires active application context.
+
+    Connect to the application's configured database. The connection
+    is unique for each request and will be reused if this is called
+    again.
+    """
+    if 'db' not in flask.g:
+        db_settings = {
+            'user': flask.current_app.config['DB_USER'],
+            'password': flask.current_app.config['DB_PASSWORD'],
+            'host': flask.current_app.config['DB_HOST'],
+            'dbname': flask.current_app.config['DB_NAME'],
+        }
+        flask.g.db = db_connect(db_settings)
+    return flask.g.db
+
+
+def close_db():
+    """
+    If this request is connected to the database, close the
+    connection.
+    """
+    db = flask.g.pop('db', None)
+
+    if db is not None:
+        db.close()
 
 
 def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
@@ -147,7 +176,7 @@ def list_sources(args):
     return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
-def get_sources(list_of_tdmq_ids):
+def find_sources(list_of_tdmq_ids):
     q = sql.SQL("""
         SELECT
             tdmq_id,
@@ -205,50 +234,54 @@ def list_entity_types(category_start=None, type_start=None):
     return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
+def db_connect(conn_params, override_db_name=None):
+    actual_db_name = override_db_name if override_db_name else conn_params['dbname']
+    con = psy.connect(
+        host=conn_params.get('host'),
+        port=conn_params.get('port'),
+        user=conn_params['user'],
+        password=conn_params['password'],
+        dbname=actual_db_name)
+    logger.debug("Connected to database '%s'", actual_db_name)
+    return con
+
+
 # FIXME move all of this to appropriate classes
-def create_db(drop=False):
+def create_db(conn_params, drop=False):
     logger.debug('drop_and_create_db:init')
-    db_settings = {
-        'user': current_app.config['DB_USER'],
-        'password': current_app.config['DB_PASSWORD'],
-        'host': current_app.config['DB_HOST'],
-        'dbname': 'postgres'
-    }
-    logger.debug('drop_and_create_db:db_settings: %s', db_settings)
-    con = psy.connect(**db_settings)
-    db_name = sql.Identifier(current_app.config['DB_NAME'])
-    logger.debug('drop_and_create_db:db_name: %s', db_name.string)
-    with con:
+    new_db_name = sql.Identifier(conn_params['dbname'])
+
+    con = db_connect(conn_params, 'postgres')
+    try:
         con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         with con.cursor() as cur:
             if drop:
                 cur.execute(
-                    sql.SQL('DROP DATABASE IF EXISTS {}').format(db_name))
-                cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
+                    sql.SQL('DROP DATABASE IF EXISTS {}').format(new_db_name))
+                cur.execute(sql.SQL('CREATE DATABASE {}').format(new_db_name))
             else:
                 cur.execute(
                     'SELECT count(*) FROM pg_catalog.pg_database '
                     'WHERE datname = %s',
-                    [current_app.config['DB_NAME']])
+                    [conn_params['dbname']])
                 if not cur.fetchone()[0]:
-                    cur.execute(sql.SQL('CREATE DATABASE {}').format(db_name))
+                    cur.execute(sql.SQL('CREATE DATABASE {}').format(new_db_name))
+    finally:
+        con.close()
 
-    con.close()
-    logger.debug('drop_and_create_db:done.')
+    logger.debug('DB %s created', new_db_name.string)
 
 
-def add_extensions(db):
+def add_extensions(curs):
     SQL = """
     CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
     CREATE EXTENSION IF NOT EXISTS postgis;
     CREATE EXTENSION IF NOT EXISTS citext;
     """
-    with db:
-        with db.cursor() as cur:
-            cur.execute(SQL)
+    curs.execute(SQL)
 
 
-def add_tables(db):
+def add_tables(curs):
     SQL = """
       CREATE TABLE entity_category (
           entity_category CITEXT PRIMARY KEY
@@ -303,12 +336,10 @@ def add_tables(db):
           ('Station', 'TrafficObserver')
           ;
     """
-    with db:
-        with db.cursor() as cur:
-            cur.execute(SQL)
+    curs.execute(SQL)
 
 
-def dump_table(db, tname, path, itersize=100000):
+def dump_table(conn, tname, path, itersize=100000):
     query = sql.SQL('SELECT row_to_json({0}) from {0}').format(
         sql.Identifier(tname)
     )
@@ -316,8 +347,8 @@ def dump_table(db, tname, path, itersize=100000):
     counter = 0
     with open(path, 'w') as f:
         f.write('{"%s": [\n' % tname)
-        with db:
-            with db.cursor('dump_cursor') as cur:
+        with conn:
+            with conn.cursor('dump_cursor') as cur:
                 cur.itersize = itersize
                 cur.execute(query)
                 for r in cur:
@@ -332,6 +363,10 @@ def dump_table(db, tname, path, itersize=100000):
 
 
 def load_sources(data, validate=False, chunk_size=500):
+    return load_sources_conn(get_db(), data, validate, chunk_size)
+
+
+def load_sources_conn(conn, data, validate=False, chunk_size=500):
     """
     Load sensors objects.
 
@@ -354,10 +389,9 @@ def load_sources(data, validate=False, chunk_size=500):
               VALUES %s"""
     template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s)"
     try:
-        with get_db() as db:
-            with db.cursor() as cur:
+        with conn:
+            with conn.cursor() as cur:
                 psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
-                db.commit()
     except psycopg2.errors.UniqueViolation as e:
         logger.debug(e)
         raise tdmq.errors.DuplicateItemException(f"{e.pgerror}\n{e.diag.message_detail}")
@@ -367,6 +401,10 @@ def load_sources(data, validate=False, chunk_size=500):
 
 
 def load_records(records, validate=False, chunk_size=500):
+    return load_records_conn(get_db(), records, validate, chunk_size)
+
+
+def load_records_conn(conn, records, validate=False, chunk_size=500):
     """
     Load records.
 
@@ -406,54 +444,49 @@ def load_records(records, validate=False, chunk_size=500):
 
     sql = "INSERT INTO record (time, source_id, footprint, data) VALUES %s"
     template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s)"
-    with get_db() as db:
-        with db.cursor() as cur:
+    with conn:
+        with conn.cursor() as cur:
             id_to_tdmq_id = get_required_internal_source_id_map(cur, records)
             tuples = [ gen_record_tuple(t, id_to_tdmq_id) for t in records ]
             logger.debug('load_records: start loading %d records', len(records))
             psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
-            db.commit()
 
     logger.debug('load_records: done.')
     return len(records)
 
 
-def get_db():
-    """Connect to the application's configured database. The connection
-    is unique for each request and will be reused if this is called
-    again.
-    """
-    if 'db' not in flask.g:
-        db_settings = {
-            'user': current_app.config['DB_USER'],
-            'password': current_app.config['DB_PASSWORD'],
-            'host': current_app.config['DB_HOST'],
-            'dbname': current_app.config['DB_NAME'],
-        }
-        logger.debug('get_db:db_setting: %s', db_settings)
-        flask.g.db = psy.connect(**db_settings)
-    return flask.g.db
-
-
-def close_db(e=None):
-    """If this request is connected to the database, close the
-    connection.
-    """
-    db = flask.g.pop('db', None)
-
-    if db is not None:
-        db.close()
-
-
-def init_db(drop=False):
+def init_db(conn_params, drop=False):
     """Clear existing data and create new tables."""
-    logger.debug(f'init_db: start drop {drop}')
-    create_db(drop)
+    logger.debug('init_db: start drop %s', drop)
+
+    create_db(conn_params, drop)
     logger.debug('init_db: db_created')
-    db = get_db()
-    add_extensions(db)
-    add_tables(db)
+
+    con = db_connect(conn_params)
+    try:
+        with con:  # transaction
+            with con.cursor() as curs:
+                add_extensions(curs)
+                add_tables(curs)
+    finally:
+        con.close()
+
     logger.debug('init_db: done')
+
+
+def drop_db(conn_params):
+    """Clear existing data and create new tables."""
+    logger.debug('drop_db %s', conn_params)
+
+    con = db_connect(conn_params, 'postgres')
+    try:
+        con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        with con.cursor() as cur:
+            cur.execute(
+                sql.SQL('DROP DATABASE IF EXISTS {}').format(sql.Identifier(conn_params['dbname'])))
+        logger.debug('database %s dropped', conn_params['dbname'])
+    finally:
+        con.close()
 
 
 loader = {}
@@ -483,8 +516,8 @@ def load_file(filename):
 
 def dump_field(field, path):
     """Dump all record of field to file path"""
-    db = get_db()
-    return dump_table(db, field, path, itersize=100000)
+    conn = get_db()
+    return dump_table(conn, field, path, itersize=100000)
 
 
 supported_bucket_ops = {
@@ -629,13 +662,23 @@ def get_timeseries(tdmq_id, args=None):
 
 
 def add_db_cli(app):
+    from flask import current_app
     db_cli = flask.cli.AppGroup('db')
+
+    def conn_params():
+        return {
+            'host': current_app.config.get('DB_HOST'),
+            'port': current_app.config.get('DB_PORT'),
+            'user': current_app.config['DB_USER'],
+            'password': current_app.config['DB_PASSWORD'],
+            'dbname': current_app.config['DB_NAME']
+        }
 
     @db_cli.command('init')
     @click.option('--drop', default=False, is_flag=True)
     def db_init(drop):
         click.echo('Starting initialization process.')
-        init_db(drop)
+        init_db(conn_params(), drop)
         click.echo('Initialized the database.')
 
     @db_cli.command('load')

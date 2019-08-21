@@ -78,17 +78,17 @@ class Client:
         self.tiledb_ctx = tiledb.Ctx(
             self.TILEDB_CONFIG if tiledb_config is None else tiledb_config)
         self.tiledb_vfs = tiledb.VFS(config=self.tiledb_ctx.config(), ctx=self.tiledb_ctx)
-
-        _logger.debug("TileDB configuration:")
-        _logger.debug("\t tiledb_hdfs_root: %s", self.tiledb_hdfs_root)
-        _logger.debug("\t tiledb_config:\n%s", self.tiledb_ctx.config())
+        _logger.debug("tiledb_hdfs_root: %s", self.tiledb_hdfs_root)
 
     def _check_sanity(self, r):
         try:
             r.raise_for_status()
         except requests.HTTPError as e:
+            raise
             # FIXME check if it is an actual duplicate!
-            raise DuplicateItemException(e.args)
+            # Let's not raise this specific exception
+            # unless we're sure that's the cause of the problem
+            # raise DuplicateItemException(e.args)
 
     def _destroy_source(self, tdmq_id):
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}')
@@ -157,7 +157,7 @@ class Client:
     def get_geometry_types(self):
         return requests.get(f'{self.base_url}/geometry_types').json()
 
-    def get_sources(self, args=None):
+    def find_sources(self, args=None):
         res = requests.get(f'{self.base_url}/sources', params=args).json()
         return [self.get_source_proxy(r['tdmq_id']) for r in res]
 

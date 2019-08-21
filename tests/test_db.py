@@ -7,7 +7,7 @@ import tdmq.db as db_query
 from test_api import _filter_records_in_time_range_and_source
 
 
-def test_query_sources_simple(db_data, source_data):
+def test_query_sources_simple(app, db_data, source_data):
     s1 = source_data['sources'][0]
 
     q_args = { 'id': s1['id'] }
@@ -22,11 +22,11 @@ def test_query_sources_simple(db_data, source_data):
     assert set(row.keys()) >= expected_keys
 
 
-def test_get_one_source(db_data, source_data):
+def test_get_one_source(app, db_data, source_data):
     s1 = source_data['sources'][0]
     tdmq_id = db_query.list_sources({ 'id': s1['id'] })[0]['tdmq_id']
 
-    resultset = db_query.get_sources([tdmq_id])
+    resultset = db_query.find_sources([tdmq_id])
     assert len(resultset) == 1
     assert isinstance(resultset, list)
 
@@ -36,19 +36,19 @@ def test_get_one_source(db_data, source_data):
     assert row['tdmq_id'] == tdmq_id
 
 
-def test_get_two_sources(db_data, source_data):
+def test_get_two_sources(app, db_data, source_data):
     source_ids = [ s['id'] for s in source_data['sources'][0:2] ]
     tdmq_ids = [
         db_query.list_sources({ 'id': source_ids[0] })[0]['tdmq_id'],
         db_query.list_sources({ 'id': source_ids[1] })[0]['tdmq_id']
     ]
 
-    resultset = db_query.get_sources(tdmq_ids)
+    resultset = db_query.find_sources(tdmq_ids)
     assert len(resultset) == 2
     assert set(tdmq_ids) == set(r['tdmq_id'] for r in resultset)
 
 
-def test_query_source_offset_limit(db_data):
+def test_query_source_offset_limit(app, db_data):
     src = db_query.list_sources({})
     assert len(src) > 2
 
@@ -64,16 +64,16 @@ def test_query_source_offset_limit(db_data):
     assert second[0]['tdmq_id'] == two_set[1]['tdmq_id']
 
 
-def test_delete_source(db_data):
+def test_delete_source(app, db_data):
     src = db_query.list_sources({ 'limit': 1 })
 
     db_query.delete_sources([src[0]['tdmq_id']])
 
-    after_delete = db_query.get_sources([src[0]['tdmq_id']])
+    after_delete = db_query.find_sources([src[0]['tdmq_id']])
     assert after_delete == []
 
 
-def test_list_categories(db):
+def test_list_categories(app, db):
     resultset = db_query.list_entity_catories("R")
     assert len(resultset) == 1
     assert resultset[0]['entity_category'].lower() == 'radar'
@@ -82,7 +82,7 @@ def test_list_categories(db):
     assert len(resultset) > 1
 
 
-def test_list_types(db):
+def test_list_types(app, db):
     resultset = db_query.list_entity_types(type_start='Point')
     assert len(resultset) == 1
     assert isinstance(resultset[0], dict)
@@ -101,7 +101,7 @@ def test_list_types(db):
     assert resultset[0]['entity_type'].lower() == 'MeteoRadarMosaic'.lower()
 
 
-def test_get_timeseries_simple(db_data, source_data):
+def test_get_timeseries_simple(app, db_data, source_data):
     our_source_id = 'tdm/sensor_0'
     all_src_recs = [ r for r in source_data['records'] if r['source'] == our_source_id ]
 
@@ -115,7 +115,7 @@ def test_get_timeseries_simple(db_data, source_data):
     assert len(result['rows'][0]) == 2 + len(result['properties'])
 
 
-def test_get_timeseries_after(db_data, source_data):
+def test_get_timeseries_after(app, db_data, source_data):
     after = '2019-05-02T11:00:22Z'
     source_id = 'tdm/sensor_0'
     records = _filter_records_in_time_range_and_source(source_data['records'], after, source_id=source_id)
@@ -128,7 +128,7 @@ def test_get_timeseries_after(db_data, source_data):
     assert len(result['rows']) == len(records)
 
 
-def test_get_timeseries_before(db_data, source_data):
+def test_get_timeseries_before(app, db_data, source_data):
     before = '2019-05-02T11:00:10Z'
     source_id = 'tdm/sensor_0'
     records = _filter_records_in_time_range_and_source(source_data['records'], before=before, source_id=source_id)
@@ -141,7 +141,7 @@ def test_get_timeseries_before(db_data, source_data):
     assert len(result['rows']) == len(records)
 
 
-def test_get_timeseries_before_after(db_data, source_data):
+def test_get_timeseries_before_after(app, db_data, source_data):
     after = '2019-05-02T11:00:00Z'
     before = '2019-05-02T11:00:10Z'
     source_id = 'tdm/sensor_0'
@@ -154,7 +154,7 @@ def test_get_timeseries_before_after(db_data, source_data):
     assert len(result['rows']) == len(records)
 
 
-def test_get_timeseries_fields(db_data, source_data):
+def test_get_timeseries_fields(app, db_data, source_data):
     tdmq_id = db_query.list_sources({ 'id': 'tdm/sensor_0' })[0]['tdmq_id']
 
     result = db_query.get_timeseries(tdmq_id)
@@ -173,7 +173,7 @@ def test_get_timeseries_fields(db_data, source_data):
     assert result['properties'] == [ 'humidity', 'temperature' ]
 
 
-def test_get_shaped_timeseries(db_data, source_data):
+def test_get_shaped_timeseries(app, db_data, source_data):
     our_source_id = 'tdm/tiledb_sensor_6'
     all_src_recs = [ r for r in source_data['records'] if r['source'] == our_source_id ]
 
@@ -187,7 +187,7 @@ def test_get_shaped_timeseries(db_data, source_data):
     assert len(result['rows']) == len(all_src_recs)
 
 
-def test_get_bucketed_timeseries(db_data, source_data):
+def test_get_bucketed_timeseries(app, db_data, source_data):
     our_source_id = 'tdm/sensor_0'
     all_src_recs = [ r for r in source_data['records'] if r['source'] == our_source_id ]
 
@@ -198,7 +198,7 @@ def test_get_bucketed_timeseries(db_data, source_data):
     # TODO: improve test
 
 
-def test_get_empty_timeseries(db_data, source_data):
+def test_get_empty_timeseries(app, db_data, source_data):
     our_source_id = 'tdm/sensor_0'
     all_src_recs = sorted( (r for r in source_data['records'] if r['source'] == our_source_id), key=op.itemgetter('time') )
 
@@ -208,7 +208,7 @@ def test_get_empty_timeseries(db_data, source_data):
     assert len(result['rows']) == 0
 
 
-def test_load_source(clean_db, source_data):
+def test_load_source(app, clean_db, source_data):
     results = db_query.list_sources({})
     assert len(results) == 0
 
@@ -224,12 +224,12 @@ def test_load_source(clean_db, source_data):
     assert results[0]['external_id'] == one_src['id']
     assert one_src == source_data['sources'][0]
 
-    query_src = db_query.get_sources(tdmq_ids)
+    query_src = db_query.find_sources(tdmq_ids)
     assert len(query_src) == 1
     assert query_src[0]['tdmq_id'] == tdmq_ids[0]
 
 
-def test_load_records_one_src(clean_db, source_data):
+def test_load_records_one_src(app, clean_db, source_data):
     one_src = copy.deepcopy(source_data['sources'][0])
     records = copy.deepcopy(source_data['records_by_source'][one_src['id']])
 
@@ -245,7 +245,7 @@ def test_load_records_one_src(clean_db, source_data):
     assert ts_data['source_info']['id'] == one_src['id']
 
 
-def test_load_records_multiple_src(clean_db, source_data):
+def test_load_records_multiple_src(app, clean_db, source_data):
     tdmq_ids = db_query.load_sources(source_data['sources'])
 
     n = db_query.load_records(source_data['records'])
@@ -253,7 +253,7 @@ def test_load_records_multiple_src(clean_db, source_data):
 
     records_by_source = source_data['records_by_source']
     for i in tdmq_ids:
-        src = db_query.get_sources([i])[0]
+        src = db_query.find_sources([i])[0]
         ts = db_query.get_timeseries(i)
         assert len(ts['rows']) == len(records_by_source[src['external_id']])
         assert ts['source_info']['id'] == src['external_id']

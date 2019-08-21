@@ -40,7 +40,7 @@ def main(args):
     dt = timedelta(seconds=desc['description']['acquisition_period'])
 
     c = Client()
-    srcs = c.get_sources({'id': desc['id']})
+    srcs = c.find_sources({'id': desc['id']})
     assert len(srcs) > 0
     s = srcs[0]
     logger.info(f"Using source {s.tdmq_id} for {s.id}.")

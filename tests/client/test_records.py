@@ -1,5 +1,5 @@
 from tdmq.client import Client
-from test_source import register_sources_here
+from test_source import register_scalar_sources
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
@@ -24,23 +24,23 @@ source_desc = {
 }
 
 
-def test_add_scalar_records(reset_db, source_data):
-    c = Client()
-    srcs = register_sources_here(c, source_data)
+def test_add_scalar_records(clean_db, source_data, live_app):
+    c = Client(live_app.url())
+    srcs = register_scalar_sources(c, source_data)
     by_source = source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
         s.add_records(by_source[s.id])
         c.deregister_source(s)
         tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     for tid in tdmq_ids:
         assert tid not in sources
 
 
-def test_add_scalar_record(reset_db, source_data):
-    c = Client()
-    srcs = register_sources_here(c, source_data)
+def test_add_scalar_record(clean_db, source_data, live_app):
+    c = Client(live_app.url())
+    srcs = register_scalar_sources(c, source_data)
     by_source = source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
@@ -48,14 +48,14 @@ def test_add_scalar_record(reset_db, source_data):
             s.add_record(r)
         c.deregister_source(s)
         tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     for tid in tdmq_ids:
         assert tid not in sources
 
 
-def test_ingest_scalar_record(reset_db, source_data):
-    c = Client()
-    srcs = register_sources_here(c, source_data)
+def test_ingest_scalar_record(clean_db, source_data, live_app):
+    c = Client(live_app.url())
+    srcs = register_scalar_sources(c, source_data)
     by_source = source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
@@ -68,20 +68,20 @@ def test_ingest_scalar_record(reset_db, source_data):
             s.ingest(t, data)
         c.deregister_source(s)
         tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     for tid in tdmq_ids:
         assert tid not in sources
 
 
-def test_check_timeseries(reset_db):
-    c = Client()
+def test_check_timeseries(clean_db, live_app):
+    c = Client(live_app.url())
     s = c.register_source(source_desc)
     N = 10
     now = datetime.now()
     time_base = datetime(now.year, now.month, now.day, now.hour)
     times = [time_base + timedelta(i) for i in range(N)]
     temps = [20 + i for i in range(N)]
-    hums = [i/N for i in range(N)]
+    hums = [i / N for i in range(N)]
     for t, tv, th in zip(times, temps, hums):
         s.ingest(t, {'temperature': tv, 'humidity': th})
     ts = s.timeseries()
@@ -91,5 +91,5 @@ def test_check_timeseries(reset_db):
     assert np.array_equal(ts_times, times)
     tid = s.tdmq_id
     c.deregister_source(s)
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     assert tid not in sources

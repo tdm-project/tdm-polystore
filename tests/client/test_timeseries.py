@@ -1,11 +1,9 @@
-import pytest
-import json
+
+
 import numpy as np
 from tdmq.client import Client
 from datetime import datetime
 from datetime import timedelta
-
-# pytestmark = pytest.mark.skip(reason="not up-to-date with new pytest setup")
 
 source_desc = {
     "id": "tdm/sensor_1/test_barfoo",
@@ -24,15 +22,15 @@ source_desc = {
 }
 
 
-def test_check_timeseries_range(reset_db):
-    c = Client()
+def test_check_timeseries_range(clean_db, live_app):
+    c = Client(live_app.url())
     s = c.register_source(source_desc)
     N = 10
     now = datetime.now()
     time_base = datetime(now.year, now.month, now.day, now.hour)
     times = [time_base + timedelta(i) for i in range(N)]
     temps = [20 + i for i in range(N)]
-    hums = [i/N for i in range(N)]
+    hums = [i / N for i in range(N)]
     for t, tv, th in zip(times, temps, hums):
         s.add_record({'time': t.strftime('%Y-%m-%dT%H:%M:%SZ'),
                       'source': s.id,
@@ -47,12 +45,12 @@ def test_check_timeseries_range(reset_db):
             assert np.array_equal(ts_times, times[u:v])
     tid = s.tdmq_id
     c.deregister_source(s)
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     assert tid not in sources
 
 
-def test_check_timeseries_bucket(reset_db):
-    c = Client()
+def test_check_timeseries_bucket(clean_db, live_app):
+    c = Client(live_app.url())
     s = c.register_source(source_desc)
     bucket = 10
     N = 10 * bucket
@@ -60,7 +58,7 @@ def test_check_timeseries_bucket(reset_db):
     time_base = datetime(now.year, now.month, now.day, now.hour)
     times = [time_base + timedelta(seconds=i) for i in range(N)]
     temps = [20 + i for i in range(N)]
-    hums = [i/N for i in range(N)]
+    hums = [i / N for i in range(N)]
     for t, tv, th in zip(times, temps, hums):
         s.add_record({'time': t.strftime('%Y-%m-%dT%H:%M:%SZ'),
                       'source': s.id,
@@ -81,12 +79,12 @@ def test_check_timeseries_bucket(reset_db):
         np.reshape(np.array(times), (-1, bucket)).min(axis=1))
     tid = s.tdmq_id
     c.deregister_source(s)
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     assert tid not in sources
 
 
-def test_empty_timeseries(reset_db):
-    c = Client()
+def test_empty_timeseries(clean_db, live_app):
+    c = Client(live_app.url())
     s = c.register_source(source_desc)
     # empty timeseries
     ts = s.timeseries()

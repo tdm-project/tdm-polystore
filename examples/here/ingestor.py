@@ -34,7 +34,7 @@ def main(args):
     c = Client()
     logger.info("pre-loading existing srcs.")
     srcs = dict((s.id, s)
-                for s in c.get_sources({'entity_category': 'Station',
+                for s in c.find_sources({'entity_category': 'Station',
                                         'entity_type': 'TrafficObserver'}))
     logger.info(f"loaded {len(srcs)}.")
     data = fetch_here_data(opts.app_id, opts.app_code, opts.source)

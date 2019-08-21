@@ -51,7 +51,7 @@ def main(args):
     dt = timedelta(seconds=desc['description']['acquisition_period'])
 
     c = Client()
-    srcs = c.get_sources({'id': desc['id']})
+    srcs = c.find_sources({'id': desc['id']})
     if len(srcs) > 0:
         assert len(srcs) == 1
         s = srcs[0]

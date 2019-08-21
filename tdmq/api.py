@@ -39,10 +39,10 @@ def add_routes(app):
     def index():
         return 'The URL for this page is {}'.format(url_for('index'))
 
-    if app.debug:
-        @app.route('/init_db')
-        def init_db():
-            return jsonify(db.init_db(drop=True))
+    # if app.debug:
+    #     @app.route('/init_db')
+    #     def init_db():
+    #         return jsonify(db.init_db(drop=True))
 
     @app.route('/entity_types')
     def entity_types():
@@ -169,7 +169,7 @@ def add_routes(app):
         if request.method == "DELETE":
             result = db.delete_sources([str(tdmq_id)])
         else:
-            sources = db.get_sources([str(tdmq_id)])
+            sources = db.find_sources([str(tdmq_id)])
             if len(sources) == 1:
                 result = sources[0]
             elif len(sources) == 0:
@@ -272,13 +272,15 @@ def add_routes(app):
         n = db.load_records(data)
         return jsonify({"loaded": n})
 
-    @app.route('/client_info')
+    @app.route('/service_info')
     def client_info():
         response = {
             'version': '0.0',
             'tiledb': {
-                'hdfs_root': 'hdfs://namenode:8020/arrays',
-                'vfs.hdfs.username': 'root'
+                'hdfs.root': 'hdfs://namenode:8020/arrays',
+                'config': {
+                    'vfs.hdfs.username': 'root'
+                }
             }
         }
 

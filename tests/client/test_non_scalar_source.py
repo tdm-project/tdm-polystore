@@ -1,5 +1,5 @@
-import pytest
-import json
+
+
 from tdmq.client import Client
 import numpy as np
 from datetime import datetime, timedelta
@@ -51,20 +51,21 @@ def check_source(s, d):
 
 
 def check_deallocation(c, tdmq_ids):
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     for tid in tdmq_ids:
         assert tid not in sources
+
 
 def register_sources_here(c, source_data):
     return register_sources(c, [d for d in source_data['sources']
                                 if not is_scalar(d)],
                             check_source=check_source)
-        
 
-def test_nonscalar_source_register_deregister(clean_hdfs, reset_db, source_data):
-    c = Client()
+
+def test_nonscalar_source_register_deregister(clean_hdfs, clean_db, source_data, live_app):
+    c = Client(live_app.url())
     srcs = register_sources_here(c, source_data)
-    sources = dict((_.tdmq_id, _) for _ in c.get_sources())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     tdmq_ids = []
     for s in srcs:
         assert s.tdmq_id in sources
@@ -79,10 +80,10 @@ def test_nonscalar_source_register_deregister(clean_hdfs, reset_db, source_data)
     check_deallocation(c, tdmq_ids)
 
 
-def test_nonscalar_source_add_records(clean_hdfs, reset_db, source_data):
+def test_nonscalar_source_add_records(clean_hdfs, clean_db, source_data, live_app):
     N = 10
-    c = Client()
-    srcs = register_sources_here(c, source_data)    
+    c = Client(live_app.url())
+    srcs = register_sources_here(c, source_data)
     tdmq_ids = []
     for s in srcs:
         assert len(s.shape) > 0

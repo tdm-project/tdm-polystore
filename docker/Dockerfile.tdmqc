@@ -3,7 +3,14 @@ FROM tdmproject/tiledb:0.1.1 AS deps
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
         libnss-wrapper \
- && pip3 install --no-cache-dir requests pytest flask click psycopg2-binary tifffile
+ && pip3 install --no-cache-dir \
+        click \
+        flask \
+        psycopg2-binary \
+        pytest \
+        pytest-flask \
+        requests \
+        tifffile
 
 ENV TDMQ_DIST=/tdmq-dist
 
