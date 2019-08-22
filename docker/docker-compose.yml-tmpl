@@ -55,7 +55,7 @@ services:
     image: tdmproject/tdmqc
     depends_on:
     - "namenode"
-    - "web"
+    - "timescaledb"
     #DEV user: USER_UID:USER_GID
     #DEV volumes:
     #DEV - "LOCAL_PATH/examples:/tdmq-dist/examples"

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export PYTHONPATH="${TDMQ_DIST}"
+
+cd "${TDMQ_DIST}/tests/"
+fake_user.sh pytest "${@}"

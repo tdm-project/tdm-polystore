@@ -8,8 +8,7 @@ printf "Creating fake NSS user %s\n" "${username}"
 
 fake_user "${username}"
 
-if [[ $# > 1 ]]; then
-    set -x
+if [[ $# -ge 1 ]]; then
     exec "${@}"
 else
     exec /bin/bash

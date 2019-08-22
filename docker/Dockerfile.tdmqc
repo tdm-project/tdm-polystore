@@ -31,9 +31,9 @@ RUN echo "export HADOOP_HOME=${HADOOP_HOME}" >> /etc/profile.d/hadoop.sh \
 
 
 COPY --chown=root tdmq_scripts.sh /usr/local/lib/
-COPY --chown=root fake_user.sh /usr/local/bin/
+COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
 RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
- && chmod 755 /usr/local/bin/fake_user.sh \
+ && chmod 755 /usr/local/bin/* \
  && chmod a+w -R /opt/hadoop/etc/hadoop/
 
 
