@@ -2,14 +2,14 @@
 
 import json
 import logging
-import multiprocessing
 import os
 import pytest
 import random
-import requests
 import signal
 import socket
 import string
+import subprocess
+import tempfile
 import time
 
 from collections import defaultdict
@@ -76,11 +76,8 @@ def clean_db(db):
 
 
 @pytest.fixture
-def app(db_connection_config, caplog):
-    caplog.set_level(logging.DEBUG)
+def app(db_connection_config):
     """Create and configure a new app instance for each test."""
-    # The database is created and dropped with each run
-    logging.debug("Creating new app")
     app = create_app({
         'TESTING': True,
         'DB_HOST': db_connection_config['host'],
@@ -142,14 +139,9 @@ def clean_hdfs(tdmq_config):
     hdfs_cmd = f'HADOOP_USER_NAME=root hdfs dfs -rm -r -f {url}'
     os.system(hdfs_cmd)
 
-
-@pytest.fixture
-def reset_db(tdmq_config):
-    requests.get(f'{tdmq_config["tdmq_base_url"]}/init_db')
-
 ############################################################
 
-#  Code taken from pytest-flask version 0.15.
+#  Code in part taken from pytest-flask version 0.15.
 #  FIXME:  contribute PR to fix LiveServer.stop()
 
 
@@ -160,65 +152,84 @@ except ImportError:
     from urllib.request import urlopen
 
 
-class LiveServer(object):
+class SubprocessLiveServer(object):
     """The helper class uses to manage live server. Handles creation and
     stopping application in a separate process.
 
-    :param app: The application to run.
     :param host: The host where to listen (default localhost).
     :param port: The port to run application.
     """
 
-    def __init__(self, app, host, port, clean_stop=False):
-        self.app = app
+    def __init__(self, cfg_file, app_path, host, port, prefix=None):
+        self.cfg_file = cfg_file
+        self.app_path = app_path
         self.port = port
         self.host = host
-        self.clean_stop = clean_stop
+        self.prefix = prefix
         self._process = None
 
     def start(self):
         """Start application in a separate process."""
-        def worker(app, host, port):
-            logging.info("Starting live server (in separate process)")
-            app.run(host=host, port=port, use_reloader=False, threaded=False, debug=True, use_evalex=False)
-        self._process = multiprocessing.Process(
-            target=worker,
-            args=(self.app, self.host, self.port)
-        )
-        self._process.start()
+        proc_env = os.environ.copy()
+        proc_env.update({
+            "FLASK_APP": self.app_path,
+            "FLASK_ENV": "development",
+            "FLASK_RUN_PORT": str(self.port),
+            "FLASK_RUN_HOST": self.host,
+            "TDMQ_FLASK_CONFIG": self.cfg_file
+        })
+
+        self._process = subprocess.Popen(["/usr/local/bin/flask", "run"], env=proc_env)
 
         # We must wait for the server to start listening with a maximum
         # timeout of 5 seconds.
         timeout = 5
-        while timeout > 0:
+        success = False
+        url = self.url('/')
+        while timeout > 0 and not success:
             time.sleep(1)
             try:
-                urlopen(self.url())
-                timeout = 0
-            except URLError:
+                urlopen(url)
+                success = True
+            except URLError as e:
+                logging.debug("Service didn't reply successfully to url %s: %s", url, e)
                 timeout -= 1
+
+        if not success:
+            self._process.kill()  # Just in case it started after the timeout
+            raise RuntimeError("live_app: failed to start Flask application")
 
     def url(self, url=''):
         """Returns the complete url based on server options."""
-        return 'http://%s:%d%s' % (self.host, self.port, url)
+        base = 'http://{}:{}'.format(self.host, self.port)
+        if self.prefix:
+            base += self.prefix
+        if url:
+            base += url
+        return base
 
     def stop(self):
         """Stop application process."""
         if self._process:
-            if self.clean_stop and self._stop_cleanly():
+            if self._stop_cleanly():
                 logging.info("Stopped live server cleanly")
                 return
 
-            if self._process.is_alive():
+            if self._process.poll() is None:
                 logging.info("Live server process %s didn't exit with SIGINT. Terminating forcefully", self._process.pid)
                 self._process.terminate()
-                self._process.join(2)
-                if self._process.is_alive():
-                    logging.debug("Process won't die.  Killing")
-                    os.kill(self._process.pid, signal.SIGKILL)
-                    self._process.join(2)
-                    if self._process.is_alive():
-                        logging.error("Live server process %s still alive...giving up trying to kill it!", self._process.pid)
+                try:
+                    self._process.wait(2)
+                    return
+                except subprocess.TimeoutExpired:
+                    pass
+
+                logging.debug("Process won't die.  Killing")
+                self._process.kill()
+                try:
+                    self._process.wait(2)
+                except subprocess.TimeoutExpired:
+                    logging.error("Live server process %s still alive...giving up trying to kill it!", self._process.pid)
 
     def _stop_cleanly(self, timeout=3):
         """Attempts to stop the server cleanly by sending a SIGINT signal and waiting for
@@ -227,48 +238,31 @@ class LiveServer(object):
         :return: True if the server was cleanly stopped, False otherwise.
         """
         logging.debug("Trying to stop live server cleanly...")
+        if self._process.poll() is not None:
+            logging.debug("Process already exited.  Exit code: %s", self._process.returncode)
+            return True
+
+        self._process.send_signal(signal.SIGINT)
+        logging.debug("sent SIGINT.  Waiting up to %s seconds", timeout)
         try:
-            os.kill(self._process.pid, signal.SIGINT)
-            logging.debug("sent SIGINT.  Joining with timeout %s", timeout)
-            self._process.join(timeout)
-            if self._process.exitcode is not None:
-                logging.debug("joined!!  Exitcode is %s", self._process.exitcode)
-                return True
-            else:
-                logging.warning("clean stop of live server timed out")
-                return False
-        except Exception as ex:
-            logging.error('Failed to join the live server process: %r', ex)
+            retcode = self._process.wait(timeout)
+            logging.debug("Exited!!  Exit code is %s", retcode)
+            return True
+        except subprocess.TimeoutExpired:
+            logging.warning("clean stop of live server timed out")
             return False
 
     def __repr__(self):
-        return '<LiveServer listening at %s>' % self.url()
+        return '<SubprocessLiveServer listening at %s>' % self.url()
 
 
-def _rewrite_server_name(server_name, new_port):
-    """Rewrite server port in ``server_name`` with ``new_port`` value."""
-    sep = ':'
-    if sep in server_name:
-        server_name, port = server_name.split(sep, 1)
-    return sep.join((server_name, new_port))
-
-
-# FIXME:  Can we get this to run for the entire session?
-@pytest.fixture
-def live_app(request, app, monkeypatch, pytestconfig):
+@pytest.fixture(scope="session")
+def live_app(db_connection_config, pytestconfig):
     """Run application in a separate process.
 
-    When the ``live_server`` fixture is applied, the ``url_for`` function
-    works as expected::
-
-        def test_server_is_up_and_running(live_server):
-            index_url = url_for('index', _external=True)
-            assert index_url == 'http://localhost:5000/'
-
-            res = urllib2.urlopen(index_url)
-            assert res.code == 200
-
+       Get the URL with live_app.url().
     """
+    import tdmq.wsgi as wsgi
     port = pytestconfig.getvalue('live_server_port')
 
     if port == 0:
@@ -280,17 +274,26 @@ def live_app(request, app, monkeypatch, pytestconfig):
 
     host = pytestconfig.getvalue('live_server_host')
 
-    # Explicitly set application ``SERVER_NAME`` for test suite
-    # and restore original value on test teardown.
-    server_name = app.config['SERVER_NAME'] or 'localhost'
-    monkeypatch.setitem(app.config, 'SERVER_NAME',
-                        _rewrite_server_name(server_name, str(port)))
+    cfg = f"""
+SECRET_KEY = "dev"
+TESTING = True,
+DB_HOST = "{db_connection_config['host']}"
+DB_PORT = "{db_connection_config['port']}"
+DB_NAME = "{db_connection_config['dbname']}"
+DB_USER = "{db_connection_config['user']}"
+DB_PASSWORD = "{db_connection_config['password']}"
+LOG_LEVEL = "DEBUG"
+    """
 
-    clean_stop = request.config.getvalue('live_server_clean_stop')
-    server = LiveServer(app, host, port, clean_stop)
-    if request.config.getvalue('start_live_server'):
+    application_path = os.path.abspath(os.path.splitext(wsgi.__file__)[0])
+    logging.debug("Running tdmq application at path %s", application_path)
+
+    with tempfile.NamedTemporaryFile(mode='w') as f:
+        f.write(cfg)
+        f.flush()
+        server = SubprocessLiveServer(f.name, application_path, host, port, wsgi.app.wsgi_app.prefix)
         server.start()
-    try:
-        yield server
-    finally:
-        server.stop()
+        try:
+            yield server
+        finally:
+            server.stop()
