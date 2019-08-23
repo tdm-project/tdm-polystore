@@ -4,10 +4,9 @@ import logging
 import numpy as np
 import sys
 
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
-from tdmq.client.client import Client
+from tdmq.client import Client
 from dpc import fetch_dpc_data
 from utils import load_desc, create_timebase
 
@@ -19,12 +18,9 @@ def build_parser():
     parser.add_argument("--source", dest='source',
                         choices=['radar', 'temperature'],
                         help="dpc data source", required=True)
-    parser.add_argument("--tdmq", dest='tdmq', help="tdmq web server address",
-                        required=False)
-    parser.add_argument("-V", dest='tdmq_version', help="tdmq version",
-                        default='0.0', required=False)
-    parser.add_argument("--hdfs", dest='hdfs', help="hdfs address",
-                        required=False)
+    parser.add_argument("--tdmq", dest='tdmq', help="tdmq web server address")
+    parser.add_argument("-V", dest='tdmq_version', help="tdmq version", default='0.0')
+    parser.add_argument("--hdfs", dest='hdfs', help="hdfs address")
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"],
                         default="INFO", help="Logging level")
 
