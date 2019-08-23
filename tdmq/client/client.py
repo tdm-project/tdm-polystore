@@ -35,7 +35,7 @@ source_classes = {
 }
 
 
-class ProxyFactory:
+class SourceFactory:
     def __init__(self, src_classes=None):
         self.src_classes = {} if src_classes is None else src_classes
 
@@ -63,7 +63,7 @@ class Client:
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self, tdmq_base_url=None):
-        self.proxy_factory = ProxyFactory(source_classes)
+        self.source_factory = SourceFactory(source_classes)
 
         self.base_url = self.DEFAULT_TDMQ_BASE_URL \
             if tdmq_base_url is None else tdmq_base_url
@@ -167,7 +167,7 @@ class Client:
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
                 self._destroy_source(d['tdmq_id'])
                 raise TdmqError(f"Internal failure in registering {d.get('id', '(id unavailable)')}.")
-        return self.get_source_proxy(d['tdmq_id'])
+        return self.get_source(d['tdmq_id'])
 
     @requires_connection
     def add_records(self, records):
@@ -188,13 +188,13 @@ class Client:
     @requires_connection
     def find_sources(self, args=None):
         res = requests.get(f'{self.base_url}/sources', params=args).json()
-        return [self.get_source_proxy(r['tdmq_id']) for r in res]
+        return [self.get_source(r['tdmq_id']) for r in res]
 
     @requires_connection
-    def get_source_proxy(self, tdmq_id):
+    def get_source(self, tdmq_id):
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
-        s = self.proxy_factory.make(self, tdmq_id, res)
+        s = self.source_factory.make(self, tdmq_id, res)
         return s
 
     @requires_connection
