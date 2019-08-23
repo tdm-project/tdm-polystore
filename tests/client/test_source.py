@@ -57,9 +57,6 @@ def test_register_deregister_simple_source(clean_hdfs, clean_db, source_data, li
         assert s.tdmq_id in sources
         assert s.id == sources[s.tdmq_id].id
         assert s.tdmq_id == sources[s.tdmq_id].tdmq_id
-        assert s.tdmq_id in c.managed_objects
-        assert s == c.managed_objects[s.tdmq_id]
-        assert s == sources[s.tdmq_id]
         tdmq_id = s.tdmq_id
         c.deregister_source(s)
         tdmq_ids.append(tdmq_id)
@@ -74,7 +71,6 @@ def test_select_source_by_id(clean_hdfs, clean_db, source_data, live_app):
     for s in srcs:
         s2 = c.find_sources({'id': s.id})
         assert len(s2) == 1
-        assert s == s2[0]
     for s in srcs:
         c.deregister_source(s)
 

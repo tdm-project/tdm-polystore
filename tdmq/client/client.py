@@ -63,7 +63,6 @@ class Client:
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self, tdmq_base_url=None):
-        self.managed_objects = {}
         self.proxy_factory = ProxyFactory(source_classes)
 
         self.base_url = self.DEFAULT_TDMQ_BASE_URL \
@@ -144,14 +143,7 @@ class Client:
     @requires_connection
     def deregister_source(self, s):
         _logger.debug('deregistering %s %s', s.tdmq_id, s)
-        if s.tdmq_id in self.managed_objects:
-            _logger.debug('removing from managed_objects')
-            self._destroy_source(s.tdmq_id)
-            del self.managed_objects[s.tdmq_id]
-            del s
-        else:
-            # NO-OP
-            pass
+        self._destroy_source(s.tdmq_id)
 
     @requires_connection
     def register_source(self, description, nslots=10*24*3600*365):
@@ -200,14 +192,9 @@ class Client:
 
     @requires_connection
     def get_source_proxy(self, tdmq_id):
-        if tdmq_id in self.managed_objects:
-            _logger.debug('reusing managed object %s', tdmq_id)
-            return self.managed_objects[tdmq_id]
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
         s = self.proxy_factory.make(self, tdmq_id, res)
-        _logger.debug('new managed object %s', s.tdmq_id)
-        self.managed_objects[s.tdmq_id] = s
         return s
 
     @requires_connection

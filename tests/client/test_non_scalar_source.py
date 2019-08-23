@@ -71,9 +71,6 @@ def test_nonscalar_source_register_deregister(clean_hdfs, clean_db, source_data,
         assert s.tdmq_id in sources
         assert s.id == sources[s.tdmq_id].id
         assert s.tdmq_id == sources[s.tdmq_id].tdmq_id
-        assert s.tdmq_id in c.managed_objects
-        assert s == c.managed_objects[s.tdmq_id]
-        assert s == sources[s.tdmq_id]
         tdmq_id = s.tdmq_id
         c.deregister_source(s)
         tdmq_ids.append(tdmq_id)
