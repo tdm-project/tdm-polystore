@@ -1,5 +1,6 @@
 
 import pytest
+import re
 from datetime import datetime
 
 
@@ -168,3 +169,13 @@ def test_timeseries(flask_client, app, db_data):
     assert d['bucket']['op'] == op
     assert d['bucket']['interval'] == bucket
     assert 'temperature' in d['data'] and 'humidity' in d['data']
+
+
+def test_service_info(flask_client):
+    resp = flask_client.get('service_info')
+    _checkresp(resp)
+    info = resp.json
+    assert info.get('version') is not None
+    assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
+    if 'tiledb' in info:
+        assert info['tiledb'].get('hdfs.root') is not None

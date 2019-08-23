@@ -40,6 +40,14 @@ def register_scalar_sources(c, source_data):
                                 if is_scalar(d)])
 
 
+def test_connect(live_app):
+    c = Client(live_app.url())
+    assert not c.connected
+    c.connect()
+    assert c.connected
+    assert c.tiledb_ctx is not None
+
+
 def test_register_deregister_simple_source(clean_hdfs, clean_db, source_data, live_app):
     c = Client(live_app.url())
     srcs = register_scalar_sources(c, source_data)

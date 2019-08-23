@@ -57,28 +57,58 @@ class ProxyFactory:
 
 
 class Client:
-    TILEDB_HDFS_ROOT = 'hdfs://namenode:8020/arrays'
-    TILEDB_CONFIG = {'vfs.hdfs.username': 'root'}
-    TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
+    DEFAULT_TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
+
     TDMQ_DT_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
-    def __init__(self,
-                 tdmq_base_url=None, tiledb_config=None, tiledb_hdfs_root=None):
+    def __init__(self, tdmq_base_url=None):
         self.managed_objects = {}
         self.proxy_factory = ProxyFactory(source_classes)
 
-        self.base_url = self.TDMQ_BASE_URL \
+        self.base_url = self.DEFAULT_TDMQ_BASE_URL \
             if tdmq_base_url is None else tdmq_base_url
 
         _logger.debug("New tdmq client object for %s", self.base_url)
 
-        self.tiledb_hdfs_root = self.TILEDB_HDFS_ROOT \
-            if tiledb_hdfs_root is None else tiledb_hdfs_root
-        self.tiledb_ctx = tiledb.Ctx(
-            self.TILEDB_CONFIG if tiledb_config is None else tiledb_config)
-        self.tiledb_vfs = tiledb.VFS(config=self.tiledb_ctx.config(), ctx=self.tiledb_ctx)
-        _logger.debug("tiledb_hdfs_root: %s", self.tiledb_hdfs_root)
+        self.connected = False
+        self.tiledb_hdfs_root = None
+        self.tiledb_ctx = None
+        self.tiledb_vfs = None
+
+    def requires_connection(func):
+        """
+        Decorator for methods that require a connection to the tdmq service.
+        """
+        def wrapper_requires_connection(self, *args, **kwargs):
+            if not self.connected:
+                self.connect()
+            return func(self, *args, **kwargs)
+
+        return wrapper_requires_connection
+
+    def connect(self):
+        if self.connected:
+            return
+
+        service_info = self._do_get('service_info')
+        _logger.debug("Service sent the following info: \n%s", service_info)
+
+        if service_info['version'] != '0.0':
+            raise NotImplementedError(f"This client isn't compatible with service version {service_info['version']}")
+        if 'tiledb' in service_info:
+            self.tiledb_hdfs_root = service_info['tiledb']['hdfs.root']
+            self.tiledb_ctx = tiledb.Ctx(service_info['tiledb'].get('config'))
+            self.tiledb_vfs = tiledb.VFS(config=self.tiledb_ctx.config(), ctx=self.tiledb_ctx)
+            _logger.info("Configured TileDB context")
+            _logger.debug("\t tiledb_hdfs_root: %s", self.tiledb_hdfs_root)
+            _logger.debug("\t tiledb_config:\n%s", self.tiledb_ctx.config())
+
+        self.connected = True
+        _logger.info("Client connected to TDMQ service at %s", self.base_url)
+
+    def _do_get(self, resource, params=None):
+        return requests.get(f'{self.base_url}/{resource}', params=params).json()
 
     def _check_sanity(self, r):
         try:
@@ -111,6 +141,7 @@ class Client:
         _logger.debug('%s (%s) registered as tdmq_id=%s', thing, description['id'], res['tdmq_id'])
         return res
 
+    @requires_connection
     def deregister_source(self, s):
         _logger.debug('deregistering %s %s', s.tdmq_id, s)
         if s.tdmq_id in self.managed_objects:
@@ -122,6 +153,7 @@ class Client:
             # NO-OP
             pass
 
+    @requires_connection
     def register_source(self, description, nslots=10*24*3600*365):
         """Register a new data source
         .. :quickref: Register a new data source
@@ -145,22 +177,28 @@ class Client:
                 raise TdmqError(f"Internal failure in registering {d.get('id', '(id unavailable)')}.")
         return self.get_source_proxy(d['tdmq_id'])
 
+    @requires_connection
     def add_records(self, records):
         return requests.post(f'{self.base_url}/records', json=records)
 
+    @requires_connection
     def get_entity_categories(self):
         return requests.get(f'{self.base_url}/entity_categories').json()
 
+    @requires_connection
     def get_entity_types(self):
         return requests.get(f'{self.base_url}/entity_types').json()
 
+    @requires_connection
     def get_geometry_types(self):
         return requests.get(f'{self.base_url}/geometry_types').json()
 
+    @requires_connection
     def find_sources(self, args=None):
         res = requests.get(f'{self.base_url}/sources', params=args).json()
         return [self.get_source_proxy(r['tdmq_id']) for r in res]
 
+    @requires_connection
     def get_source_proxy(self, tdmq_id):
         if tdmq_id in self.managed_objects:
             _logger.debug('reusing managed object %s', tdmq_id)
@@ -172,17 +210,20 @@ class Client:
         self.managed_objects[s.tdmq_id] = s
         return s
 
+    @requires_connection
     def get_timeseries(self, code, args):
         args = dict((k, v) for k, v in args.items() if v is not None)
         _logger.debug('get_timeseries(%s, %s)', code, args)
         return requests.get(f'{self.base_url}/sources/{code}/timeseries',
                             params=args).json()
 
+    @requires_connection
     def save_tiledb_frame(self, tdmq_id, slot, data):
         aname = self._source_data_path(tdmq_id)
         with tiledb.DenseArray(aname, mode='w', ctx=self.tiledb_ctx) as A:
             A[slot:slot+1] = data
 
+    @requires_connection
     def fetch_data_block(self, tdmq_id, data, args):
         # FIXME hwired on tiledb
         tiledb_index = data['tiledb_index']
@@ -225,8 +266,9 @@ class Client:
         schema = tiledb.ArraySchema(domain=dom, sparse=False,
                                     attrs=attrs, ctx=self.tiledb_ctx)
         # Create the (empty) array on disk.
-        _logger.debug('trying creation on disk of %s', array_name)
+        _logger.debug('ensuring root HDFS directory exists: %s', self.tiledb_hdfs_root)
         self.tiledb_vfs.create_dir(self.tiledb_hdfs_root)
+        _logger.debug('trying creation on disk of %s', array_name)
         tiledb.DenseArray.create(array_name, schema, ctx=self.tiledb_ctx)
         _logger.debug('%s successfully created.', array_name)
         return array_name
