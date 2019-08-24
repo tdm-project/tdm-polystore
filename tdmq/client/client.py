@@ -100,23 +100,13 @@ class Client:
     def _source_data_path(self, tdmq_id):
         return os.path.join(self.tiledb_hdfs_root, tdmq_id)
 
-    def _register_thing(self, thing, description):
-        assert isinstance(description, dict)
-        _logger.debug('registering %s id=%s', thing, description['id'])
-        r = requests.post(f'{self.base_url}/{thing}', json=[description])
-        self._check_sanity(r)
-        res = dict(description)
-        res['tdmq_id'] = r.json()[0]
-        _logger.debug('%s (%s) registered as tdmq_id=%s', thing, description['id'], res['tdmq_id'])
-        return res
-
     @requires_connection
     def deregister_source(self, s):
         _logger.debug('deregistering %s %s', s.tdmq_id, s)
         self._destroy_source(s.tdmq_id)
 
     @requires_connection
-    def register_source(self, description, nslots=10*24*3600*365):
+    def register_source(self, definition, nslots=10*24*3600*365):
         """Register a new data source
         .. :quickref: Register a new data source
 
@@ -124,20 +114,22 @@ class Client:
         needed. Actual storage allocation will be done at
         ingestion. The default value is 10*24*3600*365
         """
-        d = self._register_thing('sources', description)
-        _logger.debug(d['shape'])
-        if 'shape' in d and len(d['shape']) > 0:
+        assert isinstance(definition, dict)
+        _logger.debug('registering source id=%s', definition['id'])
+        r = requests.post(f'{self.base_url}/sources', json=[definition])
+        self._check_sanity(r)
+        tdmq_id = r.json()[0]
+        if 'shape' in definition and len(definition['shape']) > 0:
             try:
                 # FIXME add storage drivers
-                if d['storage'] != 'tiledb':
-                    raise UnsupportedFunctionality(
-                        f'storage type {d["storage"]} not supported.')
-                self._create_tiledb_array(nslots, d)
+                if definition['storage'] != 'tiledb':
+                    raise UnsupportedFunctionality(f'storage type {definition["storage"]} not supported.')
+                self._create_tiledb_array(tdmq_id, definition['shape'], definition['controlledProperties'], nslots)
             except Exception as e:
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
-                self._destroy_source(d['tdmq_id'])
-                raise TdmqError(f"Internal failure in registering {d.get('id', '(id unavailable)')}.")
-        return self.get_source(d['tdmq_id'])
+                self._destroy_source(tdmq_id)
+                raise TdmqError(f"Internal failure in registering {definition.get('id', '(id unavailable)')}.")
+        return self.get_source(tdmq_id)
 
     @requires_connection
     def add_records(self, records):
@@ -203,13 +195,12 @@ class Client:
             data = A[args]
         return data
 
-    def _create_tiledb_array(self, n_slots, description):
-        array_name = self._source_data_path(description['tdmq_id'])
+    def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots):
+        array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
         if tiledb.object_type(array_name) is not None:
             raise DuplicateItemException(
                 f'duplicate object with path {array_name}')
-        shape = description['shape']
         assert len(shape) > 0 and n_slots > 0
         dims = [tiledb.Dim(name="slot",
                            domain=(0, n_slots),
@@ -220,8 +211,7 @@ class Client:
         _logger.debug('trying domain creation for %s', array_name)
         dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
         _logger.debug('trying attribute creation for %s', array_name)
-        attrs = [tiledb.Attr(name=aname, dtype=np.float32)
-                 for aname in description['controlledProperties']]
+        attrs = [tiledb.Attr(name=aname, dtype=np.float32) for aname in properties]
         _logger.debug('trying ArraySchema creation for %s', array_name)
         schema = tiledb.ArraySchema(domain=dom, sparse=False,
                                     attrs=attrs, ctx=self.tiledb_ctx)

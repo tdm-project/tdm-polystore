@@ -50,6 +50,8 @@ class ScalarSource(Source):
         return ScalarTimeSeries(self, after, before, bucket, op)
 
     def ingest(self, t, data, slot=None):
+        if slot:
+            raise TypeError("Can't specity a slot to ingest a scalar record")
         self.add_record({'time': t.strftime(self.client.TDMQ_DT_FMT),
                          'data': data})
 
