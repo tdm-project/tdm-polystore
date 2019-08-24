@@ -28,34 +28,6 @@ def set_log_level(level):
     _logger.setLevel(level)
 
 
-source_classes = {
-    ('Station', 'PointWeatherObserver'): ScalarSource,
-    ('Station', 'EnergyConsumptionMonitor'): ScalarSource,
-    ('Radar', 'MeteoRadarMosaic'): NonScalarSource,
-}
-
-
-class SourceFactory:
-    def __init__(self, src_classes=None):
-        self.src_classes = {} if src_classes is None else src_classes
-
-    def _guess_from_description(self, desc):
-        if 'shape' in desc and len(desc['shape']) > 0:
-            return NonScalarSource
-        else:
-            return ScalarSource
-
-    def make(self, client, tdmq_id, desc):
-        key = (desc['entity_category'], desc['entity_type'])
-        if key not in self.src_classes:
-            self.src_classes[key] = self._guess_from_description(
-                desc['description'])
-            _logger.debug('Added new src_class %s %s.', key, self.src_classes[key])
-        class_ = self.src_classes[key]
-        _logger.debug('Using class %s for %s.', class_, key)
-        return class_(client, tdmq_id, desc)
-
-
 class Client:
     DEFAULT_TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
 
@@ -63,8 +35,6 @@ class Client:
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self, tdmq_base_url=None):
-        self.source_factory = SourceFactory(source_classes)
-
         self.base_url = self.DEFAULT_TDMQ_BASE_URL \
             if tdmq_base_url is None else tdmq_base_url
 
@@ -194,8 +164,11 @@ class Client:
     def get_source(self, tdmq_id):
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
-        s = self.source_factory.make(self, tdmq_id, res)
-        return s
+
+        if res['description'].get('shape'):
+            return NonScalarSource(self, tdmq_id, res)
+        else:
+            return ScalarSource(self, tdmq_id, res)
 
     @requires_connection
     def get_timeseries(self, code, args):
