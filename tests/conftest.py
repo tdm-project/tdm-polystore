@@ -257,7 +257,7 @@ class SubprocessLiveServer(object):
 
 
 @pytest.fixture(scope="session")
-def live_app(db_connection_config, pytestconfig):
+def live_app(db, db_connection_config, pytestconfig):
     """Run application in a separate process.
 
        Get the URL with live_app.url().

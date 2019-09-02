@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class DuplicateItemException(werkzeug.exceptions.HTTPException):
     code = 512
-    description = 'Attemp to duplicate unique field.'
+    description = 'Attempt to duplicate unique field.'
 
 
 def restructure_timeseries(res, properties):
@@ -39,18 +39,17 @@ def add_routes(app):
     def index():
         return 'The URL for this page is {}'.format(url_for('index'))
 
-    # if app.debug:
-    #     @app.route('/init_db')
-    #     def init_db():
-    #         return jsonify(db.init_db(drop=True))
-
     @app.route('/entity_types')
     def entity_types():
-        return jsonify(db.list_entity_types())
+        types = db.list_entity_types()
+        d = { 'entity_types': types }
+        return jsonify(d)
 
     @app.route('/entity_categories')
     def entity_categories():
-        return jsonify(db.list_entity_categories())
+        categories = db.list_entity_categories()
+        d = { 'entity_categories': categories }
+        return jsonify(d)
 
     @app.route('/sources', methods=['GET', 'POST'])
     def sources():

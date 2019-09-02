@@ -201,7 +201,7 @@ def delete_sources(list_of_tdmq_ids):
     return list_of_tdmq_ids
 
 
-def list_entity_catories(category_start=None):
+def list_entity_categories(category_start=None):
     q = sql.SQL("""
       SELECT entity_category
       FROM entity_category""")

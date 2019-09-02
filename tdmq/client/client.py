@@ -77,21 +77,13 @@ class Client:
         _logger.info("Client connected to TDMQ service at %s", self.base_url)
 
     def _do_get(self, resource, params=None):
-        return requests.get(f'{self.base_url}/{resource}', params=params).json()
-
-    def _check_sanity(self, r):
-        try:
-            r.raise_for_status()
-        except requests.HTTPError as e:
-            raise
-            # FIXME check if it is an actual duplicate!
-            # Let's not raise this specific exception
-            # unless we're sure that's the cause of the problem
-            # raise DuplicateItemException(e.args)
+        r = requests.get(f'{self.base_url}/{resource}', params=params)
+        r.raise_for_status()
+        return r.json()
 
     def _destroy_source(self, tdmq_id):
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}')
-        self._check_sanity(r)
+        r.raise_for_status()
         array_name = self._source_data_path(tdmq_id)
         if tiledb.object_type(self._source_data_path(tdmq_id),
                               ctx=self.tiledb_ctx) == 'array':
@@ -117,7 +109,7 @@ class Client:
         assert isinstance(definition, dict)
         _logger.debug('registering source id=%s', definition['id'])
         r = requests.post(f'{self.base_url}/sources', json=[definition])
-        self._check_sanity(r)
+        r.raise_for_status()
         tdmq_id = r.json()[0]
         if 'shape' in definition and len(definition['shape']) > 0:
             try:
@@ -137,24 +129,20 @@ class Client:
 
     @requires_connection
     def get_entity_categories(self):
-        return requests.get(f'{self.base_url}/entity_categories').json()
+        return self._do_get('entity_categories')
 
     @requires_connection
     def get_entity_types(self):
-        return requests.get(f'{self.base_url}/entity_types').json()
-
-    @requires_connection
-    def get_geometry_types(self):
-        return requests.get(f'{self.base_url}/geometry_types').json()
+        return self._do_get('entity_types')
 
     @requires_connection
     def find_sources(self, args=None):
-        res = requests.get(f'{self.base_url}/sources', params=args).json()
+        res = self._do_get('sources', params=args)
         return [self.get_source(r['tdmq_id']) for r in res]
 
     @requires_connection
     def get_source(self, tdmq_id):
-        res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
+        res = self._do_get(f'sources/{tdmq_id}')
         assert res['tdmq_id'] == tdmq_id
 
         if res['description'].get('shape'):
@@ -166,8 +154,7 @@ class Client:
     def get_timeseries(self, code, args):
         args = dict((k, v) for k, v in args.items() if v is not None)
         _logger.debug('get_timeseries(%s, %s)', code, args)
-        return requests.get(f'{self.base_url}/sources/{code}/timeseries',
-                            params=args).json()
+        return self._do_get(f'sources/{code}/timeseries', params=args)
 
     @requires_connection
     def save_tiledb_frame(self, tdmq_id, slot, data):
