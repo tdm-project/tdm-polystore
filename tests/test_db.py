@@ -26,7 +26,7 @@ def test_get_one_source(app, db_data, source_data):
     s1 = source_data['sources'][0]
     tdmq_id = db_query.list_sources({ 'id': s1['id'] })[0]['tdmq_id']
 
-    resultset = db_query.find_sources([tdmq_id])
+    resultset = db_query.get_sources([tdmq_id])
     assert len(resultset) == 1
     assert isinstance(resultset, list)
 
@@ -43,7 +43,7 @@ def test_get_two_sources(app, db_data, source_data):
         db_query.list_sources({ 'id': source_ids[1] })[0]['tdmq_id']
     ]
 
-    resultset = db_query.find_sources(tdmq_ids)
+    resultset = db_query.get_sources(tdmq_ids)
     assert len(resultset) == 2
     assert set(tdmq_ids) == set(r['tdmq_id'] for r in resultset)
 
@@ -69,7 +69,7 @@ def test_delete_source(app, db_data):
 
     db_query.delete_sources([src[0]['tdmq_id']])
 
-    after_delete = db_query.find_sources([src[0]['tdmq_id']])
+    after_delete = db_query.get_sources([src[0]['tdmq_id']])
     assert after_delete == []
 
 
@@ -224,7 +224,7 @@ def test_load_source(app, clean_db, source_data):
     assert results[0]['external_id'] == one_src['id']
     assert one_src == source_data['sources'][0]
 
-    query_src = db_query.find_sources(tdmq_ids)
+    query_src = db_query.get_sources(tdmq_ids)
     assert len(query_src) == 1
     assert query_src[0]['tdmq_id'] == tdmq_ids[0]
 
@@ -253,7 +253,7 @@ def test_load_records_multiple_src(app, clean_db, source_data):
 
     records_by_source = source_data['records_by_source']
     for i in tdmq_ids:
-        src = db_query.find_sources([i])[0]
+        src = db_query.get_sources([i])[0]
         ts = db_query.get_timeseries(i)
         assert len(ts['rows']) == len(records_by_source[src['external_id']])
         assert ts['source_info']['id'] == src['external_id']

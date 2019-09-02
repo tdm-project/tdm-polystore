@@ -176,7 +176,7 @@ def list_sources(args):
     return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
-def find_sources(list_of_tdmq_ids):
+def get_sources(list_of_tdmq_ids):
     q = sql.SQL("""
         SELECT
             tdmq_id,

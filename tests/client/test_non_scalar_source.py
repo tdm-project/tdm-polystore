@@ -1,9 +1,11 @@
 
 
-from tdmq.client import Client
+import logging
 import numpy as np
 from datetime import datetime, timedelta
 
+from tdmq.client import Client
+from tdmq.client.sources import NonScalarSource
 from test_source import register_sources, is_scalar
 
 
@@ -56,7 +58,7 @@ def check_deallocation(c, tdmq_ids):
         assert tid not in sources
 
 
-def register_sources_here(c, source_data):
+def register_nonscalar_sources(c, source_data):
     return register_sources(c, [d for d in source_data['sources']
                                 if not is_scalar(d)],
                             check_source=check_source)
@@ -64,16 +66,16 @@ def register_sources_here(c, source_data):
 
 def test_nonscalar_source_register_deregister(clean_hdfs, clean_db, source_data, live_app):
     c = Client(live_app.url())
-    srcs = register_sources_here(c, source_data)
+    srcs = register_nonscalar_sources(c, source_data)
+    logging.debug("Registered %s sources", len(srcs))
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     tdmq_ids = []
     for s in srcs:
+        logging.debug("source: id %s, shape: %s; type: %s", s.id, s.shape, type(s))
         assert s.tdmq_id in sources
         assert s.id == sources[s.tdmq_id].id
         assert s.tdmq_id == sources[s.tdmq_id].tdmq_id
-        assert s.tdmq_id in c.managed_objects
-        assert s == c.managed_objects[s.tdmq_id]
-        assert s == sources[s.tdmq_id]
+        assert isinstance(s, NonScalarSource)
         tdmq_id = s.tdmq_id
         c.deregister_source(s)
         tdmq_ids.append(tdmq_id)
@@ -83,9 +85,11 @@ def test_nonscalar_source_register_deregister(clean_hdfs, clean_db, source_data,
 def test_nonscalar_source_add_records(clean_hdfs, clean_db, source_data, live_app):
     N = 10
     c = Client(live_app.url())
-    srcs = register_sources_here(c, source_data)
+    srcs = register_nonscalar_sources(c, source_data)
+    logging.debug("Registered %s sources", len(srcs))
     tdmq_ids = []
     for s in srcs:
+        logging.debug("source: id %s, shape: %s; type: %s", s.id, s.shape, type(s))
         assert len(s.shape) > 0
         timebase, dt = ingest_records(s, N)
         check_records(s, timebase, dt, N)

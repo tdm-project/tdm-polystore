@@ -28,34 +28,6 @@ def set_log_level(level):
     _logger.setLevel(level)
 
 
-source_classes = {
-    ('Station', 'PointWeatherObserver'): ScalarSource,
-    ('Station', 'EnergyConsumptionMonitor'): ScalarSource,
-    ('Radar', 'MeteoRadarMosaic'): NonScalarSource,
-}
-
-
-class ProxyFactory:
-    def __init__(self, src_classes=None):
-        self.src_classes = {} if src_classes is None else src_classes
-
-    def _guess_from_description(self, desc):
-        if 'shape' in desc and len(desc['shape']) > 0:
-            return NonScalarSource
-        else:
-            return ScalarSource
-
-    def make(self, client, tdmq_id, desc):
-        key = (desc['entity_category'], desc['entity_type'])
-        if key not in self.src_classes:
-            self.src_classes[key] = self._guess_from_description(
-                desc['description'])
-            _logger.debug('Added new src_class %s %s.', key, self.src_classes[key])
-        class_ = self.src_classes[key]
-        _logger.debug('Using class %s for %s.', class_, key)
-        return class_(client, tdmq_id, desc)
-
-
 class Client:
     DEFAULT_TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
 
@@ -63,9 +35,6 @@ class Client:
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self, tdmq_base_url=None):
-        self.managed_objects = {}
-        self.proxy_factory = ProxyFactory(source_classes)
-
         self.base_url = self.DEFAULT_TDMQ_BASE_URL \
             if tdmq_base_url is None else tdmq_base_url
 
@@ -131,30 +100,13 @@ class Client:
     def _source_data_path(self, tdmq_id):
         return os.path.join(self.tiledb_hdfs_root, tdmq_id)
 
-    def _register_thing(self, thing, description):
-        assert isinstance(description, dict)
-        _logger.debug('registering %s id=%s', thing, description['id'])
-        r = requests.post(f'{self.base_url}/{thing}', json=[description])
-        self._check_sanity(r)
-        res = dict(description)
-        res['tdmq_id'] = r.json()[0]
-        _logger.debug('%s (%s) registered as tdmq_id=%s', thing, description['id'], res['tdmq_id'])
-        return res
-
     @requires_connection
     def deregister_source(self, s):
         _logger.debug('deregistering %s %s', s.tdmq_id, s)
-        if s.tdmq_id in self.managed_objects:
-            _logger.debug('removing from managed_objects')
-            self._destroy_source(s.tdmq_id)
-            del self.managed_objects[s.tdmq_id]
-            del s
-        else:
-            # NO-OP
-            pass
+        self._destroy_source(s.tdmq_id)
 
     @requires_connection
-    def register_source(self, description, nslots=10*24*3600*365):
+    def register_source(self, definition, nslots=10*24*3600*365):
         """Register a new data source
         .. :quickref: Register a new data source
 
@@ -162,20 +114,22 @@ class Client:
         needed. Actual storage allocation will be done at
         ingestion. The default value is 10*24*3600*365
         """
-        d = self._register_thing('sources', description)
-        _logger.debug(d['shape'])
-        if 'shape' in d and len(d['shape']) > 0:
+        assert isinstance(definition, dict)
+        _logger.debug('registering source id=%s', definition['id'])
+        r = requests.post(f'{self.base_url}/sources', json=[definition])
+        self._check_sanity(r)
+        tdmq_id = r.json()[0]
+        if 'shape' in definition and len(definition['shape']) > 0:
             try:
                 # FIXME add storage drivers
-                if d['storage'] != 'tiledb':
-                    raise UnsupportedFunctionality(
-                        f'storage type {d["storage"]} not supported.')
-                self._create_tiledb_array(nslots, d)
+                if definition['storage'] != 'tiledb':
+                    raise UnsupportedFunctionality(f'storage type {definition["storage"]} not supported.')
+                self._create_tiledb_array(tdmq_id, definition['shape'], definition['controlledProperties'], nslots)
             except Exception as e:
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
-                self._destroy_source(d['tdmq_id'])
-                raise TdmqError(f"Internal failure in registering {d.get('id', '(id unavailable)')}.")
-        return self.get_source_proxy(d['tdmq_id'])
+                self._destroy_source(tdmq_id)
+                raise TdmqError(f"Internal failure in registering {definition.get('id', '(id unavailable)')}.")
+        return self.get_source(tdmq_id)
 
     @requires_connection
     def add_records(self, records):
@@ -196,19 +150,17 @@ class Client:
     @requires_connection
     def find_sources(self, args=None):
         res = requests.get(f'{self.base_url}/sources', params=args).json()
-        return [self.get_source_proxy(r['tdmq_id']) for r in res]
+        return [self.get_source(r['tdmq_id']) for r in res]
 
     @requires_connection
-    def get_source_proxy(self, tdmq_id):
-        if tdmq_id in self.managed_objects:
-            _logger.debug('reusing managed object %s', tdmq_id)
-            return self.managed_objects[tdmq_id]
+    def get_source(self, tdmq_id):
         res = requests.get(f'{self.base_url}/sources/{tdmq_id}').json()
         assert res['tdmq_id'] == tdmq_id
-        s = self.proxy_factory.make(self, tdmq_id, res)
-        _logger.debug('new managed object %s', s.tdmq_id)
-        self.managed_objects[s.tdmq_id] = s
-        return s
+
+        if res['description'].get('shape'):
+            return NonScalarSource(self, tdmq_id, res)
+        else:
+            return ScalarSource(self, tdmq_id, res)
 
     @requires_connection
     def get_timeseries(self, code, args):
@@ -243,13 +195,12 @@ class Client:
             data = A[args]
         return data
 
-    def _create_tiledb_array(self, n_slots, description):
-        array_name = self._source_data_path(description['tdmq_id'])
+    def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots):
+        array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
         if tiledb.object_type(array_name) is not None:
             raise DuplicateItemException(
                 f'duplicate object with path {array_name}')
-        shape = description['shape']
         assert len(shape) > 0 and n_slots > 0
         dims = [tiledb.Dim(name="slot",
                            domain=(0, n_slots),
@@ -260,8 +211,7 @@ class Client:
         _logger.debug('trying domain creation for %s', array_name)
         dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
         _logger.debug('trying attribute creation for %s', array_name)
-        attrs = [tiledb.Attr(name=aname, dtype=np.float32)
-                 for aname in description['controlledProperties']]
+        attrs = [tiledb.Attr(name=aname, dtype=np.float32) for aname in properties]
         _logger.debug('trying ArraySchema creation for %s', array_name)
         schema = tiledb.ArraySchema(domain=dom, sparse=False,
                                     attrs=attrs, ctx=self.tiledb_ctx)

@@ -169,14 +169,13 @@ def add_routes(app):
         if request.method == "DELETE":
             result = db.delete_sources([str(tdmq_id)])
         else:
-            sources = db.find_sources([str(tdmq_id)])
+            sources = db.get_sources([str(tdmq_id)])
             if len(sources) == 1:
                 result = sources[0]
             elif len(sources) == 0:
                 result = None
             else:
-                raise RuntimeError(
-                    f"Got more than one source for tdmq_id {tdmq_id}")
+                raise RuntimeError(f"Got more than one source for tdmq_id {tdmq_id}")
         return jsonify(result)
 
     @app.route('/sources/<uuid:tdmq_id>/timeseries')
