@@ -1,7 +1,25 @@
 
+import os
 import pytest
 import re
+import tempfile
+
+from contextlib import contextmanager
 from datetime import datetime
+
+from tdmq import create_app
+
+
+@contextmanager
+def _create_new_app_test_client(config=None):
+    if config is not None and 'TESTING' not in config:
+        config = config.copy()
+        config['TESTING'] = True
+        config['LOG_LEVEL'] = 'DEBUG'
+
+    app = create_app(config)
+    with app.app_context():
+        yield app.test_client()
 
 
 def _checkresp(response, table=None):
@@ -179,3 +197,52 @@ def test_service_info(flask_client):
     assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
     if 'tiledb' in info:
         assert info['tiledb'].get('hdfs.root') is not None
+
+
+def test_app_config_tiledb():
+    hdfs_root = 'hdfs://someserver:8020/'
+    hdfs_user = 'pippo'
+    config = {
+        'TILEDB_HDFS_ROOT': hdfs_root,
+        'TILEDB_HDFS_USERNAME': hdfs_user
+    }
+
+    with _create_new_app_test_client(config) as client:
+        resp = client.get('service_info')
+        _checkresp(resp)
+        info = resp.json
+        assert 'tiledb' in info
+        assert info['tiledb']['hdfs.root'] == hdfs_root
+        assert info['tiledb']['config']['vfs.hdfs.username'] == hdfs_user
+
+
+def test_app_config_no_tiledb():
+    config = {
+        'TILEDB_HDFS_ROOT': None
+    }
+
+    with _create_new_app_test_client(config) as client:
+        resp = client.get('service_info')
+        _checkresp(resp)
+        info = resp.json
+        assert 'tiledb' not in info
+
+
+def test_app_config_from_file():
+    hdfs_root = 'hdfs://someserver:8020/'
+    cfg = f"""
+TILEDB_HDFS_ROOT = '{hdfs_root}'
+    """
+
+    with tempfile.NamedTemporaryFile(mode='w') as f:
+        f.write(cfg)
+        f.flush()
+
+        os.environ['TDMQ_FLASK_CONFIG'] = f.name
+        with _create_new_app_test_client() as client:
+            resp = client.get('service_info')
+            _checkresp(resp)
+            info = resp.json
+            assert 'tiledb' in info
+            assert info['tiledb']['hdfs.root'] == hdfs_root
+            assert info['tiledb']['config']['vfs.hdfs.username'] == 'root'

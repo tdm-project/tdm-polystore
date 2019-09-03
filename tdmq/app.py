@@ -25,20 +25,28 @@ def configure_logging(app):
     app.logger.info('Logging is active. Log level: %s', logging.getLevelName(app.logger.getEffectiveLevel()))
 
 
+class DefaultConfig(object):
+    SECRET_KEY = 'dev'
+
+    DB_HOST = 'timescaledb'
+    DB_NAME = 'tdmqtest'
+    DB_USER = 'postgres'
+    DB_PASSWORD = 'foobar'
+
+    LOG_LEVEL = "INFO"
+
+    TILEDB_HDFS_ROOT = 'hdfs://namenode:8020/arrays'
+    TILEDB_HDFS_USERNAME = 'root'
+
+
 def create_app(test_config=None):
     app = flask.Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        DB_HOST='timescaledb',
-        DB_NAME='tdmqtest',
-        DB_USER='postgres',
-        DB_PASSWORD='foobar',
-        LOG_LEVEL="INFO"
-    )
-    if test_config is None:
-        app.config.from_envvar('TDMQ_FLASK_CONFIG', silent=True)
-    else:
+    app.config.from_object(DefaultConfig)
+
+    if test_config is not None:
         app.config.from_mapping(test_config)
+    elif 'TDMQ_FLASK_CONFIG' in os.environ:
+        app.config.from_envvar('TDMQ_FLASK_CONFIG')
 
     configure_logging(app)
 

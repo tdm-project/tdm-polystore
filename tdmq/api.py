@@ -20,7 +20,7 @@ class DuplicateItemException(werkzeug.exceptions.HTTPException):
     description = 'Attempt to duplicate unique field.'
 
 
-def restructure_timeseries(res, properties):
+def _restructure_timeseries(res, properties):
     # The arrays time and footprint define the scaffolding on which
     # the actual data (properties) are defined.
     result = {'coords': None, 'data': None}
@@ -251,7 +251,7 @@ def add_routes(app):
         except tdmq.errors.RequestException as e:
             return str(e), 400  # BAD_REQUEST
 
-        res = restructure_timeseries(result['rows'], result['properties'])
+        res = _restructure_timeseries(result['rows'], result['properties'])
 
         res["tdmq_id"] = tdmq_id
         res["default_footprint"] = result['source_info']['default_footprint']
@@ -273,13 +273,14 @@ def add_routes(app):
     @app.route('/service_info')
     def client_info():
         response = {
-            'version': '0.0',
-            'tiledb': {
-                'hdfs.root': 'hdfs://namenode:8020/arrays',
-                'config': {
-                    'vfs.hdfs.username': 'root'
-                }
-            }
+            'version': '0.0'
         }
 
+        if app.config.get('TILEDB_HDFS_ROOT'):
+            response['tiledb'] = {
+                'hdfs.root': app.config['TILEDB_HDFS_ROOT'],
+                'config': {
+                    'vfs.hdfs.username': app.config.get('TILEDB_HDFS_USERNAME', 'root')
+                }
+            }
         return jsonify(response)
