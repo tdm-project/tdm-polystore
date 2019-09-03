@@ -85,8 +85,7 @@ class Client:
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}')
         r.raise_for_status()
         array_name = self._source_data_path(tdmq_id)
-        if tiledb.object_type(self._source_data_path(tdmq_id),
-                              ctx=self.tiledb_ctx) == 'array':
+        if tiledb.object_type(self._source_data_path(tdmq_id), ctx=self.tiledb_ctx) == 'array':
             tiledb.remove(array_name, ctx=self.tiledb_ctx)
 
     def _source_data_path(self, tdmq_id):
@@ -125,7 +124,8 @@ class Client:
 
     @requires_connection
     def add_records(self, records):
-        return requests.post(f'{self.base_url}/records', json=records)
+        r = requests.post(f'{self.base_url}/records', json=records)
+        r.raise_for_status()
 
     @requires_connection
     def get_entity_categories(self):
