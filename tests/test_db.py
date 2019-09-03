@@ -74,11 +74,11 @@ def test_delete_source(app, db_data):
 
 
 def test_list_categories(app, db):
-    resultset = db_query.list_entity_catories("R")
+    resultset = db_query.list_entity_categories("R")
     assert len(resultset) == 1
     assert resultset[0]['entity_category'].lower() == 'radar'
 
-    resultset = db_query.list_entity_catories()
+    resultset = db_query.list_entity_categories()
     assert len(resultset) > 1
 
 
