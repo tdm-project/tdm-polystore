@@ -15,6 +15,6 @@ install:
 
 script:
  - make start
- - sleep 5 #  Sleep a few seconds to try to make sure HDFS is ready
+ - sleep 20 #  Sleep a few seconds to try to make sure HDFS is ready
  - make run-tests
  - make stop
