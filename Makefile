@@ -51,11 +51,14 @@ stopdev:
 
 start: images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up -d
+	# Try to way for timescaleDB and HDFS
+	docker-compose -f ./docker/docker-compose.yml exec timescaledb bash -c 'for i in {{1..8}}; do pg_isready && break; done || exit 2'
+	docker-compose -f ./docker/docker-compose.yml exec namenode hdfs dfsadmin -safemode wait
 
 stop:
 	docker-compose -f ./docker/docker-compose.yml down
 
-tests: start
+run-tests: start
 	docker-compose -f ./docker/docker-compose.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
 
 clean: stop

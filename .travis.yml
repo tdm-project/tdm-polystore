@@ -14,5 +14,7 @@ install:
 before_script: flake8 -v .
 
 script:
- - make tests
+ - make start
+ - sleep 5 #  Sleep a few seconds to try to make sure HDFS is ready
+ - make run-tests
  - make stop
