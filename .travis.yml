@@ -6,12 +6,12 @@ cache: pip
 
 services: docker
 
-before_install: pip install 'flake8>=3.6'
+before_install:
+  - pip install 'flake8>=3.6'
+  - flake8 . || true
 
 install:
   - make images
-
-before_script: flake8 . && true
 
 script:
  - make start
