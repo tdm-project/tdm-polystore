@@ -272,17 +272,12 @@ def create_db(conn_params, drop=False):
     logger.debug('DB %s created', new_db_name.string)
 
 
-def add_extensions(curs):
+def get_schema_sql():
     SQL = """
-    CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
-    CREATE EXTENSION IF NOT EXISTS postgis;
-    CREATE EXTENSION IF NOT EXISTS citext;
-    """
-    curs.execute(SQL)
+      CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+      CREATE EXTENSION IF NOT EXISTS postgis;
+      CREATE EXTENSION IF NOT EXISTS citext;
 
-
-def add_tables(curs):
-    SQL = """
       CREATE TABLE entity_category (
           entity_category CITEXT PRIMARY KEY
       );
@@ -336,7 +331,11 @@ def add_tables(curs):
           ('Station', 'TrafficObserver')
           ;
     """
-    curs.execute(SQL)
+    return SQL
+
+
+def init_schema(curs):
+    curs.execute(get_schema_sql())
 
 
 def dump_table(conn, tname, path, itersize=100000):
@@ -466,8 +465,7 @@ def init_db(conn_params, drop=False):
     try:
         with con:  # transaction
             with con.cursor() as curs:
-                add_extensions(curs)
-                add_tables(curs)
+                init_schema(curs)
     finally:
         con.close()
 
