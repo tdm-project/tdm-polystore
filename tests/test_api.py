@@ -1,5 +1,4 @@
 
-import os
 import pytest
 import re
 import tempfile
@@ -228,7 +227,7 @@ def test_app_config_no_tiledb():
         assert 'tiledb' not in info
 
 
-def test_app_config_from_file():
+def test_app_config_from_file(monkeypatch):
     hdfs_root = 'hdfs://someserver:8020/'
     cfg = f"""
 TILEDB_HDFS_ROOT = '{hdfs_root}'
@@ -238,7 +237,7 @@ TILEDB_HDFS_ROOT = '{hdfs_root}'
         f.write(cfg)
         f.flush()
 
-        os.environ['TDMQ_FLASK_CONFIG'] = f.name
+        monkeypatch.setenv('TDMQ_FLASK_CONFIG', f.name)
         with _create_new_app_test_client() as client:
             resp = client.get('service_info')
             _checkresp(resp)
