@@ -8,6 +8,10 @@ services:
       - "5432"
     environment:
       - POSTGRES_PASSWORD=foobar
+    healthcheck:
+        test: [ "CMD", "pg_isready" ]
+        interval: "15s"
+        retries: 5
 
   tdmqj:
     image: tdmproject/tdmqj
