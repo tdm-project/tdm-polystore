@@ -25,7 +25,7 @@ def check_source(s, d):
 def register_sources(c, descs, check_source=check_source):
     srcs = []
     for d in descs:
-        s = c.register_source(d)
+        s = c.register_source(d, nslots=3600)
         check_source(s, d)
         srcs.append(s)
     return srcs
@@ -36,8 +36,7 @@ def is_scalar(d):
 
 
 def register_scalar_sources(c, source_data):
-    return register_sources(c, [d for d in source_data['sources']
-                                if is_scalar(d)])
+    return register_sources(c, [d for d in source_data['sources'] if is_scalar(d)])
 
 
 def test_register_deregister_simple_source(clean_hdfs, clean_db, source_data, live_app):
