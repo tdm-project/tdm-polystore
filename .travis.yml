@@ -14,7 +14,9 @@ install:
   - make images
 
 script:
- - make start
- - sleep 20 #  Sleep a few seconds to try to make sure HDFS is ready
+ # sometimes `make start` fails due to services no being ready. We ignore failures at this
+ # stage because `make run-tests` will check again
+ - make start  || true
+ - echo sleep 20 #  Sleep a few seconds to try to make sure HDFS is ready
  - make run-tests
  - make stop

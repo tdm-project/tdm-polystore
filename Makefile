@@ -54,6 +54,7 @@ start: images docker/docker-compose.yml
 	# Try to wait for timescaleDB and HDFS
 	docker-compose -f ./docker/docker-compose.yml exec timescaledb bash -c 'for i in {{1..8}}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'
 	docker-compose -f ./docker/docker-compose.yml exec namenode hdfs dfsadmin -safemode wait
+	docker-compose -f ./docker/docker-compose.yml exec datanode bash -c 'for i in {{1..8}}; do sleep 5; datanode_cid && break; done || { echo ">> Timed out waiting for datanode to join HDFS" >&2; exit 3; }'
 
 stop:
 	docker-compose -f ./docker/docker-compose.yml down
