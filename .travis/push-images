@@ -30,8 +30,8 @@ fi
 if [[ "${TRAVIS_EVENT_TYPE:-}" != "push" ]]; then
   log "TRAVIS_EVENT_TYPE is '${TRAVIS_EVENT_TYPE:-}'.  Quitting."
 
-  log "Before going, here are the current environment variables:"
-  env
+  log "Before going, here are the current environment variables (filtered for 'pass'):"
+  env | grep -vi 'pass\|secret'
   exit 0
 fi
 
