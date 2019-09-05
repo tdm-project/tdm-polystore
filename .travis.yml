@@ -18,6 +18,5 @@ script:
  # stage because `make run-tests` will check again
  - make start  || true
  - make run-tests
- - make stop
 
 after_success: .travis/push-images
