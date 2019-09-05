@@ -9,20 +9,20 @@ from tdmq.client.sources import NonScalarSource
 from test_source import register_sources, is_scalar
 
 
-def create_data_frame(shape, properties, slot):
+def create_data_frame(shape, properties, fill_value):
     data = {}
     for p in properties:
-        data[p] = np.full(shape, slot, dtype=np.float32)
+        data[p] = np.full(shape, fill_value, dtype=np.float32)
     return data
 
 
-def ingest_records(s, N):
+def create_and_ingest_records(source, nrecs):
     now = datetime.now()
     t = now
     dt = timedelta(seconds=10)
-    for slot in range(N):
-        data = create_data_frame(s.shape, s.controlled_properties, slot)
-        s.ingest(t, data, slot)
+    for slot in range(nrecs):
+        frame = create_data_frame(source.shape, source.controlled_properties, slot)
+        source.ingest(t, frame, slot)
         t += dt
     return now, dt
 
@@ -108,7 +108,7 @@ def test_nonscalar_source_add_records(clean_hdfs, clean_db, source_data, live_ap
     for s in srcs:
         logging.debug("source: id %s, shape: %s; type: %s", s.id, s.shape, type(s))
         assert len(s.shape) > 0
-        timebase, dt = ingest_records(s, N)
+        timebase, dt = create_and_ingest_records(s, N)
         check_records(s, timebase, dt, N)
         tdmq_id = s.tdmq_id
         c.deregister_source(s)

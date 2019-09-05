@@ -22,9 +22,6 @@ class Source(abc.ABC):
     def get_timeseries(self, args):
         return self.client.get_timeseries(self.tdmq_id, args)
 
-    def fetch_data_block(self, block_of_refs, args):
-        return self.client.fetch_data_block(self.tdmq_id, block_of_refs, args)
-
     @abc.abstractmethod
     def timeseries(self, after, before, bucket=None, op=None):
         pass

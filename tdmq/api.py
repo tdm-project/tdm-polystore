@@ -257,8 +257,7 @@ def add_routes(app):
         res["default_footprint"] = result['source_info']['default_footprint']
         res["shape"] = result['source_info']['shape']
         if args['bucket']:
-            res["bucket"] = {"interval": args['bucket'].total_seconds(),
-                             "op": args.get("op")}
+            res["bucket"] = {"interval": args['bucket'].total_seconds(), "op": args.get("op")}
         else:
             res['bucket'] = None
 

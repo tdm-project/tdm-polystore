@@ -160,34 +160,32 @@ class Client:
     def save_tiledb_frame(self, tdmq_id, slot, data):
         aname = self._source_data_path(tdmq_id)
         with tiledb.DenseArray(aname, mode='w', ctx=self.tiledb_ctx) as A:
-            A[slot:slot+1] = data
+            A[slot:slot + 1] = data
 
     @requires_connection
-    def fetch_data_block(self, tdmq_id, data, args):
+    def fetch_non_scalar_slice(self, tdmq_id, tiledb_indices, args):
         # FIXME hwired on tiledb
-        tiledb_index = data['tiledb_index']
-        block_of_indx = tiledb_index[args[0]]
+        block_of_indx = tiledb_indices[args[0]]
         block_of_indx = block_of_indx \
             if isinstance(args[0], slice) else [block_of_indx]
         aname = self._source_data_path(tdmq_id)
         indices = np.array(block_of_indx, dtype=np.int32)
         assert len(indices) == 1 or np.all(indices[1:] - indices[:-1] == 1)
         if isinstance(args[0], slice):
-            args = (slice(int(indices.min()),
-                          int(indices.max()) + 1), ) + args[1:]
+            tiledb_i = (slice(int(indices.min()),
+                              int(indices.max()) + 1), ) + args[1:]
         else:
             assert len(indices) == 1
-            args = (int(indices[0]),) + args[1:]
+            tiledb_i = (int(indices[0]),) + args[1:]
         with tiledb.DenseArray(aname, mode='r', ctx=self.tiledb_ctx) as A:
-            data = A[args]
+            data = A[tiledb_i]
         return data
 
     def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots):
         array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
         if tiledb.object_type(array_name) is not None:
-            raise DuplicateItemException(
-                f'duplicate object with path {array_name}')
+            raise DuplicateItemException(f'duplicate object with path {array_name}')
         assert len(shape) > 0 and n_slots > 0
         dims = [tiledb.Dim(name="slot",
                            domain=(0, n_slots),
