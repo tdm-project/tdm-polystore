@@ -87,8 +87,20 @@ def test_nonscalar_source_register_deregister(clean_hdfs, clean_db, source_data,
     check_deallocation(c, tdmq_ids)
 
 
+def test_add_record_to_one_nonscalar_source(clean_hdfs, clean_db, source_data, live_app):
+    N = 1
+    c = Client(live_app.url())
+
+    mosaic_def = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    source = c.register_source(mosaic_def, nslots=N)
+    assert len(source.shape) == 2
+
+    timebase, dt = create_and_ingest_records(source, N)
+    check_records(source, timebase, dt, N)
+
+
 def test_nonscalar_source_add_records(clean_hdfs, clean_db, source_data, live_app):
-    N = 10
+    N = 3
     c = Client(live_app.url())
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
