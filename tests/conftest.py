@@ -134,10 +134,13 @@ def tdmq_config():
 
 @pytest.fixture
 def clean_hdfs(tdmq_config):
+    import tiledb
     # FIXME make it configurable
-    url = tdmq_config['tiledb_hdfs_root']
-    hdfs_cmd = f'HADOOP_USER_NAME=root hdfs dfs -rm -r -f {url}'
-    os.system(hdfs_cmd)
+    ctx = tiledb.Ctx(tdmq_config['tiledb_config'])
+    vfs = tiledb.VFS(config=ctx.config(), ctx=ctx)
+    array_root = tdmq_config['tiledb_hdfs_root']
+    if vfs.is_dir(array_root):
+        vfs.remove_dir(array_root)
 
 ############################################################
 
