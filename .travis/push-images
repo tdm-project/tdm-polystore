@@ -67,7 +67,7 @@ for image in "${Images[@]}"; do
   docker tag "${ImageSlug}" "${FullImageName}"
 
   log "Pushing ${FullImageName} to dockerhub"
-  echo docker push "${FullImageName}"
+  docker push "${FullImageName}"
 done
 
 log "Finished"
