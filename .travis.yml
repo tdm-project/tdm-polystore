@@ -8,7 +8,7 @@ services: docker
 
 before_install:
   - pip install 'flake8>=3.6'
-  - flake8 . || true
+  - flake8 . || true  # We don't fail a build for a flake8 complaint
 
 install:
   - make images
@@ -17,6 +17,5 @@ script:
  # sometimes `make start` fails due to services no being ready. We ignore failures at this
  # stage because `make run-tests` will check again
  - make start  || true
- - echo sleep 20 #  Sleep a few seconds to try to make sure HDFS is ready
  - make run-tests
  - make stop
