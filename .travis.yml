@@ -19,3 +19,5 @@ script:
  - make start  || true
  - make run-tests
  - make stop
+
+after_success: .travis/push-images

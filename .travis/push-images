@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+# Set this to anything other than true to avoid having the images
+# pushed to dockerhub
+DoPush="${DoPush:-true}"
+
+my_name="$(basename "$0" .sh)"
+
+
+function log() {
+  printf "%s [ %s ] -- %s\n" "$(date "+%Y-%m-%d %H:%M:%S")" "${my_name}" "$*" >&2
+}
+
+
+########### main ###############
+
+log "Running for TRAVIS_EVENT_TYPE ${TRAVIS_EVENT_TYPE:-empty}"
+
+if [[ "${TRAVIS_EVENT_TYPE:-}" != "push" ]]; then
+  log "TRAVIS_EVENT_TYPE is '${TRAVIS_EVENT_TYPE:-}'.  Quitting."
+
+  log "Before going, here are the current environment variables:"
+  env
+  exit 0
+fi
+
+case "${TRAVIS_BRANCH}" in
+  devel)
+    tag="dev-${TRAVIS_BUILD_NUMBER}"
+    ;;
+  master)
+    tag="${TRAVIS_BUILD_NUMBER}"
+    ;;
+  *)
+    log "Running for ignored branch ${TRAVIS_BRANCH}.  Quitting."
+    exit 0
+    ;;
+esac
+
+log "Computed tag '${tag}'"
+
+ImageSlug="tdmproject/tdmq"
+FullImageName="${ImageSlug}:${tag}"
+
+log "Tagging tdmq image"
+# ImageSlug used here must match the image tag set by the
+# docker build command in the Makefile
+docker tag "${ImageSlug}" "${FullImageName}"
+
+
+if [[ "${DoPush}" == "true" ]]; then
+  log "Logging into dockerhub"
+  if [[ -z "${DOCKER_PASSWORD:-}" || -z "${DOCKER_USERNAME:-}" ]]; then
+    log "Docker credentials not set in environment.  Can't push!"
+    exit 2
+  fi
+
+  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+  log "Pushing ${FullImageName} to dockerhub"
+  echo docker push "${FullImageName}"
+else
+  log "Push disabled by DoPush=${DoPush}"
+fi
+
+log "Finished"
