@@ -38,7 +38,7 @@ class TimeSeries(abc.ABC):
         self.fetch()
 
     def get_shape(self):
-        return (len(self.time),) + self.source.get_shape()
+        return (len(self.time),) + self.source.shape
 
 
 class ScalarTimeSeries(TimeSeries):

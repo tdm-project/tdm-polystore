@@ -27,18 +27,23 @@ def ingest_records(s, N):
     return now, dt
 
 
-def check_records(s, timebase, dt, N):
-    ts = s.timeseries()
-    ts_times, D = ts[:]
+def check_records(source, timebase, dt, N):
+    ts = source.timeseries()
+    assert len(ts) == N
+    assert ts.get_shape() == (N,) + source.shape
+
+    ts_times, series = ts[:]
+
+    for p in source.controlled_properties:
+        assert series[p].shape == (N,) + source.shape
+
     t = timebase
-    for p in s.controlled_properties:
-        assert D[p].shape == (N,) + s.shape
     for i in range(N):
         assert (ts_times[i] - t).total_seconds() < 1.0e-5
         t += dt
-        for p in s.controlled_properties:
-            assert D[p][i].min() == D[p][i].max()
-            assert int(D[p][i].min()) == i
+        for p in source.controlled_properties:
+            assert series[p][i].min() == series[p][i].max()
+            assert int(series[p][i].min()) == i
 
 
 def check_source(s, d):
