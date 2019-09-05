@@ -2,11 +2,14 @@
 
 set -o errexit
 set -o nounset
+set -o pipefail
 
 # Set this to anything other than true to avoid having the images
 # pushed to dockerhub
 DoPush="${DoPush:-true}"
 
+ImageOwner="tdmproject"
+Images=(tdmq tdmqj)
 my_name="$(basename "$0" .sh)"
 
 
@@ -19,6 +22,11 @@ function log() {
 
 log "Running for TRAVIS_EVENT_TYPE ${TRAVIS_EVENT_TYPE:-empty}"
 
+if [[ "${DoPush}" != "true" ]]; then
+  log "Push disabled by DoPush=${DoPush}"
+  exit 0
+fi
+
 if [[ "${TRAVIS_EVENT_TYPE:-}" != "push" ]]; then
   log "TRAVIS_EVENT_TYPE is '${TRAVIS_EVENT_TYPE:-}'.  Quitting."
 
@@ -28,7 +36,7 @@ if [[ "${TRAVIS_EVENT_TYPE:-}" != "push" ]]; then
 fi
 
 case "${TRAVIS_BRANCH}" in
-  devel)
+  develop)
     tag="dev-${TRAVIS_BUILD_NUMBER}"
     ;;
   master)
@@ -42,28 +50,26 @@ esac
 
 log "Computed tag '${tag}'"
 
-ImageSlug="tdmproject/tdmq"
-FullImageName="${ImageSlug}:${tag}"
+log "Logging into dockerhub"
+if [[ -z "${DOCKER_PASSWORD:-}" || -z "${DOCKER_USERNAME:-}" ]]; then
+  log "Docker credentials not set in environment.  Can't push!"
+  exit 2
+fi
+echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-log "Tagging tdmq image"
-# ImageSlug used here must match the image tag set by the
-# docker build command in the Makefile
-docker tag "${ImageSlug}" "${FullImageName}"
+for image in "${Images[@]}"; do
+  ImageSlug="${ImageOwner}/${image}"
+  FullImageName="${ImageSlug}:${tag}"
 
-
-if [[ "${DoPush}" == "true" ]]; then
-  log "Logging into dockerhub"
-  if [[ -z "${DOCKER_PASSWORD:-}" || -z "${DOCKER_USERNAME:-}" ]]; then
-    log "Docker credentials not set in environment.  Can't push!"
-    exit 2
-  fi
-
-  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  log "Tagging tdmq image ${ImageSlug} as ${FullImageName}"
+  # ImageSlug used here must match the image tag set by the
+  # docker build command in the Makefile
+  docker tag "${ImageSlug}" "${FullImageName}"
 
   log "Pushing ${FullImageName} to dockerhub"
   echo docker push "${FullImageName}"
-else
-  log "Push disabled by DoPush=${DoPush}"
-fi
+done
 
 log "Finished"
+
+# vim: set et sw=2
