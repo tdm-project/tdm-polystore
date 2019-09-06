@@ -2,6 +2,9 @@
 
 export PYTHONPATH="${TDMQ_DIST}"
 
+
+# FIXME:  how can we wait for HDFS to be ready before starting the tests?
+
 tdmqc_run_tests
 
 exit_code=$?

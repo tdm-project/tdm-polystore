@@ -7,8 +7,6 @@ RUN apt-get update -q \
         click \
         flask \
         psycopg2-binary \
-        pytest \
-        pytest-flask \
         requests \
         tifffile
 
@@ -37,15 +35,25 @@ RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
  && chmod a+w -R /opt/hadoop/etc/hadoop/
 
 
-FROM deps
+#################################################
+FROM deps AS tdmq-client
+
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
+WORKDIR "${TDMQ_DIST}"
+RUN cd "${TDMQ_DIST}" \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx \
+ && python3 setup.py install
+
+
+#################################################
+FROM tdmq-client AS tdmqc
+
+RUN pip3 install --no-cache-dir \
+        pytest \
+        pytest-flask
 
 ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
 
-COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
-WORKDIR /tdmq-dist
-RUN python3 setup.py install
-
 COPY --chown=root tdmqc-entrypoint.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/tdmqc-entrypoint.sh
-
-

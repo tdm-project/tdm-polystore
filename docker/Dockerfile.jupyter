@@ -1,4 +1,4 @@
-FROM tdmproject/tdmqc-deps
+FROM tdmproject/tdmq-client
 
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
@@ -33,14 +33,8 @@ EXPOSE 8888
 ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqj-entrypoint.sh" ]
 CMD [ "--notebook-dir=/home/jupyter/notebooks" ]
 
-COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
 COPY --chown=root tdmqj-entrypoint.sh /usr/local/bin/
-
-RUN cd "${TDMQ_DIST}" \
- && find . -type f -print0 | xargs -0 chmod a+r \
- && find . -type d -print0 | xargs -0 chmod a+rx \
- && chmod 755 /usr/local/bin/tdmqj-entrypoint.sh \
- && python3 setup.py install
+RUN chmod 755 /usr/local/bin/tdmqj-entrypoint.sh
 
 USER jupyter
 

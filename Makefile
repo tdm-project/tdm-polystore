@@ -11,13 +11,13 @@ docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
 	cp -rf apidocs setup.py tdmq tests docker/tdmq-dist
 
-tdmqc-deps: docker/Dockerfile.tdmqc
-	docker build -f docker/Dockerfile.tdmqc  --target=deps -t tdmproject/tdmqc-deps docker
+tdmq-client: docker/Dockerfile.tdmqc
+	docker build -f docker/Dockerfile.tdmqc --target=tdmq-client -t tdmproject/tdmq-client docker
 
-tdmqc: docker/tdmq-dist tdmqc-deps docker/Dockerfile.tdmqc
+tdmqc: docker/tdmq-dist tdmq-client docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
 
-jupyter: docker/tdmq-dist tdmqc-deps docker/Dockerfile.jupyter
+jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
 
 web: docker/tdmq-dist docker/Dockerfile.web

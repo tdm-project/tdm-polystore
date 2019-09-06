@@ -9,7 +9,7 @@ set -o pipefail
 DoPush="${DoPush:-true}"
 
 ImageOwner="tdmproject"
-Images=(tdmq tdmqj)
+Images=(tdmq-client tdmq tdmqj)
 my_name="$(basename "$0" .sh)"
 
 
