@@ -3,7 +3,9 @@ FROM tdmproject/tiledb:0.1.1 AS deps
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
         libnss-wrapper \
+        python3-sqlalchemy-ext \
  && pip3 install --no-cache-dir \
+        alembic \
         click \
         flask \
         psycopg2-binary \

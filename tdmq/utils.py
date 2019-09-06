@@ -1,4 +1,8 @@
+
+import os
 import re
+
+from contextlib import contextmanager
 
 
 def convert_roi(roi):
@@ -14,3 +18,13 @@ def convert_roi(roi):
                 'radius': float(m.groups()[4])}
     else:
         raise ValueError('illegal roi {}'.format(roi))
+
+
+@contextmanager
+def chdir_context(new_dir):
+    old_dir = os.getcwd()
+    try:
+        os.chdir(new_dir)
+        yield
+    finally:
+        os.chdir(old_dir)

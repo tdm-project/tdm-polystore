@@ -14,8 +14,9 @@ import time
 
 from collections import defaultdict
 
-from tdmq import create_app
+from tdmq.app import create_app
 import tdmq.db
+import tdmq.db_manager as db_manager
 
 
 @pytest.fixture(scope="session")
@@ -49,8 +50,8 @@ def db_connection_config():
 def db(db_connection_config):
     """Create and connect to the database"""
 
-    tdmq.db.init_db(db_connection_config)
-    connection = tdmq.db.db_connect(db_connection_config)
+    db_manager.create_db(db_connection_config)
+    connection = db_manager.db_connect(db_connection_config)
 
     try:
         yield connection
@@ -58,7 +59,7 @@ def db(db_connection_config):
         logging.info(f"Tearing down DB connection)")
         connection.close()
         logging.info("Dropping test DB %s", db_connection_config['dbname'])
-        tdmq.db.drop_db(db_connection_config)
+        db_manager.drop_db(db_connection_config)
 
 
 @pytest.fixture

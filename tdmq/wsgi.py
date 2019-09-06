@@ -1,4 +1,5 @@
-from tdmq import create_app
+
+from tdmq.app import create_app
 
 
 class PrefixMiddleware(object):

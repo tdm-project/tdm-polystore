@@ -6,7 +6,7 @@ import tempfile
 from contextlib import contextmanager
 from datetime import datetime
 
-from tdmq import create_app
+from tdmq.app import create_app
 
 
 @contextmanager

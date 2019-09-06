@@ -1,4 +1,4 @@
-from tdmq import create_app
+from tdmq.app import create_app
 
 
 def test_config():

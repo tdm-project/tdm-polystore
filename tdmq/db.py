@@ -1,17 +1,14 @@
 
-import click
-import flask
 import json
 import logging
-import psycopg2 as psy
 import psycopg2.extras
 import psycopg2.sql as sql
 import uuid
 
 from psycopg2.sql import SQL
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 import tdmq.errors
+import tdmq.db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +27,7 @@ def get_db():
     is unique for each request and will be reused if this is called
     again.
     """
+    import flask
     if 'db' not in flask.g:
         db_settings = {
             'user': flask.current_app.config['DB_USER'],
@@ -37,7 +35,7 @@ def get_db():
             'host': flask.current_app.config['DB_HOST'],
             'dbname': flask.current_app.config['DB_NAME'],
         }
-        flask.g.db = db_connect(db_settings)
+        flask.g.db = tdmq.db_manager.db_connect(db_settings)
     return flask.g.db
 
 
@@ -46,6 +44,7 @@ def close_db():
     If this request is connected to the database, close the
     connection.
     """
+    import flask
     db = flask.g.pop('db', None)
 
     if db is not None:
@@ -234,112 +233,6 @@ def list_entity_types(category_start=None, type_start=None):
     return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
-def db_connect(conn_params, override_db_name=None):
-    actual_db_name = override_db_name if override_db_name else conn_params['dbname']
-    con = psy.connect(
-        host=conn_params.get('host'),
-        port=conn_params.get('port'),
-        user=conn_params['user'],
-        password=conn_params['password'],
-        dbname=actual_db_name)
-    logger.debug("Connected to database '%s'", actual_db_name)
-    return con
-
-
-# FIXME move all of this to appropriate classes
-def create_db(conn_params, drop=False):
-    logger.debug('drop_and_create_db:init')
-    new_db_name = sql.Identifier(conn_params['dbname'])
-
-    con = db_connect(conn_params, 'postgres')
-    try:
-        con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        with con.cursor() as cur:
-            if drop:
-                cur.execute(
-                    sql.SQL('DROP DATABASE IF EXISTS {}').format(new_db_name))
-                cur.execute(sql.SQL('CREATE DATABASE {}').format(new_db_name))
-            else:
-                cur.execute(
-                    'SELECT count(*) FROM pg_catalog.pg_database '
-                    'WHERE datname = %s',
-                    [conn_params['dbname']])
-                if not cur.fetchone()[0]:
-                    cur.execute(sql.SQL('CREATE DATABASE {}').format(new_db_name))
-    finally:
-        con.close()
-
-    logger.debug('DB %s created', new_db_name.string)
-
-
-def get_schema_sql():
-    SQL = """
-      CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
-      CREATE EXTENSION IF NOT EXISTS postgis;
-      CREATE EXTENSION IF NOT EXISTS citext;
-
-      CREATE TABLE entity_category (
-          entity_category CITEXT PRIMARY KEY
-      );
-
-      CREATE TABLE entity_type (
-          entity_category CITEXT REFERENCES entity_category(entity_category),
-          entity_type CITEXT,
-          schema JSONB,
-          PRIMARY KEY (entity_category, entity_type)
-      );
-
-      CREATE TABLE source (
-          tdmq_id UUID,
-          external_id TEXT NOT NULL UNIQUE,
-          default_footprint GEOMETRY NOT NULL,
-          stationary BOOLEAN NOT NULL DEFAULT TRUE, -- source.stationary is true => record.geom is NULL
-          entity_category CITEXT NOT NULL,
-          entity_type CITEXT NOT NULL,
-          description JSONB,
-          registration_time TIMESTAMP NOT NULL DEFAULT NOW(),
-          PRIMARY KEY (tdmq_id),
-          FOREIGN KEY (entity_category, entity_type) REFERENCES entity_type(entity_category, entity_type)
-      );
-
-      CREATE TABLE record (
-          time TIMESTAMP(6) NOT NULL,
-          source_id UUID NOT NULL REFERENCES source(tdmq_id) ON DELETE CASCADE,
-          footprint GEOMETRY, -- source.stationary is true => record.footprint is NULL
-          data JSONB NOT NULL
-      );
-
-      -- create the hypertable on record. Rather than using the default index, we create an
-      -- index on (source_id, time DESC) as suggested by TimescaleDB best practices:
-      -- https://docs.timescale.com/v1.2/using-timescaledb/schema-management#indexing-best-practices
-      SELECT create_hypertable('record', 'time', create_default_indexes => FALSE, if_not_exists => TRUE);
-      CREATE INDEX ON record (source_id, time DESC);
-      CREATE INDEX ON source USING GIST (default_footprint);
-
-      INSERT INTO entity_category VALUES
-          ('Radar'),
-          ('Satellite'),
-          ('Simulation'),
-          ('Station');
-
-      INSERT INTO entity_type VALUES
-          ('Radar', 'MeteoRadarMosaic'),
-          ('Station', 'WeatherObserver'),
-          ('Station', 'PointWeatherObserver'),
-          ('Station', 'TemperatureMosaic'),
-          ('Station', 'EnergyConsumptionMonitor'),
-          ('Station', 'TrafficObserver'),
-          ('Station', 'DeviceStatusMonitor')
-
-          ;
-    """
-    return SQL
-
-
-def init_schema(curs):
-    curs.execute(get_schema_sql())
-
-
 def dump_table(conn, tname, path, itersize=100000):
     query = sql.SQL('SELECT row_to_json({0}) from {0}').format(
         sql.Identifier(tname)
@@ -454,39 +347,6 @@ def load_records_conn(conn, records, validate=False, chunk_size=500):
 
     logger.debug('load_records: done.')
     return len(records)
-
-
-def init_db(conn_params, drop=False):
-    """Clear existing data and create new tables."""
-    logger.debug('init_db: start drop %s', drop)
-
-    create_db(conn_params, drop)
-    logger.debug('init_db: db_created')
-
-    con = db_connect(conn_params)
-    try:
-        with con:  # transaction
-            with con.cursor() as curs:
-                init_schema(curs)
-    finally:
-        con.close()
-
-    logger.debug('init_db: done')
-
-
-def drop_db(conn_params):
-    """Clear existing data and create new tables."""
-    logger.debug('drop_db %s', conn_params)
-
-    con = db_connect(conn_params, 'postgres')
-    try:
-        con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        with con.cursor() as cur:
-            cur.execute(
-                sql.SQL('DROP DATABASE IF EXISTS {}').format(sql.Identifier(conn_params['dbname'])))
-        logger.debug('database %s dropped', conn_params['dbname'])
-    finally:
-        con.close()
 
 
 loader = {}
@@ -662,23 +522,24 @@ def get_timeseries(tdmq_id, args=None):
 
 
 def add_db_cli(app):
-    from flask import current_app
+    import flask
+    import click
     db_cli = flask.cli.AppGroup('db')
 
     def conn_params():
         return {
-            'host': current_app.config.get('DB_HOST'),
-            'port': current_app.config.get('DB_PORT'),
-            'user': current_app.config['DB_USER'],
-            'password': current_app.config['DB_PASSWORD'],
-            'dbname': current_app.config['DB_NAME']
+            'host': flask.current_app.config.get('DB_HOST'),
+            'port': flask.current_app.config.get('DB_PORT'),
+            'user': flask.current_app.config['DB_USER'],
+            'password': flask.current_app.config['DB_PASSWORD'],
+            'dbname': flask.current_app.config['DB_NAME']
         }
 
     @db_cli.command('init')
     @click.option('--drop', default=False, is_flag=True)
     def db_init(drop):
         click.echo('Starting initialization process.')
-        init_db(conn_params(), drop)
+        tdmq.db_manager.create_db(conn_params(), drop)
         click.echo('Initialized the database.')
 
     @db_cli.command('load')
