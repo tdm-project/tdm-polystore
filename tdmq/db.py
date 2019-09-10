@@ -328,7 +328,9 @@ def get_schema_sql():
           ('Station', 'PointWeatherObserver'),
           ('Station', 'TemperatureMosaic'),
           ('Station', 'EnergyConsumptionMonitor'),
-          ('Station', 'TrafficObserver')
+          ('Station', 'TrafficObserver'),
+          ('Station', 'DeviceStatusMonitor')
+
           ;
     """
     return SQL
