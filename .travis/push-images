@@ -9,7 +9,7 @@ set -o pipefail
 DoPush="${DoPush:-true}"
 
 ImageOwner="tdmproject"
-Images=(tdmq-client tdmq tdmqj)
+Images=(tdmq-client tdmq tdmqj tdmq-db)
 my_name="$(basename "$0" .sh)"
 
 
@@ -29,9 +29,6 @@ fi
 
 if [[ "${TRAVIS_EVENT_TYPE:-}" != "push" ]]; then
   log "TRAVIS_EVENT_TYPE is '${TRAVIS_EVENT_TYPE:-}'.  Quitting."
-
-  log "Before going, here are the current environment variables (filtered for 'pass'):"
-  env | grep -vi 'pass\|secret'
   exit 0
 fi
 
