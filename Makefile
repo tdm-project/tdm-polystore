@@ -23,7 +23,10 @@ jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
 web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
 
-images: tdmqc jupyter web
+tdmq-db: docker/tdmq-db docker/tdmq-dist
+	docker build -f docker/Dockerfile.tdmq-db -t tdmproject/tdmq-db docker
+
+images: tdmqc jupyter web tdmq-db
 
 docker/docker-compose-dev.yml: docker/docker-compose.yml-tmpl
 	sed -e "s^LOCAL_PATH^$${PWD}^" \

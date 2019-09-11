@@ -1,7 +1,5 @@
 from __future__ import with_statement
 
-import os
-
 from alembic import context
 from sqlalchemy import create_engine
 from logging.config import fileConfig
@@ -32,13 +30,9 @@ def connect_to_db():
     if 'conn_params' in config.attributes:
         return db_manager.db_connect(config.attributes['conn_params'])
     else:
-        params = {
-            'host': os.getenv("POSTGRES_HOST", ""),
-            'user': os.getenv("POSTGRES_USER", "tdm"),
-            'password': os.getenv("POSTGRES_PASSWORD", ""),
-            'dbname': os.getenv("POSTGRES_DB", "tdm")
-        }
-        return db_manager.db_connect(params)
+        # if db_connect parameters aren't provided, it'll try to get them
+        # from the environment
+        return db_manager.db_connect(None)
 
 
 def run_migrations_offline():

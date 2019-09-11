@@ -3,11 +3,15 @@ version: "3"
 services:
 
   timescaledb:
-    image: timescale/timescaledb-postgis:1.4.0-pg11
+    image: tdmproject/tdmq-db
     ports:
       - "5432"
     environment:
+      - POSTGRES_DB=tdmqtest
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=foobar
+      - START_DB=true
+      - POSTGRES_RUN_MIGRATIONS=true
     healthcheck:
         test: [ "CMD", "pg_isready" ]
         interval: "15s"
@@ -25,6 +29,9 @@ services:
       - NAMENODE_HOSTNAME=namenode
 
   web:
+    # Remember that this service is using its default configuration
+    # to access the database, so the settings must match the environment
+    # configuration set for timescaledb above.
     image: tdmproject/tdmq
     depends_on:
       - "timescaledb"

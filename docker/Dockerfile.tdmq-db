@@ -1,0 +1,51 @@
+
+FROM timescale/timescaledb-postgis:1.4.0-pg11 AS init-db
+
+LABEL name="tdmq-db" \
+      container.version="cv0.1"
+
+ENV START_DB=false
+
+RUN \
+     apk add --no-cache \
+        bash \
+        py3-pip \
+        py3-psycopg2 \
+        py3-sqlalchemy \
+  && pip3 install --no-cache-dir alembic 
+
+ENV TDMQ_DIST=/tdmq-dist
+
+# Create entrypoint script to initialize DB, run migrations, and start the DB only if START_DB is set.
+# We remove the 'exec "$@"' line from the original entrypoint script, then append the new portion.
+RUN cat /usr/local/bin/docker-entrypoint.sh | \
+    sed -e '/^exec "$@" */d' | \
+    sed -e \
+'$a export POSTGRES_USER="${POSTGRES_USER:-postgres}"\n\
+if [[ "$1" = postgres ]]; then\n\
+  /usr/local/bin/run_migrations.sh\n\
+  printf "Initialization completed\\n" >&2\n\
+fi\n\
+if [[ "${START_DB:-}" = true ]]; then\n\
+  printf "Starting database\\n" >&2\n\
+  exec "$@"\n\
+else\n\
+  printf "Initialized DB but not starting it since START_DB is not set\\n" >&2\n\
+fi\n\
+'  > /usr/local/bin/tdmq-db-entrypoint.sh
+
+ENTRYPOINT [ "/usr/local/bin/tdmq-db-entrypoint.sh" ]
+CMD [ "postgres" ]
+
+COPY tdmq-db/scripts/* /usr/local/bin/
+COPY tdmq-db/initdb.d/* /docker-entrypoint-initdb.d/
+
+RUN chmod a+rx /usr/local/bin/* \
+              /docker-entrypoint-initdb.d/*.sh \
+ && chmod -R a+r /docker-entrypoint-initdb.d/*
+
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
+RUN cd "${TDMQ_DIST}" \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx \
+ && pip3 install --no-deps .

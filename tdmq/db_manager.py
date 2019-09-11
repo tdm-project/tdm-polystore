@@ -12,7 +12,16 @@ import tdmq.utils
 logger = logging.getLogger(__name__)
 
 
-def db_connect(conn_params, override_db_name=None):
+def db_connect(conn_params=None, override_db_name=None):
+    if conn_params is None:
+        # Try to get the connection parameters from environment varibles
+        conn_params = {
+            'host': os.getenv("POSTGRES_HOST", ""),
+            'port': os.getenv("POSTGRES_PORT", ""),
+            'user': os.getenv("POSTGRES_USER", "tdm"),
+            'password': os.getenv("POSTGRES_PASSWORD", ""),
+            'dbname': os.getenv("POSTGRES_DB", "tdm")
+        }
     actual_db_name = override_db_name if override_db_name else conn_params['dbname']
     con = psy.connect(
         host=conn_params.get('host'),
