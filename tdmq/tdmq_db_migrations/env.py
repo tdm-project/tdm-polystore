@@ -2,6 +2,7 @@ from __future__ import with_statement
 
 from alembic import context
 from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 from logging.config import fileConfig
 
 import tdmq.db_manager as db_manager
@@ -47,14 +48,18 @@ def run_migrations_offline():
     script output.
 
     """
-    connectable = create_engine('postgresql://', creator=connect_to_db)
+    engine = create_engine('postgresql://', creator=connect_to_db, poolclass=NullPool)
 
-    with connectable.connect() as connection:
+    connection = engine.connect()
+    try:
         context.configure(
             connection=connection, target_metadata=target_metadata, literal_binds=True)
 
-    with context.begin_transaction():
-        context.run_migrations()
+        with context.begin_transaction():
+            context.run_migrations()
+    finally:
+        connection.close()
+        engine.dispose()
 
 
 def run_migrations_online():
@@ -64,9 +69,10 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = create_engine('postgresql://', creator=connect_to_db)
+    engine = create_engine('postgresql://', creator=connect_to_db, poolclass=NullPool)
 
-    with connectable.connect() as connection:
+    connection = engine.connect()
+    try:
         context.configure(
             connection=connection,
             target_metadata=target_metadata
@@ -74,6 +80,9 @@ def run_migrations_online():
 
         with context.begin_transaction():
             context.run_migrations()
+    finally:
+        connection.close()
+        engine.dispose()
 
 
 if context.is_offline_mode():

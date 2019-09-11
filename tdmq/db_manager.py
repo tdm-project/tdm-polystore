@@ -33,7 +33,6 @@ def db_connect(conn_params=None, override_db_name=None):
     return con
 
 
-# FIXME move all of this to appropriate classes
 def create_db(conn_params, drop=False):
     logger.debug('drop_and_create_db:init')
     new_db_name = sql.Identifier(conn_params['dbname'])
