@@ -1,4 +1,4 @@
-FROM tdmproject/tdmq-client
+FROM tdmproject/tdmq-client as jupyter-deps
 
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
@@ -21,11 +21,11 @@ RUN apt-get update -q \
         xarray \
         tifffile \
         wget \
- && pip3 install --no-cache-dir cartopy \
- && useradd -m jupyter
+ && pip3 install --no-cache-dir cartopy
 
 # cartopy must be installed after cython
-
+FROM jupyter-deps
+RUN useradd -m jupyter
 ENV HOME=/home/jupyter
 
 EXPOSE 8888
