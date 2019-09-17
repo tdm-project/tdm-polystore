@@ -71,11 +71,11 @@ services:
     #DEV volumes:
     #DEV - "LOCAL_PATH/examples:/tdmq-dist/examples"
     #DEV - "LOCAL_PATH/tests:/tdmq-dist/tests"
-    #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"    
+    #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
     environment:
       - NAMENODE_HOSTNAME=namenode
- 
-   tdmqj-hub:
+
+  tdmqj-hub:
     image: tdmproject/tdmqj-hub
     container_name: tdmq-notebook
     environment:
