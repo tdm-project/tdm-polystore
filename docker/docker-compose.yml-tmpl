@@ -81,4 +81,4 @@ services:
     environment:
       - NAMENODE_HOSTNAME=namenode
     volumes:
-      - ".travis/quickstart_dense.py:/quickstart_dense.py"
+      - "LOCAL_PATH/.travis/quickstart_dense.py:/quickstart_dense.py"
