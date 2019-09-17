@@ -74,3 +74,11 @@ services:
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"    
     environment:
       - NAMENODE_HOSTNAME=namenode
+ 
+   tdmqj-hub:
+    image: tdmproject/tdmqj-hub
+    container_name: tdmq-notebook
+    environment:
+      - NAMENODE_HOSTNAME=namenode
+    volumes:
+      - ".travis/quickstart_dense.py:/quickstart_dense.py"
