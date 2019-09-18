@@ -44,6 +44,7 @@ def main(args):
         if did not in srcs:
             logger.info(f"created new src {did}.")
             s = c.register_source(get_description_of_src(d))
+            srcs[did] = s
         else:
             s = srcs[did]
         s.ingest(d['pbt'], d['CF'])
