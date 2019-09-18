@@ -25,10 +25,10 @@ RUN apt-get update -q \
 
 # cartopy must be installed after cython
 
-
-FROM jupyter-deps
 RUN useradd -m jupyter
 ENV HOME=/home/jupyter
+
+FROM jupyter-deps
 
 EXPOSE 8888
 

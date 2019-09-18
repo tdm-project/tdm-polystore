@@ -26,10 +26,12 @@ jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
 
 jupyterhub: jupyter docker/Dockerfile.jupyterhub
 	if [[ ! -d docker-stacks ]]; then git clone --single-branch --branch=master https://github.com/jupyter/docker-stacks.git; fi
+	user_info=( $$(docker run --rm --entrypoint bash ${TDMQJ_DEPS} -c 'echo $$(whoami; id -u; id -g)') )
+	echo ${user_info}
 	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
-	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${TDMQJ_DEPS} .
-	cd docker-stacks/minimal-notebook/ && docker build -t tdmproject/minimal-notebook --build-arg BASE_CONTAINER=tdmproject/base-notebook .
-	docker build -f docker/Dockerfile.jupyterhub  -t tdmproject/tdmqj-hub --build-arg HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${TDMQJ_DEPS} /opt/hadoop/bin/hadoop classpath --glob) docker
+	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${TDMQJ_DEPS} --build-arg NB_USER=${user_info[0]} --build-arg NB_UID=${user_info[1]} --build-arg NB_GID=${user_info[2]} .
+	cd docker-stacks/minimal-notebook/ && docker build -t tdmproject/minimal-notebook --build-arg BASE_CONTAINER=tdmproject/base-notebook --build-arg NB_USER=${user_info[0]} --build-arg NB_UID=${user_info[1]} --build-arg NB_GID=${user_info[2]} .
+	docker build -f docker/Dockerfile.jupyterhub  -t tdmproject/tdmqj-hub docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
