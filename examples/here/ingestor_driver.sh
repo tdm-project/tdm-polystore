@@ -1,14 +1,12 @@
 #!/bin/bash
 
-app_id="NOT_A_GOOD_ID"
-app_code="NOT_A_GOOD_APP_CODE"
+app_id="DMWSuGha6KgsE1d9s2wJ"
+app_code="voC1-vkRneenHHQTrpvR7A"
 TIME=300
 
 while true;
 do
+    python3 ingestor.py --app-id ${app_id} --app-code ${app_code} --source flow
     echo "Sleeping ${TIME}"
     sleep ${TIME}
-    python3 ingestor.py --app-id ${app_id} --app-code ${app_code} --source flow    
 done
-
-
