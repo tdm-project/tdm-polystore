@@ -1,4 +1,7 @@
-FROM tdmproject/tdmq-client AS jupyter-deps
+ARG BASE_IMAGE=tdmproject/tdmq-client
+FROM $BASE_IMAGE AS jupyter-deps
+
+ARG PIP_BIN=pip3
 
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
@@ -8,7 +11,7 @@ RUN apt-get update -q \
         proj-data \
  && apt-get autoclean -y \
  && apt-get clean -y \
- && pip3 install --no-cache-dir \
+ && $PIP_BIN install --no-cache-dir \
         ckanapi \
         folium \
         jupyter \
@@ -21,15 +24,15 @@ RUN apt-get update -q \
         xarray \
         tifffile \
         wget \
- && pip3 install --no-cache-dir cartopy
+ && $PIP_BIN install --no-cache-dir cartopy
 
 # cartopy must be installed after cython
 
-RUN useradd -m jupyter
-ENV HOME=/home/jupyter
 
 FROM jupyter-deps
 
+RUN useradd -m jupyter
+ENV HOME=/home/jupyter
 EXPOSE 8888
 
 ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqj-entrypoint.sh" ]
