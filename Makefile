@@ -21,17 +21,15 @@ tdmqc: docker/tdmq-dist tdmq-client docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
 
 jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
-	docker build -f docker/Dockerfile.jupyter --target jupyter-deps -t ${TDMQJ_DEPS} docker
+	docker build -f docker/Dockerfile.jupyter --target=jupyter-deps -t ${TDMQJ_DEPS} docker
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
 
-jupyterhub: jupyter
-	if [[ ! -d docker-stacks ]]; then git clone https://github.com/jupyter/docker-stacks.git; fi
-	cd docker-stacks;	git checkout ${DOCKER_STACKS_REV}
-	cd docker-stacks/base-notebook/; docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${TDMQJ_DEPS} .
-	cd docker-stacks/minimal-notebook/; docker build -t tdmproject/minimal-notebook --build-arg BASE_CONTAINER=tdmproject/base-notebook .
-	docker build -f docker/Dockerfile.jupyterhub  -t tdmproject/tdmqj-hub --build-arg HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${TDMQJ_DEPS} /opt/hadoop/bin/hadoop classpath --glob) .
-
-
+jupyterhub: jupyter docker/Dockerfile.jupyterhub
+	if [[ ! -d docker-stacks ]]; then git clone --single-branch --branch=master https://github.com/jupyter/docker-stacks.git; fi
+	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
+	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${TDMQJ_DEPS} .
+	cd docker-stacks/minimal-notebook/ && docker build -t tdmproject/minimal-notebook --build-arg BASE_CONTAINER=tdmproject/base-notebook .
+	docker build -f docker/Dockerfile.jupyterhub  -t tdmproject/tdmqj-hub --build-arg HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${TDMQJ_DEPS} /opt/hadoop/bin/hadoop classpath --glob) docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
