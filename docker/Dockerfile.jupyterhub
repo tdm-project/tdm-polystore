@@ -6,3 +6,4 @@ ENV USER $NB_USER
 RUN pip install --no-cache-dir tiledb
 
 USER $USER
+WORKDIR $HOME
