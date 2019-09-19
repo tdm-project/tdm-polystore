@@ -28,13 +28,13 @@ jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
 jupyterhub:
 	if [[ ! -d docker-stacks ]]; then git clone --single-branch --branch=master https://github.com/jupyter/docker-stacks.git; fi
 	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
-	user_info=( ${NB_USER} 1001 1001 ); \
-	echo $${user_info}; \
-	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE}  . ; \
-	cd ../minimal-notebook/ && docker build -t  tdmproject/minimal-notebook --build-arg  BASE_CONTAINER=tdmproject/base-notebook .
+	build_arg_user="--build-arg NB_USER=${NB_USER}"; \
+  echo $${build_arg_user}; \
+	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE} $${build_arg_user}  . ; \
+	cd ../minimal-notebook/ && docker build -t  tdmproject/minimal-notebook --build-arg  BASE_CONTAINER=tdmproject/base-notebook $${build_arg_user} .
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc:conda --target tdmq-client --build-arg BASE_IMAGE=tdmproject/minimal-notebook --build-arg PIP_BIN=pip docker
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj:conda --target=jupyter-deps --build-arg BASE_IMAGE=tdmproject/tdmqc:conda --build-arg PIP_BIN=pip docker
-	docker build -f docker/Dockerfile.jupyterhub -t tdmproject/tdmqj-hub  --build-arg BASE_IMAGE=tdmproject/tdmqj:conda  docker
+	docker build -f docker/Dockerfile.jupyterhub -t tdmproject/tdmqj-hub  --build-arg BASE_IMAGE=tdmproject/tdmqj:conda $${build_arg_user} docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
