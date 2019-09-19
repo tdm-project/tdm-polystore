@@ -30,11 +30,13 @@ jupyterhub:
 	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
 	build_arg_user="--build-arg NB_USER=${NB_USER}"; \
   echo $${build_arg_user}; \
+  HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${HADOOP_CLIENT_IMAGE} /opt/hadoop/bin/hadoop classpath --glob) ; \
+  echo $${HADOOP_CLASSPATH}; \
 	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE} $${build_arg_user}  . ; \
 	cd ../minimal-notebook/ && docker build -t  tdmproject/minimal-notebook --build-arg  BASE_CONTAINER=tdmproject/base-notebook $${build_arg_user} .
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc:conda --target tdmq-client --build-arg BASE_IMAGE=tdmproject/minimal-notebook --build-arg PIP_BIN=pip docker
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj:conda --target=jupyter-deps --build-arg BASE_IMAGE=tdmproject/tdmqc:conda --build-arg PIP_BIN=pip docker
-	docker build -f docker/Dockerfile.jupyterhub -t tdmproject/tdmqj-hub  --build-arg BASE_IMAGE=tdmproject/tdmqj:conda $${build_arg_user} docker
+	docker build -f docker/Dockerfile.jupyterhub -t tdmproject/tdmqj-hub  --build-arg BASE_IMAGE=tdmproject/tdmqj:conda $${build_arg_user} --build-arg HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${HADOOP_CLIENT_IMAGE} /opt/hadoop/bin/hadoop classpath --glob)  docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
