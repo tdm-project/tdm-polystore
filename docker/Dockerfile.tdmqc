@@ -9,6 +9,7 @@ RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
         libnss-wrapper \
         python3-sqlalchemy-ext \
+ && echo "using command $PIP" \
  && $PIP_BIN install --no-cache-dir \
         alembic \
         click \
@@ -58,7 +59,7 @@ RUN cd "${TDMQ_DIST}" \
 #################################################
 FROM tdmq-client AS tdmqc
 
-RUN $PIP_BIN install --no-cache-dir \
+RUN $PIP install --no-cache-dir \
         pytest \
         pytest-flask
 
