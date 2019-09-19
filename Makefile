@@ -5,9 +5,9 @@ PSWD=foobar
 TDMQ_FILES=$(wildcard tdmq/*.py tdmq/client/*.py)
 
 DOCKER_STACKS_REV := 6c3390a9292e8475d18026eb60f8d712b5b901db
-TDMQJ_DEPS=tdmproject/tdmqj-deps
+TDMQJ_DEPS := tdmproject/tdmqj-deps
 HADOOP_CLIENT_IMAGE := crs4/hadoopclient:3.2.0
-
+NB_USER := tdm
 all: images
 
 # FIXME copying tests/data twice...
@@ -28,10 +28,10 @@ jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
 jupyterhub:
 	if [[ ! -d docker-stacks ]]; then git clone --single-branch --branch=master https://github.com/jupyter/docker-stacks.git; fi
 	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
-	user_info=( mdrio 1001 1001 ); \
+	user_info=( ${NB_USER} 1001 1001 ); \
 	echo $${user_info}; \
-	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE} --build-arg NB_USER=$${user_info[0]} --build-arg NB_UID=$${user_info[1]} --build-arg NB_GID=$${user_info[2]} .; \
-	cd ../minimal-notebook/ && docker build -t tdmproject/minimal-notebook --build-arg BASE_CONTAINER=tdmproject/base-notebook --build-arg NB_USER=$${user_info[0]} --build-arg NB_UID=$${user_info[1]} --build-arg NB_GID=$${user_info[2]} .
+	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE}  . ; \
+	cd ../minimal-notebook/ && docker build -t  tdmproject/minimal-notebook --build-arg  BASE_CONTAINER=tdmproject/base-notebook .
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc:conda --target tdmq-client --build-arg BASE_IMAGE=tdmproject/minimal-notebook --build-arg PIP_BIN=pip docker
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj:conda --target=jupyter-deps --build-arg BASE_IMAGE=tdmproject/tdmqc:conda --build-arg PIP_BIN=pip docker
 	docker build -f docker/Dockerfile.jupyterhub -t tdmproject/tdmqj-hub  --build-arg BASE_IMAGE=tdmproject/tdmqj:conda  docker
