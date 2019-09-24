@@ -1,9 +1,13 @@
-
+SHELL := /bin/bash
 
 PSWD=foobar
 
 TDMQ_FILES=$(wildcard tdmq/*.py tdmq/client/*.py)
 
+DOCKER_STACKS_REV := 6c3390a9292e8475d18026eb60f8d712b5b901db
+TDMQJ_DEPS := tdmproject/tdmqj-deps
+HADOOP_CLIENT_IMAGE := crs4/hadoopclient:3.2.0
+NB_USER := tdm
 all: images
 
 # FIXME copying tests/data twice...
@@ -18,7 +22,20 @@ tdmqc: docker/tdmq-dist tdmq-client docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
 
 jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
+	docker build -f docker/Dockerfile.jupyter --target=jupyter-deps -t ${TDMQJ_DEPS} docker
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
+
+jupyterhub:
+	if [[ ! -d docker-stacks ]]; then git clone --single-branch --branch=master https://github.com/jupyter/docker-stacks.git; fi
+	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
+	build_arg_user="--build-arg NB_USER=${NB_USER}"; \
+  echo $${build_arg_user}; \
+	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE} $${build_arg_user}  . &&  \
+	cd ../minimal-notebook/ && docker build -t  tdmproject/minimal-notebook --build-arg  BASE_CONTAINER=tdmproject/base-notebook $${build_arg_user} .
+	HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${HADOOP_CLIENT_IMAGE} /opt/hadoop/bin/hadoop classpath --glob) && \
+	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc:conda --target tdmq-client --build-arg BASE_IMAGE=tdmproject/minimal-notebook --build-arg PIP_BIN=pip docker &&  \
+	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj:conda --target=jupyter-deps --build-arg BASE_IMAGE=tdmproject/tdmqc:conda --build-arg PIP_BIN=pip docker &&  \
+	docker build -f docker/Dockerfile.jupyterhub -t tdmproject/tdmqj-hub  --build-arg BASE_IMAGE=tdmproject/tdmqj:conda $${build_arg_user} --build-arg HADOOP_CLASSPATH=$${HADOOP_CLASSPATH}  docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
@@ -26,7 +43,7 @@ web: docker/tdmq-dist docker/Dockerfile.web
 tdmq-db: docker/tdmq-db docker/tdmq-dist
 	docker build -f docker/Dockerfile.tdmq-db -t tdmproject/tdmq-db docker
 
-images: tdmqc jupyter web tdmq-db
+images: tdmqc jupyter web tdmq-db jupyterhub
 
 docker/docker-compose-dev.yml: docker/docker-compose.yml-tmpl
 	sed -e "s^LOCAL_PATH^$${PWD}^" \
@@ -64,8 +81,17 @@ stop:
 
 run-tests: start
 	docker-compose -f ./docker/docker-compose.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
+	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -mkdir /tiledb"
+	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
+	docker-compose -f ./docker/docker-compose.yml logs tdmqj-hub
+	docker-compose -f ./docker/docker-compose.yml exec tdmqj-hub bash -c "sed -i s/localhost/namenode/ /opt/hadoop/etc/hadoop/core-site.xml"
+	docker-compose -f ./docker/docker-compose.yml exec --user $$(id -u) tdmqj-hub fake_user.sh /bin/bash -c "python /quickstart_dense.py -f hdfs://namenode:8020/tiledb"
+	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
+	docker-compose -f ./docker/docker-compose.yml exec tdmqj-hub bash -c "python -c 'import tdmq, matplotlib'"
+
+
 
 clean: stop
+	rm -rf docker-stacks
 
-
-.PHONY: all tdmqc-deps tdmqc jupyter web images run start stop startdev stopdev clean
+.PHONY: all tdmqc-deps tdmqc jupyter jupyterhub web images run start stop startdev stopdev clean
