@@ -86,7 +86,9 @@ run-tests: start
 	docker-compose -f ./docker/docker-compose.yml logs tdmqj-hub
 	docker-compose -f ./docker/docker-compose.yml exec tdmqj-hub bash -c "sed -i s/localhost/namenode/ /opt/hadoop/etc/hadoop/core-site.xml"
 	docker-compose -f ./docker/docker-compose.yml exec tdmqj-hub bash -c "python /quickstart_dense.py -f hdfs://namenode:8020/tiledb"
+	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
 	docker-compose -f ./docker/docker-compose.yml exec tdmqj-hub bash -c "python -c 'import tdmq, matplotlib'"
+
 
 
 clean: stop
