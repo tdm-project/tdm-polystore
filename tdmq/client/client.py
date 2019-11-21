@@ -35,8 +35,9 @@ class Client:
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self, tdmq_base_url=None):
-        self.base_url = self.DEFAULT_TDMQ_BASE_URL \
-            if tdmq_base_url is None else tdmq_base_url
+        self.base_url = (tdmq_base_url or
+                         os.getenv('TDMQ_BASE_URL') or
+                         self.DEFAULT_TDMQ_BASE_URL)
 
         _logger.debug("New tdmq client object for %s", self.base_url)
 
