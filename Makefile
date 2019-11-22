@@ -11,9 +11,9 @@ NB_USER := tdm
 all: images
 
 # FIXME copying tests/data twice...
-docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests
+docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests examples
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
-	cp -rf apidocs setup.py tdmq tests docker/tdmq-dist
+	cp -rf apidocs setup.py tdmq tests examples docker/tdmq-dist
 
 tdmq-client: docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc --target=tdmq-client -t tdmproject/tdmq-client docker
