@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class DuplicateItemException(werkzeug.exceptions.HTTPException):
-    code = 512
+    code = 409
     description = 'Attempt to duplicate unique field.'
 
 

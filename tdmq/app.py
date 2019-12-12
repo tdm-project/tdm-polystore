@@ -2,11 +2,12 @@
 
 import logging
 import os
-import flask
 
+import flask
+from flask.json import jsonify
+
+from tdmq.api import DuplicateItemException, add_routes
 from tdmq.db import add_db_cli, close_db
-from tdmq.api import add_routes
-from tdmq.api import DuplicateItemException
 
 
 def configure_logging(app):
@@ -61,7 +62,7 @@ def create_app(test_config=None):
     @app.errorhandler(DuplicateItemException)
     def handle_duplicate(e):
         app.logger.error('duplicate item exception %s', e.args)
-        return f'{e.args}', 512
+        return jsonify({"error": "duplicated_source_id"}), e.code
 
     @app.teardown_appcontext
     def teardown_db(arg):

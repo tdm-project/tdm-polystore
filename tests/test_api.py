@@ -82,6 +82,28 @@ def _validate_ids(data, expected):
     assert set( s['external_id'] for s in data ) == expected
 
 
+def test_source_create_duplicate(flask_client, app, db_data, source_data):
+    source_data = [{
+        "id": "st1",
+        "alias": "st1",
+        "entity_type": "WeatherObserver",
+        "entity_category": "Station",
+        "default_footprint": {
+            "type": "Point",
+            "coordinates": [1.1, 2.2]
+        },
+        "stationary": True,
+        "controlledProperties": ["windDirection", "windSpeed"],
+        "shape": [],
+        "description": {}
+    }]
+    response = flask_client.post('/sources', json=source_data)
+    _checkresp(response)
+    response = flask_client.post('/sources', json=source_data)
+    assert response.status == '409 CONFLICT'
+    assert response.get_json() == {"error": "duplicated_source_id"}
+
+
 def test_sources_no_args(flask_client, app, db_data, source_data):
     response = flask_client.get('/sources')
     _checkresp(response)
