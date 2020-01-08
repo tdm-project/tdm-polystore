@@ -104,7 +104,7 @@ def list_sources(args):
 
     # where clauses
     def add_where_lit(column, condition, literal):
-        where.append(SQL(" ").join( (SQL(column), SQL(condition), sql.Literal(literal)) ))
+        where.append(SQL(" ").join((SQL(column), SQL(condition), sql.Literal(literal))))
 
     if 'id' in args:
         add_where_lit('source.external_id', '=', args.pop('id'))
@@ -115,7 +115,7 @@ def list_sources(args):
     if 'tdmq_id' in args:
         add_where_lit('source.tdmq_id', '=', args.pop('tdmq_id'))
     if 'stationary' in args:
-        add_where_lit('source.stationary', 'is', (args.pop('stationary').lower() in { 't', 'true' }))
+        add_where_lit('source.stationary', 'is', (args.pop('stationary').lower() in {'t', 'true'}))
     if 'controlledProperties' in args:
         # require that all these exist in the controlledProperties array
         # This is the PgSQL operator: ?&  text[]   Do all of these array strings exist as top-level keys?
@@ -123,7 +123,7 @@ def list_sources(args):
         assert isinstance(required_properties, list)
         where.append(
             SQL("source.description->'controlledProperties' ?& array[ {} ]").format(
-                SQL(', ').join([ sql.Literal(p) for p in required_properties ])))
+                SQL(', ').join([sql.Literal(p) for p in required_properties])))
     if 'roi' in args:
         fp = args.pop('roi')
         where.append(SQL(
@@ -148,7 +148,7 @@ def list_sources(args):
         if 'before' in args:
             interval.append(SQL("record.time < {}").format(sql.Literal(args.pop('before'))))
 
-        where.append(in_subquery.format( SQL(" AND ").join(interval) ))
+        where.append(in_subquery.format(SQL(" AND ").join(interval)))
 
     if 'limit' in args:
         limit = sql.Literal(args.pop('limit'))
@@ -158,7 +158,7 @@ def list_sources(args):
     if args:  # not empty, so we have additional filtering attributes to apply to description
         logger.debug("Left over args for JSON query: %s", args)
         for k, v in args.items():
-            term = { "description": { k: v } }
+            term = {"description": {k: v}}
             where.append(SQL('source.description @> {}::jsonb').format(sql.Literal(json.dumps(term))))
 
     query = select
@@ -172,7 +172,10 @@ def list_sources(args):
         if offset:
             query += SQL(' OFFSET ') + offset
 
-    return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
+    except psycopg2.OperationalError:
+        raise tdmq.errors.DBOperationalError
 
 
 def get_sources(list_of_tdmq_ids):
@@ -273,10 +276,10 @@ def load_sources_conn(conn, data, validate=False, chunk_size=500):
         entity_cat = d['entity_category']
         footprint = d['default_footprint']
         stationary = d.get('stationary', True)
-        return ( tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d) )
+        return (tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d))
 
     logger.debug('load_sources: start loading %d sources', len(data))
-    tuples = [ gen_source_tuple(t) for t in data ]
+    tuples = [gen_source_tuple(t) for t in data]
     sql = """
           INSERT INTO source
               (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description)
@@ -291,7 +294,7 @@ def load_sources_conn(conn, data, validate=False, chunk_size=500):
         raise tdmq.errors.DuplicateItemException(f"{e.pgerror}\n{e.diag.message_detail}")
 
     logger.debug('load_sources: done.')
-    return [ t[0] for t in tuples ]
+    return [t[0] for t in tuples]
 
 
 def load_records(records, validate=False, chunk_size=500):
@@ -331,7 +334,7 @@ def load_records_conn(conn, records, validate=False, chunk_size=500):
 
     def gen_record_tuple(d, id_to_tdmq_id):
         s_time = d['time']
-        tdmq_id = d['tdmq_id'] if 'tdmq_id' in d else id_to_tdmq_id[ d['source'] ]
+        tdmq_id = d['tdmq_id'] if 'tdmq_id' in d else id_to_tdmq_id[d['source']]
         footprint = json.dumps(d.get('footprint')) if d.get('footprint') else None
 
         return (s_time, tdmq_id, footprint, psycopg2.extras.Json(d['data']))
@@ -341,7 +344,7 @@ def load_records_conn(conn, records, validate=False, chunk_size=500):
     with conn:
         with conn.cursor() as cur:
             id_to_tdmq_id = get_required_internal_source_id_map(cur, records)
-            tuples = [ gen_record_tuple(t, id_to_tdmq_id) for t in records ]
+            tuples = [gen_record_tuple(t, id_to_tdmq_id) for t in records]
             logger.debug('load_records: start loading %d records', len(records))
             psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
 
@@ -411,11 +414,11 @@ def _get_source_description(tdmq_id):
 
 
 def _timeseries_select(properties):
-    select_list = [ sql.SQL("EXTRACT(epoch FROM record.time), record.footprint") ]
+    select_list = [sql.SQL("EXTRACT(epoch FROM record.time), record.footprint")]
     # select_list.append( sql.SQL("record.time, record.footprint") )
     select_list.extend(
-        [ sql.SQL("data->{} AS {}").format(sql.Literal(field), sql.Identifier(field))
-            for field in properties ])
+        [sql.SQL("data->{} AS {}").format(sql.Literal(field), sql.Identifier(field))
+            for field in properties])
 
     grouping_clause = sql.SQL(" ORDER BY record.time ASC ")
 
@@ -425,8 +428,8 @@ def _timeseries_select(properties):
 def _bucketed_timeseries_select(properties, bucket_interval, bucket_op):
     select_list = []
     # select_list.append( sql.SQL("time_bucket({}, record.time) AS time_bucket").format(sql.Literal(bucket_interval)) )
-    select_list.append( sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)) )
-    select_list.append( sql.SQL("ST_Collect(record.footprint) AS footprint_centroid") )
+    select_list.append(sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)))
+    select_list.append(sql.SQL("ST_Collect(record.footprint) AS footprint_centroid"))
 
     if bucket_op == 'string_agg':
         operation_args = "(data->>{}), ','"
@@ -437,11 +440,11 @@ def _bucketed_timeseries_select(properties, bucket_interval, bucket_op):
     access_template = "{}( " + operation_args + " ) AS {}"
 
     select_list.extend(
-        [ sql.SQL(access_template).format(
+        [sql.SQL(access_template).format(
             sql.Identifier(bucket_op),
             sql.Literal(field),
             sql.Identifier(f"{bucket_op}_{field}"))
-          for field in properties ] )
+         for field in properties])
 
     grouping_clause = sql.SQL("""
         GROUP BY time_bucket
@@ -479,7 +482,7 @@ def get_timeseries(tdmq_id, args=None):
         if args and args.get('fields', []):
             fields = args['fields']
             # keep the order specified in fields
-            properties = [ f for f in fields if f in properties ]
+            properties = [f for f in fields if f in properties]
             if fields != properties:
                 unknown_fields = ', '.join(set(fields).difference(properties))
                 raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
@@ -507,12 +510,12 @@ def get_timeseries(tdmq_id, args=None):
         bucket_op = None
         clauses = _timeseries_select(properties)
 
-    where = [ sql.SQL("source_id = {}").format(sql.Literal(tdmq_id)) ]
+    where = [sql.SQL("source_id = {}").format(sql.Literal(tdmq_id))]
 
     if args and args.get('after'):
-        where.append( sql.SQL("record.time >= {}").format(sql.Literal(args['after'])) )
+        where.append(sql.SQL("record.time >= {}").format(sql.Literal(args['after'])))
     if args and args.get('before'):
-        where.append( sql.SQL("record.time < {}").format(sql.Literal(args['before'])) )
+        where.append(sql.SQL("record.time < {}").format(sql.Literal(args['before'])))
 
     clauses['where_clause'] = sql.SQL(" AND ").join(where)
 

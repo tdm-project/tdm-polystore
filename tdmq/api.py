@@ -1,23 +1,15 @@
+import logging
 from datetime import timedelta
 
-from flask import jsonify
-from flask import request
-from flask import url_for
-
-import werkzeug.exceptions
+import werkzeug.exceptions as wex
+from flask import jsonify, request, url_for
+from flask.app import InternalServerError
 
 import tdmq.db as db
 import tdmq.errors
 from tdmq.utils import convert_roi
 
-
-import logging
 logger = logging.getLogger(__name__)
-
-
-class DuplicateItemException(werkzeug.exceptions.HTTPException):
-    code = 409
-    description = 'Attempt to duplicate unique field.'
 
 
 def _restructure_timeseries(res, properties):
@@ -42,13 +34,13 @@ def add_routes(app):
     @app.route('/entity_types')
     def entity_types():
         types = db.list_entity_types()
-        d = { 'entity_types': types }
+        d = {'entity_types': types}
         return jsonify(d)
 
     @app.route('/entity_categories')
     def entity_categories():
         categories = db.list_entity_categories()
-        d = { 'entity_categories': categories }
+        d = {'entity_categories': categories}
         return jsonify(d)
 
     @app.route('/sources', methods=['GET', 'POST'])
@@ -120,24 +112,26 @@ def add_routes(app):
         """
         if request.method == "GET":
             args = {k: v for k, v in request.args.items()}
-            logger.debug("source:  args is %s", args)
+            logger.debug("source: args is %s", args)
             if 'roi' in args:
                 args['roi'] = convert_roi(args['roi'])
             if 'controlledProperties' in args:
                 args['controlledProperties'] = \
                     args['controlledProperties'].split(',')
-            res = db.list_sources(args)
+            try:
+                res = db.list_sources(args)
+            except tdmq.errors.DBOperationalError:
+                raise wex.InternalServerError()
             return jsonify(res)
         elif request.method == "POST":
             data = request.json
             try:
                 tdmq_ids = db.load_sources(data)
-            except tdmq.errors.DuplicateItemException as e:
-                raise DuplicateItemException(e.args)
+            except tdmq.errors.DuplicateItemException:
+                raise wex.Conflict()
             return jsonify(tdmq_ids)
         else:
-            raise NotImplementedError(
-                f"{request.method} not supported by this endpoint")
+            raise wex.MethodNotAllowed()
 
     @app.route('/sources/<uuid:tdmq_id>', methods=['GET', 'DELETE'])
     def source(tdmq_id):

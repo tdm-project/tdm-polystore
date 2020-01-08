@@ -6,9 +6,16 @@ import os
 import flask
 from flask.json import jsonify
 
-from tdmq.api import DuplicateItemException, add_routes
+from tdmq.api import add_routes
 from tdmq.db import add_db_cli, close_db
+import werkzeug.exceptions as wex
 
+
+ERROR_CODES = {
+    405: "method_not_allowed",
+    409: "duplicated_resource",
+    500: "error_retrieving_data"
+}
 
 def configure_logging(app):
     level_str = app.config.get('LOG_LEVEL', 'INFO')
@@ -59,10 +66,9 @@ def create_app(test_config=None):
     add_db_cli(app)
     add_routes(app)
 
-    @app.errorhandler(DuplicateItemException)
-    def handle_duplicate(e):
-        app.logger.error('duplicate item exception %s', e.args)
-        return jsonify({"error": "duplicated_source_id"}), e.code
+    @app.errorhandler(wex.HTTPException)
+    def handle_errors(e):
+        return jsonify({"error": ERROR_CODES.get(e.code)}), e.code
 
     @app.teardown_appcontext
     def teardown_db(arg):
