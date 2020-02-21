@@ -5,7 +5,7 @@ set -o errexit
 
 #### main ####
 
-if [[ "${POSTGRES_RUN_MIGRATIONS:-}" = true ]]; then
+if [[ "${POSTGRES_RUN_MIGRATIONS:-}" = "true" ]]; then
     source "$(dirname "${0}")/_functions.sh"
     printf "Starting DB to run migrations\n" >&2
 
