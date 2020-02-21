@@ -1,109 +1,248 @@
-{"sources": [
-    {"id": "tdm/sensor_0",
-     "alias": "my desk",
-     "entity_type": "PointWeatherObserver",
-     "entity_category": "Station",
-     "default_footprint": {"type": "Point", "coordinates": [8.936079, 38.990040]},
-     "stationary": true,
-     "controlledProperties": ["temperature", "humidity"],
-     "shape": [],
-     "description": {
-        "type": "multisensor",
-        "brandName": "ProSensor",
-        "modelName": "R2D2",
-        "manufacturerName": "CRS4"
-     }
-    },
-    {"id": "tdm/sensor_1",
-     "alias": "porto conte",
-     "entity_type": "PointWeatherObserver",
-     "entity_category": "Station",
-     "default_footprint": {"type": "Point", "coordinates": [8.246969, 40.584128]},
-     "controlledProperties": ["humidity", "temperature"],
-     "shape": [],
-     "storage": null,
-     "description": {
-        "type": "multisensor",
-        "brandName": "ProSensor",
-        "modelName": "R2D2",
-        "manufacturerName": "CRS4"
-     }
-    },
-    {"id": "tdm/sensor_3",
-     "alias": "In città",
-     "entity_type": "EnergyConsumptionMonitor",
-     "entity_category": "Station",
-     "default_footprint": {"type": "Point", "coordinates": [9.132862, 39.248232]},
-     "controlledProperties": ["power"],
-     "shape": [],
-     "description": {
-        "type": "power sensor",
-        "brandName": "ProSensor",
-        "modelName": "C3PO",
-        "manufacturerName": "CRS4" }
-    },
-    {"id": "tdm/sensor_4",
-     "alias": "Piazza d'Armi",
-     "entity_type": "PointWeatherObserver",
-     "entity_category": "Station",
-     "default_footprint": {"type": "Point", "coordinates": [9.111131, 39.228299]},
-     "controlledProperties": ["temperature"],
-     "shape": [],
-     "storage": "timescaledb",
-     "description": {
-        "type": "TemperatureSensorDTH11",
-        "brandName": "Acme",
-        "modelName": "Acme multisensor DHT11",
-        "manufacturerName": "Acme Inc." }
-    },
-    {"id": "tdm/sensor_5",
-     "alias": "Mobile sensor",
-     "entity_type": "PointWeatherObserver",
-     "entity_category": "Station",
-     "default_footprint": {"type": "Point", "coordinates": [9.109731, 39.214298]},
-     "stationary": false,
-     "controlledProperties": ["humidity"],
-     "shape": [],
-     "storage": null,
-     "description": {
-        "type": "HumiditySensorDHT11",
-        "brandName": "Acme",
-        "modelName": "Acme multisensor DHT11",
-        "manufacturerName": "Acme Inc." }
-    },
-    {"id": "tdm/tiledb_sensor_6",
-     "alias": "Mosaic of dpc meteo radars",
-     "entity_category": "Radar",
-     "entity_type": "MeteoRadarMosaic",
-     "default_footprint": {
-         "coordinates": [[
-             [4.537000517753033, 47.856095810774605],
-             [4.537000517753033, 35.07686201381699],
-             [20.436762466677894, 35.07686201381699],
-             [20.436762466677894, 47.856095810774605],
-             [4.537000517753033, 47.856095810774605]]],
-         "type": "Polygon" },
-     "stationary": true,
-     "controlledProperties": ["VMI", "SRI"],
-     "shape": [1400, 1200],
-     "storage": "tiledb",
-     "geomapping": {
-         "SRID": "EPSG:4326",
-         "grid": {"xsize": 1200, "ysize": 1400},
-         "ModelTransformation": [
-             [0.013249801624104052, 0.0, 0.0, 4.537000517753033],
-             [0.0, -0.009128024140684008, 0.0, 47.856095810774605],
-             [0.0, 0.0, 0.0, 0.0],
-             [0.0, 0.0, 0.0, 1.0]]
-     },     
-     "storage": "tiledb",
-     "description": {
-        "type": "meteoRadar",
-        "brandName": "DPC",
-        "modelName": "dpc-radar-mosaic",
-        "manufacturerName": "Dipartimento Protezione Civile",
-        "category": ["sensor"],
-        "function": ["sensing"],
-        "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar" }
-    }
-]}
+{
+    "sources": [
+        {
+            "id": "tdm/sensor_0",
+            "alias": "my desk",
+            "entity_type": "PointWeatherObserver",
+            "entity_category": "Station",
+            "default_footprint": {
+                "type": "Point",
+                "coordinates": [
+                    8.936079,
+                    38.990040
+                ]
+            },
+            "stationary": true,
+            "controlledProperties": [
+                "temperature",
+                "humidity"
+            ],
+            "shape": [],
+            "description": {
+                "type": "multisensor",
+                "brandName": "ProSensor",
+                "modelName": "R2D2",
+                "manufacturerName": "CRS4"
+            },
+            "private": false
+        },
+        {
+            "id": "tdm/sensor_1",
+            "alias": "porto conte",
+            "entity_type": "PointWeatherObserver",
+            "entity_category": "Station",
+            "default_footprint": {
+                "type": "Point",
+                "coordinates": [
+                    8.246969,
+                    40.584128
+                ]
+            },
+            "controlledProperties": [
+                "humidity",
+                "temperature"
+            ],
+            "shape": [],
+            "storage": null,
+            "description": {
+                "type": "multisensor",
+                "brandName": "ProSensor",
+                "modelName": "R2D2",
+                "manufacturerName": "CRS4"
+            },
+            "private": false
+        },
+        {
+            "id": "tdm/sensor_3",
+            "alias": "In città",
+            "entity_type": "EnergyConsumptionMonitor",
+            "entity_category": "Station",
+            "default_footprint": {
+                "type": "Point",
+                "coordinates": [
+                    9.132862,
+                    39.248232
+                ]
+            },
+            "controlledProperties": [
+                "power"
+            ],
+            "shape": [],
+            "description": {
+                "type": "power sensor",
+                "brandName": "ProSensor",
+                "modelName": "C3PO",
+                "manufacturerName": "CRS4"
+            },
+            "private": false
+        },
+        {
+            "id": "tdm/sensor_4",
+            "alias": "Piazza d'Armi",
+            "entity_type": "PointWeatherObserver",
+            "entity_category": "Station",
+            "default_footprint": {
+                "type": "Point",
+                "coordinates": [
+                    9.111131,
+                    39.228299
+                ]
+            },
+            "controlledProperties": [
+                "temperature"
+            ],
+            "shape": [],
+            "storage": "timescaledb",
+            "description": {
+                "type": "TemperatureSensorDTH11",
+                "brandName": "Acme",
+                "modelName": "Acme multisensor DHT11",
+                "manufacturerName": "Acme Inc."
+            },
+            "private": false
+        },
+        {
+            "id": "tdm/sensor_5",
+            "alias": "Mobile sensor",
+            "entity_type": "PointWeatherObserver",
+            "entity_category": "Station",
+            "default_footprint": {
+                "type": "Point",
+                "coordinates": [
+                    9.109731,
+                    39.214298
+                ]
+            },
+            "stationary": false,
+            "controlledProperties": [
+                "humidity"
+            ],
+            "shape": [],
+            "storage": null,
+            "description": {
+                "type": "HumiditySensorDHT11",
+                "brandName": "Acme",
+                "modelName": "Acme multisensor DHT11",
+                "manufacturerName": "Acme Inc."
+            },
+            "private": false
+        },
+        {
+            "id": "tdm/tiledb_sensor_6",
+            "alias": "Mosaic of dpc meteo radars",
+            "entity_category": "Radar",
+            "entity_type": "MeteoRadarMosaic",
+            "default_footprint": {
+                "coordinates": [
+                    [
+                        [
+                            4.537000517753033,
+                            47.856095810774605
+                        ],
+                        [
+                            4.537000517753033,
+                            35.07686201381699
+                        ],
+                        [
+                            20.436762466677894,
+                            35.07686201381699
+                        ],
+                        [
+                            20.436762466677894,
+                            47.856095810774605
+                        ],
+                        [
+                            4.537000517753033,
+                            47.856095810774605
+                        ]
+                    ]
+                ],
+                "type": "Polygon"
+            },
+            "stationary": true,
+            "controlledProperties": [
+                "VMI",
+                "SRI"
+            ],
+            "shape": [
+                1400,
+                1200
+            ],
+            "storage": "tiledb",
+            "geomapping": {
+                "SRID": "EPSG:4326",
+                "grid": {
+                    "xsize": 1200,
+                    "ysize": 1400
+                },
+                "ModelTransformation": [
+                    [
+                        0.013249801624104052,
+                        0.0,
+                        0.0,
+                        4.537000517753033
+                    ],
+                    [
+                        0.0,
+                        -0.009128024140684008,
+                        0.0,
+                        47.856095810774605
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ]
+                ]
+            },
+            "storage": "tiledb",
+            "description": {
+                "type": "meteoRadar",
+                "brandName": "DPC",
+                "modelName": "dpc-radar-mosaic",
+                "manufacturerName": "Dipartimento Protezione Civile",
+                "category": [
+                    "sensor"
+                ],
+                "function": [
+                    "sensing"
+                ],
+                "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar"
+            },
+            "private": false
+        },
+        {
+            "id": "tdm/sensor_7",
+            "alias": "private home",
+            "entity_type": "PointWeatherObserver",
+            "entity_category": "Station",
+            "default_footprint": {
+                "type": "Point",
+                "coordinates": [
+                    10.762179,
+                    31.486511
+                ]
+            },
+            "stationary": true,
+            "controlledProperties": [
+                "temperature",
+                "humidity"
+            ],
+            "shape": [],
+            "description": {
+                "type": "multisensor",
+                "brandName": "ProSensor",
+                "modelName": "R2D2",
+                "manufacturerName": "CRS4"
+            },
+            "private": true
+        }
+    ]
+}

@@ -51,6 +51,7 @@ def db(db_connection_config):
     """Create and connect to the database"""
 
     db_manager.create_db(db_connection_config)
+    db_manager.alembic_run_migrations(db_connection_config)
     connection = db_manager.db_connect(db_connection_config)
 
     try:
@@ -118,7 +119,7 @@ def db_data(clean_db, source_data):
 def _rand_str(length=6):
     if length < 1:
         raise ValueError(f"Length must be >= 1 (got {length})")
-    return ''.join([ random.choice(string.ascii_lowercase) for _ in range(length) ])
+    return ''.join([random.choice(string.ascii_lowercase) for _ in range(length)])
 
 
 #

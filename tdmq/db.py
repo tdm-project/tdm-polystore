@@ -90,12 +90,14 @@ def list_sources(args):
     """
     select = SQL("""
         SELECT
-            source.tdmq_id,
-            source.external_id,
-            ST_AsGeoJSON(ST_Transform(source.default_footprint, 4326))::json
+            tdmq_id,
+            external_id,
+            ST_AsGeoJSON(ST_Transform(default_footprint, 4326))::json
                 as default_footprint,
-            source.entity_category,
-            source.entity_type
+            entity_category,
+            entity_type,
+            description,
+            private
         FROM source""")
 
     where = []
@@ -116,6 +118,8 @@ def list_sources(args):
         add_where_lit('source.tdmq_id', '=', args.pop('tdmq_id'))
     if 'stationary' in args:
         add_where_lit('source.stationary', 'is', (args.pop('stationary').lower() in {'t', 'true'}))
+    if 'private' in args:
+        add_where_lit('source.private', 'is', (args.pop('private').lower() in {'t', 'true'}))
     if 'controlledProperties' in args:
         # require that all these exist in the controlledProperties array
         # This is the PgSQL operator: ?&  text[]   Do all of these array strings exist as top-level keys?
@@ -188,7 +192,8 @@ def get_sources(list_of_tdmq_ids):
             stationary,
             entity_category,
             entity_type,
-            description
+            description,
+            private
         FROM source
         WHERE tdmq_id IN %s""")
 
@@ -276,19 +281,20 @@ def load_sources_conn(conn, data, validate=False, chunk_size=500):
         entity_cat = d['entity_category']
         footprint = d['default_footprint']
         stationary = d.get('stationary', True)
-        return (tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d))
+        private = d.get('private', True)
+        return (tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d), private)
 
     logger.debug('load_sources: start loading %d sources', len(data))
     tuples = [gen_source_tuple(t) for t in data]
-    sql = """
-          INSERT INTO source
-              (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description)
-              VALUES %s"""
-    template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s)"
+    sqlstm = """
+             INSERT INTO source
+             (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description, private)
+             VALUES %s"""
+    template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s, %s)"
     try:
         with conn:
             with conn.cursor() as cur:
-                psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
+                psycopg2.extras.execute_values(cur, sqlstm, tuples, template=template, page_size=chunk_size)
     except psycopg2.errors.UniqueViolation as e:
         logger.debug(e)
         raise tdmq.errors.DuplicateItemException(f"{e.pgerror}\n{e.diag.message_detail}")
@@ -469,6 +475,9 @@ def get_timeseries(tdmq_id, args=None):
      :query fields: list of controlledProperties from the source,
                     or nothing to select all of them.
 
+     :query private_sources: if present, it gets the records of private (in case of True) or public (in case of False).
+                             If absent, it gets records from all sources
+
      :returns: array of arrays: time, footprint, field+
                Fields are in the same order as specified in args.
     """
@@ -489,12 +498,15 @@ def get_timeseries(tdmq_id, args=None):
             # Convert properties from a set to a list, since order is important
             properties = list(properties)
 
+    
+    # TODO: If we create a view for this, we just need to change the FROM in the second query_template
     query_template = sql.SQL("""
         SELECT {select_list}
-            FROM record
-            WHERE {where_clause}
-            {grouping_clause}""")
-
+        FROM {from_clause}
+        WHERE 
+        {where_clause}
+        {grouping_clause}""")
+    
     if args and args.get('bucket'):
         bucket_interval = args['bucket']
 
@@ -510,18 +522,23 @@ def get_timeseries(tdmq_id, args=None):
         bucket_op = None
         clauses = _timeseries_select(properties)
 
+    clauses["from_clause"] = sql.SQL(" record ") # by default we assume args['private_sources'] is False
+
     where = [sql.SQL("source_id = {}").format(sql.Literal(tdmq_id))]
 
     if args and args.get('after'):
         where.append(sql.SQL("record.time >= {}").format(sql.Literal(args['after'])))
     if args and args.get('before'):
         where.append(sql.SQL("record.time < {}").format(sql.Literal(args['before'])))
+    if args and 'private_sources' in args:
+        clauses['from_clause'] = sql.SQL("source JOIN record ON source.tdmq_id = record.source_id")
+        where.append(sql.SQL('source.private is {}').format(sql.Literal(args['private_sources'])))
 
     clauses['where_clause'] = sql.SQL(" AND ").join(where)
 
     query = query_template.format(**clauses)
-
-    return dict(source_info=info, properties=properties, rows=query_db_all(query))
+    rows = query_db_all(query)
+    return dict(source_info=info, properties=properties, rows=rows)
 
 
 def add_db_cli(app):
