@@ -20,14 +20,15 @@ source_desc = {
         "brandName": "ProSensor",
         "modelName": "R2D2",
         "manufacturerName": "CRS4"
-    }
+    },
+    "private": False
 }
 
 
-def test_add_scalar_records(clean_db, source_data, live_app):
+def test_add_scalar_records(clean_db, public_source_data, live_app):
     c = Client(live_app.url())
-    srcs = register_scalar_sources(c, source_data)
-    by_source = source_data['records_by_source']
+    srcs = register_scalar_sources(c, public_source_data)
+    by_source = public_source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
         s.add_records(by_source[s.id])
@@ -38,10 +39,10 @@ def test_add_scalar_records(clean_db, source_data, live_app):
         assert tid not in sources
 
 
-def test_add_scalar_record(clean_db, source_data, live_app):
+def test_add_scalar_record(clean_db, public_source_data, live_app):
     c = Client(live_app.url())
-    srcs = register_scalar_sources(c, source_data)
-    by_source = source_data['records_by_source']
+    srcs = register_scalar_sources(c, public_source_data)
+    by_source = public_source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:
@@ -53,10 +54,10 @@ def test_add_scalar_record(clean_db, source_data, live_app):
         assert tid not in sources
 
 
-def test_ingest_scalar_record(clean_db, source_data, live_app):
+def test_ingest_scalar_record(clean_db, public_source_data, live_app):
     c = Client(live_app.url())
-    srcs = register_scalar_sources(c, source_data)
-    by_source = source_data['records_by_source']
+    srcs = register_scalar_sources(c, public_source_data)
+    by_source = public_source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:

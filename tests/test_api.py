@@ -79,7 +79,6 @@ def test_sources_db_error(flask_client):
     """
     # IMPORTANT: it must be left as first test in the file otherwise it fails since the other tests create the db
     response = flask_client.get('/sources')
-    logger.error(response.get_json())
     assert response.status == '500 INTERNAL SERVER ERROR'
     assert response.get_json() == {"error": "error_retrieving_data"}
 
@@ -236,6 +235,20 @@ def test_timeseries(flask_client, app, db_data):
     assert d['bucket']['op'] == op
     assert d['bucket']['interval'] == bucket
     assert 'temperature' in d['data'] and 'humidity' in d['data']
+
+
+def test_timeseries_for_private_sources(flask_client, app, db_data):
+    source_id = 'tdm/sensor_7'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    print(tdmq_id)
+
+    # bucket, op = 20 * 60, 'sum'
+    # q = f'bucket={bucket}&op={op}'
+    # response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries')
+    assert response.status == '404 NOT FOUND'
+    assert response.get_json() == {"error": "not_found"}
 
 
 def test_service_info(flask_client):

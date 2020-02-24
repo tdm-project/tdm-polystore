@@ -48,6 +48,32 @@ def test_get_two_sources(app, db_data, source_data):
     assert set(tdmq_ids) == set(r['tdmq_id'] for r in resultset)
 
 
+def test_get_private_sources(app, db_data, source_data):
+    for s in source_data['sources']:
+        if s["private"] is True:
+            private_source_id = s["id"]
+
+    tdmq_id = db_query.list_sources({'id': private_source_id})[0]['tdmq_id']
+
+    resultset = db_query.get_sources([tdmq_id])
+    assert len(resultset) == 0
+
+    resultset = db_query.get_sources([tdmq_id], include_privates=True)
+    assert len(resultset) == 1
+
+
+def test_get_public_and_private_sources(app, db_data, source_data):
+    source_ids = [s['id'] for s in source_data['sources']]
+    private_sources = [s['id'] for s in source_data['sources'] if s['private'] is True]
+    tdmq_ids = [db_query.list_sources({'id': source_id})[0]['tdmq_id'] for source_id in source_ids ]
+
+    resultset = db_query.get_sources(tdmq_ids)
+    assert len(resultset) == len(tdmq_ids) - len(private_sources)
+
+    resultset = db_query.get_sources(tdmq_ids, include_privates=True)
+    assert len(resultset) == len(tdmq_ids)
+
+
 def test_query_source_offset_limit(app, db_data):
     src = db_query.list_sources({})
     assert len(src) > 2
@@ -273,7 +299,8 @@ def test_load_records_multiple_src(app, clean_db, source_data):
 
     records_by_source = source_data['records_by_source']
     for i in tdmq_ids:
-        src = db_query.get_sources([i])[0]
+        print("i")
+        src = db_query.get_sources([i], include_privates=True)[0]
         ts = db_query.get_timeseries(i)
         assert len(ts['rows']) == len(records_by_source[src['external_id']])
         assert ts['source_info']['id'] == src['external_id']

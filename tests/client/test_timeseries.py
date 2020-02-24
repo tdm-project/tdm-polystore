@@ -1,9 +1,12 @@
 
+from datetime import datetime, timedelta
+from urllib.error import HTTPError
 
 import numpy as np
+import pytest
+import requests
+
 from tdmq.client import Client
-from datetime import datetime
-from datetime import timedelta
 
 source_desc = {
     "id": "tdm/sensor_1/test_barfoo",
@@ -18,7 +21,8 @@ source_desc = {
         "brandName": "ProSensor",
         "modelName": "R2D2",
         "manufacturerName": "CRS4"
-    }
+    },
+    "private": False
 }
 
 
@@ -87,6 +91,7 @@ def test_empty_timeseries(clean_db, live_app):
     c = Client(live_app.url())
     s = c.register_source(source_desc)
     # empty timeseries
-    ts = s.timeseries()
-    assert len(ts) == 0
+    with pytest.raises(requests.exceptions.HTTPError) as he:
+        s.timeseries()
+        assert he.status_code == '404'
     c.deregister_source(s)

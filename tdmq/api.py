@@ -3,7 +3,6 @@ from datetime import timedelta
 
 import werkzeug.exceptions as wex
 from flask import jsonify, request, url_for
-from flask.app import InternalServerError
 
 import tdmq.db as db
 import tdmq.errors
@@ -122,6 +121,7 @@ def add_routes(app):
                 res = db.list_sources(args)
             except tdmq.errors.DBOperationalError:
                 raise wex.InternalServerError()
+            logger.error("result is: %s", res)
             return jsonify(res)
         elif request.method == "POST":
             data = request.json
@@ -160,13 +160,13 @@ def add_routes(app):
         :returns: source description
         """
         if request.method == "DELETE":
-            result = db.delete_sources([str(tdmq_id)])
+            result = db.delete_sources([tdmq_id])
         else:
-            sources = db.get_sources([str(tdmq_id)])
+            sources = db.get_sources([tdmq_id], include_privates=False)
             if len(sources) == 1:
                 result = sources[0]
             elif len(sources) == 0:
-                result = None
+                raise wex.NotFound()
             else:
                 raise RuntimeError(f"Got more than one source for tdmq_id {tdmq_id}")
         return jsonify(result)
@@ -240,10 +240,18 @@ def add_routes(app):
         if args['fields'] is not None:
             args['fields'] = args['fields'].split(',')
 
+        # Forces not return private_sources
+        args['private_sources'] = False
+
         try:
             result = db.get_timeseries(tdmq_id, args)
-        except tdmq.errors.RequestException as e:
-            return str(e), 400  # BAD_REQUEST
+        except tdmq.errors.RequestException:
+            logger.error("Bad request getting timeseries")
+            raise wex.BadRequest()
+      
+        if len(result["rows"]) == 0:
+            logger.error("did not find any timeseries corresponding to required args")
+            raise wex.NotFound()
 
         res = _restructure_timeseries(result['rows'], result['properties'])
 

@@ -4,14 +4,15 @@ import logging
 import os
 
 import flask
+import werkzeug.exceptions as wex
 from flask.json import jsonify
 
 from tdmq.api import add_routes
 from tdmq.db import add_db_cli, close_db
-import werkzeug.exceptions as wex
-
 
 ERROR_CODES = {
+    400: "bad_request",
+    404: "not_found",
     405: "method_not_allowed",
     409: "duplicated_resource",
     500: "error_retrieving_data"

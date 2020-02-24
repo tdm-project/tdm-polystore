@@ -1,14 +1,15 @@
 
 import json
 import logging
-import psycopg2.extras
-import psycopg2.sql as sql
 import uuid
 
+import psycopg2.extras
+import psycopg2.sql as sql
 from psycopg2.sql import SQL
+from pyparsing import Literal
 
-import tdmq.errors
 import tdmq.db_manager
+import tdmq.errors
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ def close_db():
 def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
     with get_db() as db:
         with db.cursor(cursor_factory=cursor_factory) as cur:
-            cur.execute(q, (args,))
+            cur.execute(q, tuple(args))
             result = cur.fetchall() if fetch else None
 
     if one and result is not None:
@@ -73,6 +74,7 @@ def list_sources(args):
         'controlledProperties'
         'after'
         'before'
+        'private'
         'roi'
         'limit'
         'offset'
@@ -182,7 +184,13 @@ def list_sources(args):
         raise tdmq.errors.DBOperationalError
 
 
-def get_sources(list_of_tdmq_ids):
+def get_sources(list_of_tdmq_ids, include_privates=False):
+    """
+    Get the sources details for all the sources with tdmq_id in `list_of_tdmq_ids`.
+    If include_privates is False (default) it returns only the details of public sources, otherwise
+    it includes also the details of private sources
+    """
+
     q = sql.SQL("""
         SELECT
             tdmq_id,
@@ -195,16 +203,23 @@ def get_sources(list_of_tdmq_ids):
             description,
             private
         FROM source
-        WHERE tdmq_id IN %s""")
-
-    return query_db_all(q, tuple(list_of_tdmq_ids), cursor_factory=psycopg2.extras.RealDictCursor)
+        WHERE tdmq_id = ANY(%s)""")
+    
+    if include_privates is False:
+        q += sql.SQL(" AND private IS %s")
+        args = (list_of_tdmq_ids, include_privates)
+    else:
+        args = (list_of_tdmq_ids,)
+    return query_db_all(q, args=args, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 def delete_sources(list_of_tdmq_ids):
-    q = sql.SQL("""
+    query = sql.SQL("""
         DELETE FROM source
-        WHERE tdmq_id IN %s""")
-    query_db_all(q, tuple(list_of_tdmq_ids), fetch=False)
+        WHERE tdmq_id = ANY(%s)
+    """)
+
+    query_db_all(query, args=(list_of_tdmq_ids,), fetch=False)
     return list_of_tdmq_ids
 
 
@@ -498,15 +513,14 @@ def get_timeseries(tdmq_id, args=None):
             # Convert properties from a set to a list, since order is important
             properties = list(properties)
 
-    
-    # TODO: If we create a view for this, we just need to change the FROM in the second query_template
+    # TODO: We can also create a view with just records from public sources
     query_template = sql.SQL("""
         SELECT {select_list}
         FROM {from_clause}
         WHERE 
         {where_clause}
         {grouping_clause}""")
-    
+
     if args and args.get('bucket'):
         bucket_interval = args['bucket']
 
@@ -522,7 +536,7 @@ def get_timeseries(tdmq_id, args=None):
         bucket_op = None
         clauses = _timeseries_select(properties)
 
-    clauses["from_clause"] = sql.SQL(" record ") # by default we assume args['private_sources'] is False
+    clauses["from_clause"] = sql.SQL(" record ")  # by default we assume args['private_sources'] is False
 
     where = [sql.SQL("source_id = {}").format(sql.Literal(tdmq_id))]
 

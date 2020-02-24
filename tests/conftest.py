@@ -34,6 +34,15 @@ def source_data():
     return dict(sources=sources, records=records,
                 records_by_source=records_by_source)
 
+@pytest.fixture(scope="session")
+def public_source_data(source_data):
+    sources = [s for s in source_data['sources'] if s['private'] is False]
+    records = [r for r in source_data['records'] if r['source'] not in [s['id'] for s in sources]]
+    records_by_source = defaultdict(list)
+    for r in records:
+        records_by_source[r['source']].append(r)
+
+    return dict(sources=sources, records=records, records_by_source=records_by_source)
 
 @pytest.fixture(scope="session")
 def db_connection_config():
