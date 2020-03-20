@@ -18,6 +18,7 @@ COPY --chown=root ./requirements-client.txt "${TDMQ_DIST}/"
 #   psycopg2-binary==2.8
 #   requests==2.22
 #   tifffile==2019.7.26.2
+#   Werkzeug==0.16 <- not a direct dependency but we need to fix its version or pytest-flask 0.15 won't work
 
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
