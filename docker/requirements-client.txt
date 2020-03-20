@@ -5,3 +5,4 @@ psycopg2-binary==2.8
 requests==2.22
 tifffile==2019.7.26.2
 imagecodecs-lite==2019.12.3
+Werkzeug==0.16
