@@ -12,7 +12,7 @@ RUN \
         py3-pip \
         py3-psycopg2 \
         py3-sqlalchemy \
-  && pip3 install --no-cache-dir alembic
+  && pip3 install --no-cache-dir alembic==1.3
 
 ENV TDMQ_DIST=/tdmq-dist
 
