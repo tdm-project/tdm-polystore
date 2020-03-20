@@ -7,20 +7,25 @@ ENV PIP=$PIP_BIN
 ARG HADOOP_HOME=/opt/hadoop
 
 USER root
+
+ENV TDMQ_DIST=/tdmq-dist
+COPY --chown=root ./requirements-client.txt "${TDMQ_DIST}/"
+
+# First order python dependencies:
+#   alembic==1.3
+#   Click==7
+#   Flask==1.1
+#   psycopg2-binary==2.8
+#   requests==2.22
+#   tifffile==2019.7.26.2
+
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
         libnss-wrapper \
         python3-sqlalchemy-ext \
+ && apt-get clean -y \
  && echo "using command $PIP" \
- && $PIP_BIN install --no-cache-dir \
-        alembic \
-        click \
-        flask \
-        psycopg2-binary \
-        requests \
-        tifffile
-
-ENV TDMQ_DIST=/tdmq-dist
+ && $PIP_BIN install --no-cache-dir -r "${TDMQ_DIST}/requirements-client.txt"
 
 ENV DATA_DIR="${TDMQ_DIST}/data" \
     HADOOP_LOG_DIR="/tmp/hadoop_logs" \
@@ -62,8 +67,8 @@ RUN cd "${TDMQ_DIST}" \
 FROM tdmq-client AS tdmqc
 
 RUN $PIP install --no-cache-dir \
-        pytest \
-        pytest-flask
+        pytest==5.3 \
+        pytest-flask==0.15
 
 ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
 

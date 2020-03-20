@@ -2,6 +2,22 @@ ARG BASE_IMAGE=tdmproject/tdmq-client
 FROM $BASE_IMAGE AS jupyter-deps
 
 ARG PIP_BIN=pip3
+COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
+
+# First order python dependencies:
+#  ckanapi==4.3
+#  colormap==1.0
+#  Cython==0.29
+#  easydev==0.9
+#  folium==0.10
+#  jupyter==1.0
+#  matplotlib==3.1
+#  psycopg2-binary==2.8
+#  pyproj==2.4.2.post1
+#  tifffile==2019.7.26
+#  wget==3.2
+#  xarray==0.14
+#  Cartopy==0.17
 
 RUN apt-get update -q \
  && apt-get install -y --no-install-recommends \
@@ -9,23 +25,9 @@ RUN apt-get update -q \
         libproj-dev \
         proj-bin \
         proj-data \
- && apt-get autoclean -y \
  && apt-get clean -y \
- && $PIP_BIN install --no-cache-dir \
-        ckanapi \
-        folium \
-        jupyter \
-        matplotlib \
-        cython \
-        colormap \
-        easydev \
-        psycopg2-binary \
-        pyproj \
-        xarray \
-        tifffile \
-        wget \
- && $PIP_BIN install --no-cache-dir cartopy
-
+ && $PIP_BIN install --no-cache-dir -r "${TDMQ_DIST}/requirements-tdmqj.txt" \
+ && $PIP_BIN install --no-cache-dir cartopy==0.17
 # cartopy must be installed after cython
 
 
