@@ -36,7 +36,7 @@ def source_data():
 
 @pytest.fixture(scope="session")
 def public_source_data(source_data):
-    sources = [s for s in source_data['sources'] if s['private'] is False]
+    sources = [s for s in source_data['sources'] if s.get('public') is True ]
     records = [r for r in source_data['records'] if r['source'] in [s['id'] for s in sources]]
     records_by_source = defaultdict(list)
     for r in records:

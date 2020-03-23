@@ -51,7 +51,7 @@ def test_get_two_sources(app, db_data, source_data):
 
 
 def test_get_private_sources(app, db_data, source_data):
-    private_source = next(s for s in source_data['sources'] if s["private"] is True)
+    private_source = next(s for s in source_data['sources'] if s.get("public") is not True)
     results = db_query.list_sources({
         'id': private_source['id'],
         'include_private': 'True'})
@@ -68,7 +68,7 @@ def test_get_private_sources(app, db_data, source_data):
 
 def test_get_public_and_private_sources(app, db_data, source_data):
     source_ids = [s['id'] for s in source_data['sources']]
-    private_sources = [s['id'] for s in source_data['sources'] if s['private'] is True]
+    private_sources = [s['id'] for s in source_data['sources'] if s.get('public') is not True]
     tdmq_ids = [db_query.list_sources({'id': source_id, 'include_private': 'True' })[0]['tdmq_id'] for source_id in source_ids ]
 
     resultset = db_query.get_sources(tdmq_ids)
@@ -97,7 +97,7 @@ def test_query_source_offset_limit(app, db_data):
 def test_query_source_only_public(app, db_data):
     only_public_sources = db_query.list_sources({})
     for s in only_public_sources:
-        assert s['private'] is not True
+        assert s['public'] is True
 
 
 def test_delete_source(app, db_data):
@@ -217,7 +217,7 @@ def test_get_timeseries_tdmq_id_not_found(app, db_data):
 def test_get_private_timeseries(app, db_data, source_data):
     assert len(db_query.list_sources({'id': 'tdm/sensor_7'})) == 0
     private_source = db_query.list_sources({'id': 'tdm/sensor_7', 'include_private': 'true'})[0]
-    assert private_source['private'] is True
+    assert private_source['public'] is not True
     tdmq_id = private_source['tdmq_id']
 
     # If we don't specify include_private it should only retrieve public records
@@ -286,19 +286,19 @@ def test_load_source(app, clean_db, source_data):
     assert query_src[0]['tdmq_id'] == tdmq_ids[0]
 
 
-def test_load_source_missing_private(app, clean_db, source_data):
+def test_load_source_missing_public_attr(app, clean_db, source_data):
     one_src = copy.deepcopy(source_data['sources'][0])
-    # remove the 'private attribute
-    del one_src['private']
-    assert 'private' not  in one_src
+    # remove the 'public attribute
+    del one_src['public']
+    assert 'public' not in one_src
 
-    # If `private` isn't specified, the system should default to 'true'
+    # If `public` isn't specified, the system should default to 'false'
     tdmq_ids = db_query.load_sources([one_src])
     retrieved = db_query.get_sources(tdmq_ids, include_private=True)
     assert len(retrieved) == 1
     item = retrieved[0]
     assert item['external_id'] == one_src['id']
-    assert item['private'] is True
+    assert item['public'] is False
 
 
 def test_load_records_one_src(app, clean_db, source_data):

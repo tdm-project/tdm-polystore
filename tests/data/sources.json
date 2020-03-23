@@ -24,7 +24,7 @@
                 "modelName": "R2D2",
                 "manufacturerName": "CRS4"
             },
-            "private": false
+            "public": true
         },
         {
             "id": "tdm/sensor_1",
@@ -50,7 +50,7 @@
                 "modelName": "R2D2",
                 "manufacturerName": "CRS4"
             },
-            "private": false
+            "public": true
         },
         {
             "id": "tdm/sensor_3",
@@ -74,7 +74,7 @@
                 "modelName": "C3PO",
                 "manufacturerName": "CRS4"
             },
-            "private": false
+            "public": true
         },
         {
             "id": "tdm/sensor_4",
@@ -99,7 +99,7 @@
                 "modelName": "Acme multisensor DHT11",
                 "manufacturerName": "Acme Inc."
             },
-            "private": false
+            "public": true
         },
         {
             "id": "tdm/sensor_5",
@@ -125,7 +125,7 @@
                 "modelName": "Acme multisensor DHT11",
                 "manufacturerName": "Acme Inc."
             },
-            "private": false
+            "public": true
         },
         {
             "id": "tdm/tiledb_sensor_6",
@@ -216,7 +216,7 @@
                 ],
                 "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar"
             },
-            "private": false
+            "public": true
         },
         {
             "id": "tdm/sensor_7",
@@ -242,7 +242,7 @@
                 "modelName": "R2D2",
                 "manufacturerName": "CRS4"
             },
-            "private": true
+            "public": false
         }
     ]
 }

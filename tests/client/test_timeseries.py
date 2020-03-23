@@ -22,7 +22,7 @@ source_desc = {
         "modelName": "R2D2",
         "manufacturerName": "CRS4"
     },
-    "private": False
+    "public": True
 }
 
 

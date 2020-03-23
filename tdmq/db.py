@@ -102,7 +102,7 @@ def list_sources(args):
             entity_category,
             entity_type,
             description,
-            private
+            public
         FROM source""")
 
     where = []
@@ -124,7 +124,7 @@ def list_sources(args):
     if 'stationary' in args:
         add_where_lit('source.stationary', 'is', (args.pop('stationary').lower() in {'t', 'true'}))
     if 'include_private' not in args or args.pop('include_private').lower() not in {'t', 'true'}:
-        where.append(SQL(" private is false "))
+        where.append(SQL(" public is true "))
     if 'controlledProperties' in args:
         # require that all these exist in the controlledProperties array
         # This is the PgSQL operator: ?&  text[]   Do all of these array strings exist as top-level keys?
@@ -204,12 +204,12 @@ def get_sources(list_of_tdmq_ids, include_private=False):
             entity_category,
             entity_type,
             description,
-            private
+            public
         FROM source
         WHERE tdmq_id = ANY(%s)""")
 
     if include_private is not True:
-        q += sql.SQL(" AND private IS false")
+        q += sql.SQL(" AND public IS true")
     args = (list_of_tdmq_ids,)
     return query_db_all(q, args=args, cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -297,14 +297,14 @@ def load_sources_conn(conn, data, validate=False, chunk_size=500):
         entity_cat = d['entity_category']
         footprint = d['default_footprint']
         stationary = d.get('stationary', True)
-        private = d.get('private', True)
-        return (tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d), private)
+        public = d.get('public', False)
+        return (tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d), public)
 
     logger.debug('load_sources: start loading %d sources', len(data))
     tuples = [gen_source_tuple(t) for t in data]
     sqlstm = """
              INSERT INTO source
-             (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description, private)
+             (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description, public)
              VALUES %s"""
     template = "(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s, %s)"
     try:
@@ -426,14 +426,14 @@ def _get_source_info(tdmq_id):
     q = sql.SQL("""
         SELECT
             source.description,
-            source.private
+            source.public
         FROM source
         WHERE tdmq_id = %s""")
     row = query_db_all(q, args=(tdmq_id,), one=True)
     if row is None:
         raise tdmq.errors.ItemNotFoundException(f"tdmq_id {tdmq_id} not found in DB")
 
-    return dict(description=row[0], private=row[1])
+    return dict(description=row[0], public=row[1])
 
 
 def _timeseries_select(properties):
@@ -503,7 +503,7 @@ def get_timeseries(tdmq_id, args=None):
 
     info = _get_source_info(tdmq_id)
     description = info['description']
-    source_is_private = info['private']
+    source_is_private = not info.get('public', False)
     logger.debug("get_timeseries for private source %s", tdmq_id)
 
     if source_is_private and (not args or args.get('include_private') is not True):
@@ -550,7 +550,7 @@ def get_timeseries(tdmq_id, args=None):
         bucket_op = None
         clauses = _timeseries_select(properties)
 
-    clauses["from_clause"] = sql.SQL(" record ")  # by default we assume args['private_sources'] is False
+    clauses["from_clause"] = sql.SQL(" record ")  # by default we assume args['include_private'] is False
 
     where = [sql.SQL("source_id = {}").format(sql.Literal(tdmq_id))]
     if args and args.get('after'):
