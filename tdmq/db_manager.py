@@ -133,8 +133,9 @@ def init_db(conn_params):
     finally:
         con.close()
 
-    # alembic_stamp_new_db(conn_params)
-    # alembic_run_migrations(conn_params)
+    #  Stamping the db doesn't seem to be necessary
+    #  alembic_stamp_new_db(conn_params)
+    alembic_run_migrations(conn_params)
 
     logger.debug('init_db: done')
 
