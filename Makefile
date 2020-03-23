@@ -4,7 +4,7 @@ PSWD=foobar
 
 TDMQ_FILES=$(wildcard tdmq/*.py tdmq/client/*.py)
 
-DOCKER_STACKS_REV := 213760e5674e11a4cedfdebc392a3a8d263b1425
+DOCKER_STACKS_REV := dc9744740e128ad7ca7c235d5f54791883c2ea69
 TDMQJ_DEPS := tdmproject/tdmqj-deps
 HADOOP_CLIENT_IMAGE := crs4/hadoopclient:3.2.0
 NB_USER := tdm
