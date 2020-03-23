@@ -74,10 +74,10 @@ def list_sources(args):
         'controlledProperties'
         'after'
         'before'
-        'private'
         'roi'
         'limit'
         'offset'
+        'include_private'
 
     All applied conditions must match for an element to be returned.
 
@@ -90,6 +90,9 @@ def list_sources(args):
 
     All other arguments are tested for equality.
     """
+    if args is None:
+        args = {}
+
     select = SQL("""
         SELECT
             tdmq_id,
@@ -120,8 +123,8 @@ def list_sources(args):
         add_where_lit('source.tdmq_id', '=', args.pop('tdmq_id'))
     if 'stationary' in args:
         add_where_lit('source.stationary', 'is', (args.pop('stationary').lower() in {'t', 'true'}))
-    if 'private' in args:
-        add_where_lit('source.private', 'is', (args.pop('private').lower() in {'t', 'true'}))
+    if 'include_private' not in args or args.pop('include_private').lower() not in {'t', 'true'}:
+        where.append(SQL(" private is false "))
     if 'controlledProperties' in args:
         # require that all these exist in the controlledProperties array
         # This is the PgSQL operator: ?&  text[]   Do all of these array strings exist as top-level keys?
@@ -184,10 +187,10 @@ def list_sources(args):
         raise tdmq.errors.DBOperationalError
 
 
-def get_sources(list_of_tdmq_ids, include_privates=False):
+def get_sources(list_of_tdmq_ids, include_private=False):
     """
     Get the sources details for all the sources with tdmq_id in `list_of_tdmq_ids`.
-    If include_privates is False (default) it returns only the details of public sources, otherwise
+    If include_private is False (default) it returns only the details of public sources, otherwise
     it includes also the details of private sources
     """
 
@@ -204,12 +207,10 @@ def get_sources(list_of_tdmq_ids, include_privates=False):
             private
         FROM source
         WHERE tdmq_id = ANY(%s)""")
-    
-    if include_privates is False:
-        q += sql.SQL(" AND private IS %s")
-        args = (list_of_tdmq_ids, include_privates)
-    else:
-        args = (list_of_tdmq_ids,)
+
+    if include_private is not True:
+        q += sql.SQL(" AND private IS false")
+    args = (list_of_tdmq_ids,)
     return query_db_all(q, args=args, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
@@ -421,17 +422,18 @@ supported_bucket_ops = {
 }
 
 
-def _get_source_description(tdmq_id):
+def _get_source_info(tdmq_id):
     q = sql.SQL("""
         SELECT
-            source.description
+            source.description,
+            source.private
         FROM source
         WHERE tdmq_id = %s""")
     row = query_db_all(q, args=(tdmq_id,), one=True)
     if row is None:
         raise tdmq.errors.ItemNotFoundException(f"tdmq_id {tdmq_id} not found in DB")
 
-    return row[0]
+    return dict(description=row[0], private=row[1])
 
 
 def _timeseries_select(properties):
@@ -474,6 +476,7 @@ def _bucketed_timeseries_select(properties, bucket_interval, bucket_op):
     return dict(select_list=sql.SQL(", ").join(select_list), grouping_clause=grouping_clause)
 
 
+# TODO:  change args to **kwargs
 def get_timeseries(tdmq_id, args=None):
     """
      :query after: consider only sensors reporting strictly after
@@ -490,19 +493,31 @@ def get_timeseries(tdmq_id, args=None):
      :query fields: list of controlledProperties from the source,
                     or nothing to select all of them.
 
-     :query private_sources: if present, it gets the records of private (in case of True) or public (in case of False).
-                             If absent, it gets records from all sources
+     :query include_private: if present and True, it retrieves records even if they belong
+                             to a private source.
+                             If absent function only retrieves from public sources.
 
      :returns: array of arrays: time, footprint, field+
                Fields are in the same order as specified in args.
     """
 
-    info = _get_source_description(tdmq_id)
+    info = _get_source_info(tdmq_id)
+    description = info['description']
+    source_is_private = info['private']
+    logger.debug("get_timeseries for private source %s", tdmq_id)
 
-    if info.get('shape'):
+    if source_is_private and (not args or args.get('include_private') is not True):
+        # The source is private, but private data has not been requested.
+        # We replicate the same behaviour that would be seen if the item didn't
+        # exist.
+        # TODO:  It would be better to raise/communicate the privilege problem to
+        # the application layer and let it decide how to respon.
+        raise tdmq.errors.ItemNotFoundException(f"tdmq_id {tdmq_id} either not in DB or is not public")
+
+    if description.get('shape'):
         properties = ['tiledb_index']
     else:
-        properties = info['controlledProperties']
+        properties = description['controlledProperties']
         if args and args.get('fields', []):
             fields = args['fields']
             # keep the order specified in fields
@@ -513,7 +528,6 @@ def get_timeseries(tdmq_id, args=None):
             # Convert properties from a set to a list, since order is important
             properties = list(properties)
 
-    # TODO: We can also create a view with just records from public sources
     query_template = sql.SQL("""
         SELECT {select_list}
         FROM {from_clause}
@@ -524,7 +538,7 @@ def get_timeseries(tdmq_id, args=None):
     if args and args.get('bucket'):
         bucket_interval = args['bucket']
 
-        if info.get('shape'):
+        if description.get('shape'):
             bucket_op = 'jsonb_agg'
         else:
             bucket_op = args['op']
@@ -539,20 +553,16 @@ def get_timeseries(tdmq_id, args=None):
     clauses["from_clause"] = sql.SQL(" record ")  # by default we assume args['private_sources'] is False
 
     where = [sql.SQL("source_id = {}").format(sql.Literal(tdmq_id))]
-
     if args and args.get('after'):
         where.append(sql.SQL("record.time >= {}").format(sql.Literal(args['after'])))
     if args and args.get('before'):
         where.append(sql.SQL("record.time < {}").format(sql.Literal(args['before'])))
-    if args and 'private_sources' in args:
-        clauses['from_clause'] = sql.SQL("source JOIN record ON source.tdmq_id = record.source_id")
-        where.append(sql.SQL('source.private is {}').format(sql.Literal(args['private_sources'])))
 
     clauses['where_clause'] = sql.SQL(" AND ").join(where)
 
     query = query_template.format(**clauses)
     rows = query_db_all(query)
-    return dict(source_info=info, properties=properties, rows=rows)
+    return dict(source_info=description, properties=properties, rows=rows)
 
 
 def add_db_cli(app):

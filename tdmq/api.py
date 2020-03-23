@@ -118,10 +118,10 @@ def add_routes(app):
                 args['controlledProperties'] = \
                     args['controlledProperties'].split(',')
             try:
+                args['include_private'] = 'false'
                 res = db.list_sources(args)
             except tdmq.errors.DBOperationalError:
                 raise wex.InternalServerError()
-            logger.error("result is: %s", res)
             return jsonify(res)
         elif request.method == "POST":
             data = request.json
@@ -162,7 +162,7 @@ def add_routes(app):
         if request.method == "DELETE":
             result = db.delete_sources([tdmq_id])
         else:
-            sources = db.get_sources([tdmq_id], include_privates=False)
+            sources = db.get_sources([tdmq_id], include_private=False)
             if len(sources) == 1:
                 result = sources[0]
             elif len(sources) == 0:
@@ -240,8 +240,8 @@ def add_routes(app):
         if args['fields'] is not None:
             args['fields'] = args['fields'].split(',')
 
-        # Forces not return private_sources
-        args['private_sources'] = False
+        # Forces returning data only for private_sources
+        args['include_private'] = False
 
         try:
             result = db.get_timeseries(tdmq_id, args)

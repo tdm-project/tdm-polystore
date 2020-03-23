@@ -131,16 +131,16 @@ def test_sources_method_not_allowed(flask_client):
     assert response.get_json() == {"error": "method_not_allowed"}
 
 @pytest.mark.sources
-def test_sources_no_args(flask_client, app, db_data, source_data):
+def test_sources_no_args(flask_client, app, db_data, public_source_data):
     response = flask_client.get('/sources')
     _checkresp(response)
     data = response.get_json()
     assert isinstance(data, list)
-    assert len(data) == len(source_data['sources'])
-    _validate_ids(data, set( s['id'] for s in source_data['sources'] ))
+    assert len(data) == len(public_source_data['sources'])
+    _validate_ids(data, set( s['id'] for s in public_source_data['sources'] ))
 
 @pytest.mark.sources
-def test_sources_only_geom(flask_client, app, db_data, source_data):
+def test_sources_only_geom(flask_client, app, db_data, public_source_data):
     geom = 'circle((9.132, 39.248), 1000)'
     q = f'roi={geom}'
     response = flask_client.get(f'/sources?{q}')
@@ -149,44 +149,44 @@ def test_sources_only_geom(flask_client, app, db_data, source_data):
     _validate_ids(data, { 'tdm/sensor_3', 'tdm/tiledb_sensor_6' })
 
 @pytest.mark.sources
-def test_sources_active_after_before(flask_client, app, db_data, source_data):
+def test_sources_active_after_before(flask_client, app, db_data, public_source_data):
     after, before = '2019-05-02T11:30:00Z', '2019-05-02T12:30:00Z'
     q = f'after={after}&before={before}'
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/tiledb_sensor_6' }
-    expected = _get_active_sources_in_time_range(source_data['records'], after, before)
+    expected = _get_active_sources_in_time_range(public_source_data['records'], after, before)
     _validate_ids(response.get_json(), expected)
 
 @pytest.mark.sources
-def test_sources_active_after(flask_client, app, db_data, source_data):
+def test_sources_active_after(flask_client, app, db_data, public_source_data):
     after = '2019-05-02T11:00:22Z'
     q = f'after={after}'
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/sensor_1', 'tdm/tiledb_sensor_6' }
-    expected = _get_active_sources_in_time_range(source_data['records'], after)
+    expected = _get_active_sources_in_time_range(public_source_data['records'], after)
     _validate_ids(response.get_json(), expected)
 
 @pytest.mark.sources
-def test_sources_active_before(flask_client, app, db_data, source_data):
+def test_sources_active_before(flask_client, app, db_data, public_source_data):
     before = '2019-05-02T11:00:00Z'
     q = f'before={before}'
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/sensor_1' }
-    expected = _get_active_sources_in_time_range(source_data['records'], None, before)
+    expected = _get_active_sources_in_time_range(public_source_data['records'], None, before)
     _validate_ids(response.get_json(), expected)
 
 @pytest.mark.sources
-def test_sources_active_after_geom(flask_client, app, db_data, source_data):
+def test_sources_active_after_geom(flask_client, app, db_data, public_source_data):
     geom = 'circle((8.93, 39.0), 10000)'  # point is near the town of Pula
     after = '2019-05-02T11:00:22Z'
     q = f'roi={geom}&after={after}'
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/tiledb_sensor_6' }
-    expected = _get_active_sources_in_time_range(source_data['records'], after, None)
+    expected = _get_active_sources_in_time_range(public_source_data['records'], after, None)
     expected.remove('tdm/sensor_1')  # sensor_1 is out of the selected geographic region
     _validate_ids(response.get_json(), expected)
 
@@ -200,8 +200,8 @@ def test_sources_fail(flask_client):
         assert geom in ve.value
 
 @pytest.mark.sources
-def test_source_query_by_tdmq_id(flask_client, app, db_data, source_data):
-    external_source_id = source_data['sources'][0]['id']
+def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data):
+    external_source_id = public_source_data['sources'][0]['id']
     response_with_id = flask_client.get(f'/sources?id={external_source_id}')
     item_with_id = response_with_id.get_json()[0]
     tdmq_id = item_with_id['tdmq_id']
@@ -240,15 +240,8 @@ def test_timeseries(flask_client, app, db_data):
 def test_timeseries_for_private_sources(flask_client, app, db_data):
     source_id = 'tdm/sensor_7'
     response = flask_client.get(f'/sources?id={source_id}')
-    tdmq_id = response.get_json()[0]['tdmq_id']
-    print(tdmq_id)
-
-    # bucket, op = 20 * 60, 'sum'
-    # q = f'bucket={bucket}&op={op}'
-    # response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
-    response = flask_client.get(f'/sources/{tdmq_id}/timeseries')
-    assert response.status == '404 NOT FOUND'
-    assert response.get_json() == {"error": "not_found"}
+    assert response.status == '200 OK'
+    _checkresp(response, [])
 
 
 def test_service_info(flask_client):
