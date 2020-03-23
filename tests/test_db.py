@@ -286,6 +286,21 @@ def test_load_source(app, clean_db, source_data):
     assert query_src[0]['tdmq_id'] == tdmq_ids[0]
 
 
+def test_load_source_missing_private(app, clean_db, source_data):
+    one_src = copy.deepcopy(source_data['sources'][0])
+    # remove the 'private attribute
+    del one_src['private']
+    assert 'private' not  in one_src
+
+    # If `private` isn't specified, the system should default to 'true'
+    tdmq_ids = db_query.load_sources([one_src])
+    retrieved = db_query.get_sources(tdmq_ids, include_private=True)
+    assert len(retrieved) == 1
+    item = retrieved[0]
+    assert item['external_id'] == one_src['id']
+    assert item['private'] is True
+
+
 def test_load_records_one_src(app, clean_db, source_data):
     one_src = copy.deepcopy(source_data['sources'][0])
     records = copy.deepcopy(source_data['records_by_source'][one_src['id']])

@@ -17,7 +17,7 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('source', sa.Column('private', sa.Boolean, default=True, nullable=False))   
+    op.add_column('source', sa.Column('private', sa.Boolean, server_default='true', nullable=False))
 
 
 def downgrade():
