@@ -8,7 +8,12 @@ DOCKER_STACKS_REV := dc9744740e128ad7ca7c235d5f54791883c2ea69
 TDMQJ_DEPS := tdmproject/tdmqj-deps
 HADOOP_CLIENT_IMAGE := crs4/hadoopclient:3.2.0
 NB_USER := tdm
+
 all: images
+
+images: base-images jupyterhub
+
+base-images: tdmqc jupyter web tdmq-db
 
 # FIXME copying tests/data twice...
 docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests examples
@@ -43,8 +48,6 @@ web: docker/tdmq-dist docker/Dockerfile.web
 tdmq-db: docker/tdmq-db docker/tdmq-dist
 	docker build -f docker/Dockerfile.tdmq-db -t tdmproject/tdmq-db docker
 
-images: tdmqc jupyter web tdmq-db jupyterhub
-
 docker/docker-compose-dev.yml: docker/docker-compose.yml-tmpl
 	sed -e "s^LOCAL_PATH^$${PWD}^" \
 	    -e "s^USER_UID^$$(id -u)^" \
@@ -60,16 +63,16 @@ docker/docker-compose.yml: docker/docker-compose.yml-tmpl
 	    -e "s^USER_GID^$$(id -g)^" \
 	     < docker/docker-compose.yml-tmpl > docker/docker-compose.yml
 
-run: images docker/docker-compose.yml
+run: base-images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up
 
-startdev: images docker/docker-compose-dev.yml
+startdev: base-images docker/docker-compose-dev.yml
 	docker-compose -f ./docker/docker-compose-dev.yml up -d
 
 stopdev:
 	docker-compose -f ./docker/docker-compose-dev.yml down
 
-start: images docker/docker-compose.yml
+start: base-images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up -d
 	# Try to wait for timescaleDB and HDFS
 	docker-compose -f ./docker/docker-compose.yml exec timescaledb bash -c 'for i in {{1..8}}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'
@@ -94,4 +97,4 @@ run-tests: start
 clean: stop
 	rm -rf docker-stacks
 
-.PHONY: all tdmqc-deps tdmqc jupyter jupyterhub web images run start stop startdev stopdev clean
+.PHONY: all tdmqc-deps tdmqc jupyter jupyterhub web images base-images run start stop startdev stopdev clean
