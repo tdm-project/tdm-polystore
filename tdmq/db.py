@@ -58,8 +58,8 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
             cur.execute(q, tuple(args))
             result = cur.fetchall() if fetch else None
 
-    if one and result is not None:
-        return result[0]
+    if one:
+        return result[0] if result else None
     else:
         return result
 
