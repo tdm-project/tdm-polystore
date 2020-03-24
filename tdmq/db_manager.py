@@ -133,7 +133,8 @@ def init_db(conn_params):
     finally:
         con.close()
 
-    alembic_stamp_new_db(conn_params)
+    #  Stamping the db doesn't seem to be necessary
+    #  alembic_stamp_new_db(conn_params)
     alembic_run_migrations(conn_params)
 
     logger.debug('init_db: done')
@@ -188,7 +189,7 @@ def alembic_stamp_new_db(conn_params=None):
     from alembic import command
 
     with _alembic_context(conn_params) as alembic_cfg:
-        logger.debug("Stamping DB")
+        logger.info("Stamping DB")
         command.stamp(alembic_cfg, "head")
 
 
@@ -196,5 +197,5 @@ def alembic_run_migrations(conn_params=None, target="head"):
     from alembic import command
 
     with _alembic_context(conn_params) as alembic_cfg:
-        logger.debug("Running migrations")
+        logger.info("Running migrations")
         command.upgrade(alembic_cfg, target)

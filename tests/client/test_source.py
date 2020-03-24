@@ -22,10 +22,10 @@ def check_source(s, d):
     assert s.shape == ()
 
 
-def register_sources(c, descs, check_source=check_source):
+def register_sources(client, descs, check_source=check_source):
     srcs = []
     for d in descs:
-        s = c.register_source(d, nslots=3600)
+        s = client.register_source(d, nslots=3600)
         check_source(s, d)
         srcs.append(s)
     return srcs
@@ -35,13 +35,13 @@ def is_scalar(d):
     return 'shape' not in d or len(d['shape']) == 0
 
 
-def register_scalar_sources(c, source_data):
-    return register_sources(c, [d for d in source_data['sources'] if is_scalar(d)])
+def register_scalar_sources(client, source_data):
+    return register_sources(client, [d for d in source_data['sources'] if is_scalar(d)])
 
 
-def test_register_deregister_simple_source(clean_hdfs, clean_db, source_data, live_app):
+def test_register_deregister_simple_source(clean_hdfs, clean_db, public_source_data, live_app):
     c = Client(live_app.url())
-    srcs = register_scalar_sources(c, source_data)
+    srcs = register_scalar_sources(c, public_source_data)
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     tdmq_ids = []
     for s in srcs:
@@ -56,9 +56,9 @@ def test_register_deregister_simple_source(clean_hdfs, clean_db, source_data, li
         assert tid not in sources
 
 
-def test_select_source_by_id(clean_hdfs, clean_db, source_data, live_app):
+def test_select_source_by_id(clean_hdfs, clean_db, public_source_data, live_app):
     c = Client(live_app.url())
-    srcs = register_scalar_sources(c, source_data)
+    srcs = register_scalar_sources(c, public_source_data)
     for s in srcs:
         s2 = c.find_sources({'id': s.id})
         assert len(s2) == 1
@@ -66,9 +66,9 @@ def test_select_source_by_id(clean_hdfs, clean_db, source_data, live_app):
         c.deregister_source(s)
 
 
-def test_select_sources_by_entity_type(clean_hdfs, clean_db, source_data, live_app):
+def test_select_sources_by_entity_type(clean_hdfs, clean_db, public_source_data, live_app):
     c = Client(live_app.url())
-    srcs = register_scalar_sources(c, source_data)
+    srcs = register_scalar_sources(c, public_source_data)
     counts = Counter([s.entity_type for s in srcs])
     for k in counts:
         s2 = c.find_sources({'entity_type': k})

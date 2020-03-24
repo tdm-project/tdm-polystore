@@ -13,7 +13,7 @@ services:
       - START_DB=true
       - POSTGRES_RUN_MIGRATIONS=true
     healthcheck:
-        test: [ "CMD", "pg_isready" ]
+        test: [ "CMD", "pg_isready", "--username=postgres" ]
         interval: "15s"
         retries: 5
 

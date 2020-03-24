@@ -34,6 +34,15 @@ def source_data():
     return dict(sources=sources, records=records,
                 records_by_source=records_by_source)
 
+@pytest.fixture(scope="session")
+def public_source_data(source_data):
+    sources = [s for s in source_data['sources'] if s.get('public') is True ]
+    records = [r for r in source_data['records'] if r['source'] in [s['id'] for s in sources]]
+    records_by_source = defaultdict(list)
+    for r in records:
+        records_by_source[r['source']].append(r)
+
+    return dict(sources=sources, records=records, records_by_source=records_by_source)
 
 @pytest.fixture(scope="session")
 def db_connection_config():
@@ -51,6 +60,7 @@ def db(db_connection_config):
     """Create and connect to the database"""
 
     db_manager.create_db(db_connection_config)
+    db_manager.alembic_run_migrations(db_connection_config)
     connection = db_manager.db_connect(db_connection_config)
 
     try:
@@ -118,7 +128,7 @@ def db_data(clean_db, source_data):
 def _rand_str(length=6):
     if length < 1:
         raise ValueError(f"Length must be >= 1 (got {length})")
-    return ''.join([ random.choice(string.ascii_lowercase) for _ in range(length) ])
+    return ''.join([random.choice(string.ascii_lowercase) for _ in range(length)])
 
 
 #

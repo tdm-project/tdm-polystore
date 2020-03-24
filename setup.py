@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'flask',
         'click',
-        'psycopg2-binary'
+        'psycopg2-binary',
+        'alembic'
     ],
 )

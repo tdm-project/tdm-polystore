@@ -22,11 +22,11 @@ RUN cat /usr/local/bin/docker-entrypoint.sh | \
     sed -e '/^exec "$@" */d' | \
     sed -e \
 '$a export POSTGRES_USER="${POSTGRES_USER:-postgres}"\n\
-if [[ "$1" = postgres ]]; then\n\
+if [[ "$1" = "postgres" ]]; then\n\
   /usr/local/bin/run_migrations.sh\n\
   printf "Initialization completed\\n" >&2\n\
 fi\n\
-if [[ "${START_DB:-}" = true ]]; then\n\
+if [[ "${START_DB:-}" = "true" ]]; then\n\
   printf "Starting database\\n" >&2\n\
   exec "$@"\n\
 else\n\

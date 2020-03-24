@@ -18,3 +18,7 @@ class ItemNotFoundException(RequestException):
 
 class UnsupportedFunctionality(TdmqError):
     pass
+
+
+class DBOperationalError(TdmqError):
+    pass
