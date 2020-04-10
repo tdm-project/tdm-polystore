@@ -452,7 +452,7 @@ def _bucketed_timeseries_select(properties, bucket_interval, bucket_op):
     select_list = []
     # select_list.append( sql.SQL("time_bucket({}, record.time) AS time_bucket").format(sql.Literal(bucket_interval)) )
     select_list.append(sql.SQL("EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket").format(sql.Literal(bucket_interval)))
-    select_list.append(sql.SQL("ST_Collect(record.footprint) AS footprint_centroid"))
+    select_list.append(sql.SQL("ST_AsGeoJSON(ST_Transform(ST_Collect(record.footprint), 4326))::json AS footprint_centroid"))
 
     if bucket_op == 'string_agg':
         operation_args = "(data->>{}), ','"
