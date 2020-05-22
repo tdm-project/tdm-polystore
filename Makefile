@@ -5,6 +5,7 @@ PSWD=foobar
 TDMQ_FILES=$(wildcard tdmq/*.py tdmq/client/*.py)
 
 DOCKER_STACKS_REV := dc9744740e128ad7ca7c235d5f54791883c2ea69
+# DOCKER_STACKS_REV := 3b1f4f5e6cc1fd81a14bd57e805fbb25daa3063c
 TDMQJ_DEPS := tdmproject/tdmqj-deps
 HADOOP_CLIENT_IMAGE := crs4/hadoopclient:3.2.0
 NB_USER := tdm
@@ -34,7 +35,7 @@ jupyterhub:
 	if [[ ! -d docker-stacks ]]; then git clone --single-branch --branch=master https://github.com/jupyter/docker-stacks.git; fi
 	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
 	build_arg_user="--build-arg NB_USER=${NB_USER}"; \
-  echo $${build_arg_user}; \
+    echo $${build_arg_user}; \
 	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE} $${build_arg_user}  . &&  \
 	cd ../minimal-notebook/ && docker build -t  tdmproject/minimal-notebook --build-arg  BASE_CONTAINER=tdmproject/base-notebook $${build_arg_user} .
 	HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${HADOOP_CLIENT_IMAGE} /opt/hadoop/bin/hadoop classpath --glob) && \
