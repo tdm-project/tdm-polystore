@@ -1,5 +1,5 @@
 
-
+[![Build Status](https://travis-ci.org/tdm-project/tdm-polystore.svg?branch=develop)](https://travis-ci.org/tdm-project/tdm-polystore)
 
 Run the `TDMQ_API_Experiments.ipynb` notebook first to initialize the database
 and load some data.
