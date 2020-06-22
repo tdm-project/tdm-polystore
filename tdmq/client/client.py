@@ -1,17 +1,15 @@
 
-
 import logging
-import numpy as np
 import os
+
+import numpy as np
 import requests
+from prometheus_client import Summary
+
 import tiledb
-
-from tdmq.client.sources import ScalarSource
-from tdmq.client.sources import NonScalarSource
-
-from tdmq.errors import TdmqError
-from tdmq.errors import DuplicateItemException
-from tdmq.errors import UnsupportedFunctionality
+from tdmq.client.sources import NonScalarSource, ScalarSource
+from tdmq.errors import (DuplicateItemException, TdmqError,
+                         UnsupportedFunctionality)
 
 # FIXME need to do this to patch a overzealous logging by urllib3
 _logger = logging.getLogger('urllib3.connectionpool')
