@@ -1,9 +1,6 @@
-
-
 import json
 import logging
 import os
-import pytest
 import random
 import signal
 import socket
@@ -11,12 +8,14 @@ import string
 import subprocess
 import tempfile
 import time
-
 from collections import defaultdict
 
-from tdmq.app import create_app
+from prometheus_client.registry import CollectorRegistry
+
+import pytest
 import tdmq.db
 import tdmq.db_manager as db_manager
+from tdmq.app import create_app
 
 
 @pytest.fixture(scope="session")
@@ -96,7 +95,8 @@ def app(db_connection_config):
         'DB_NAME': db_connection_config['dbname'],
         'DB_USER': db_connection_config['user'],
         'DB_PASSWORD': db_connection_config['password'],
-        'LOG_LEVEL': 'DEBUG'
+        'LOG_LEVEL': 'DEBUG',
+        'PROMETHEUS_REGISTRY': True
     })
 
     app.testing = True
@@ -290,13 +290,14 @@ def live_app(db, db_connection_config, pytestconfig):
 
     cfg = f"""
 SECRET_KEY = "dev"
-TESTING = True,
+TESTING = True
 DB_HOST = "{db_connection_config['host']}"
 DB_PORT = "{db_connection_config['port']}"
 DB_NAME = "{db_connection_config['dbname']}"
 DB_USER = "{db_connection_config['user']}"
 DB_PASSWORD = "{db_connection_config['password']}"
 LOG_LEVEL = "DEBUG"
+PROMETHEUS_REGISTRY = True
     """
 
     application_path = os.path.abspath(os.path.splitext(wsgi.__file__)[0])
@@ -305,7 +306,7 @@ LOG_LEVEL = "DEBUG"
     with tempfile.NamedTemporaryFile(mode='w') as f:
         f.write(cfg)
         f.flush()
-        server = SubprocessLiveServer(f.name, application_path, host, port, wsgi.app.wsgi_app.prefix)
+        server = SubprocessLiveServer(f.name, application_path, host, port, '')
         server.start()
         try:
             yield server

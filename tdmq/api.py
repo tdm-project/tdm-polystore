@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import werkzeug.exceptions as wex
 from flask import jsonify, request, url_for
+from prometheus_client.registry import REGISTRY
 from prometheus_client.utils import INF
 from prometheus_client.metrics import Histogram, Summary
 
@@ -24,11 +25,11 @@ def _restructure_timeseries(res, properties):
     return result
 
 
-def add_routes(app):
+def add_routes(app, registry=REGISTRY):
     http_request_prom = Histogram('tdmq_http_requests_seconds', 'Elapsed time to process http requests',
-                                  ['method', 'endpoint'], buckets=[.5, 1, 5, 10, 20, INF])
+                                  ['method', 'endpoint'], buckets=[.5, 1, 5, 10, 20, INF], registry=registry)
     http_response_prom = Histogram('tdmq_http_response_bytes', 'Size in bytes of an http response',
-                                   ['method', 'endpoint'], buckets=[1, 2, 5, 10, 20, INF])
+                                   ['method', 'endpoint'], buckets=[1, 2, 5, 10, 20, INF], registry=registry)
 
     @app.before_request
     def print_args():

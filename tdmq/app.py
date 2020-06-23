@@ -6,6 +6,7 @@ import os
 import flask
 import werkzeug.exceptions as wex
 from flask.json import jsonify
+from prometheus_client.registry import REGISTRY, CollectorRegistry
 
 from tdmq.api import add_routes
 from tdmq.db import add_db_cli, close_db
@@ -66,7 +67,11 @@ def create_app(test_config=None):
         pass
 
     add_db_cli(app)
-    add_routes(app)
+
+    if app.config.get('PROMETHEUS_REGISTRY', False) is True:
+        add_routes(app, registry=CollectorRegistry(auto_describe=True))
+    else:
+        add_routes(app)
 
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):

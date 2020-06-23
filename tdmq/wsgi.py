@@ -24,11 +24,12 @@ class PrefixMiddleware(object):
             start_response('404', [('Content-Type', 'text/plain')])
             return ["This url does not belong to the app.".encode()]
 
-
-main_app = create_app()
-prom_app = make_wsgi_app()
-
-main_app.wsgi_app = PrefixMiddleware(main_app.wsgi_app, prom_app, prefix='/api/v0.0')
+def get_wsgi_app():
+    app = create_app()
+    prom_app = make_wsgi_app()
+    app.wsgi_app = PrefixMiddleware(app.wsgi_app, prom_app, prefix='/api/v0.0')
+    return app
 
 if __name__ == "__main__":
-    main_app.run()
+    app = get_wsgi_app()
+    app.run()

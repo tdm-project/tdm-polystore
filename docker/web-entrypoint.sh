@@ -33,5 +33,5 @@ if [[ "${DEV}" == "true" ]]; then
     export FLASK_RUN_HOST=0.0.0.0
     flask run "${@}"
 else
-    gunicorn -b 0.0.0.0:8000 wsgi:app
+    gunicorn -b 0.0.0.0:8000 "wsgi:get_app()"
 fi
