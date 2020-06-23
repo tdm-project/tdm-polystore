@@ -10,9 +10,14 @@ setup(
                   'tdmq_db_migrations/versions/*' ] },
     zip_safe=False,
     install_requires=[
-        'flask',
-        'click',
-        'psycopg2-binary',
-        'alembic'
+        'flask==1.1.0',
+        'click==7.0',
+        'psycopg2-binary==2.8',
+        'alembic==1.3.0',
+        'prometheus_client==0.8.0',
+        'gunicorn==20.0.4',
+        'sphinx',
+        'sphinxcontrib-httpdomain',
+        'pytest'
     ],
 )

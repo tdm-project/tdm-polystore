@@ -1,8 +1,12 @@
 import logging
+import sys
 from datetime import timedelta
 
 import werkzeug.exceptions as wex
 from flask import jsonify, request, url_for
+from prometheus_client.registry import REGISTRY
+from prometheus_client.utils import INF
+from prometheus_client.metrics import Histogram, Summary
 
 import tdmq.db as db
 import tdmq.errors
@@ -21,7 +25,12 @@ def _restructure_timeseries(res, properties):
     return result
 
 
-def add_routes(app):
+def add_routes(app, registry=REGISTRY):
+    http_request_prom = Histogram('tdmq_http_requests_seconds', 'Elapsed time to process http requests',
+                                  ['method', 'endpoint'], buckets=[.5, 1, 5, 10, 20, INF], registry=registry)
+    http_response_prom = Histogram('tdmq_http_response_bytes', 'Size in bytes of an http response',
+                                   ['method', 'endpoint'], buckets=[1, 2, 5, 10, 20, INF], registry=registry)
+
     @app.before_request
     def print_args():
         logger.debug("request.args: %s", request.args)
@@ -32,15 +41,21 @@ def add_routes(app):
 
     @app.route('/entity_types')
     def entity_types():
-        types = db.list_entity_types()
-        d = {'entity_types': types}
-        return jsonify(d)
+        with http_request_prom.labels(method='get', endpoint='entity_types').time():
+            types = db.list_entity_types()
+            res = jsonify({'entity_types': types})
+            http_response_prom.labels(method='get', endpoint='entity_types').observe(
+                    sys.getsizeof(res.data))
+            return res
 
     @app.route('/entity_categories')
     def entity_categories():
-        categories = db.list_entity_categories()
-        d = {'entity_categories': categories}
-        return jsonify(d)
+        with http_request_prom.labels(method='get', endpoint='entity_categories').time():
+            categories = db.list_entity_categories()
+            res = jsonify({'entity_categories': categories})
+            http_response_prom.labels(method='get', endpoint='entity_categories').observe(
+                    sys.getsizeof(res.data))
+            return res
 
     @app.route('/sources', methods=['GET', 'POST'])
     def sources():
@@ -110,19 +125,23 @@ def add_routes(app):
 
         """
         if request.method == "GET":
-            args = {k: v for k, v in request.args.items()}
-            logger.debug("source: args is %s", args)
-            if 'roi' in args:
-                args['roi'] = convert_roi(args['roi'])
-            if 'controlledProperties' in args:
-                args['controlledProperties'] = \
-                    args['controlledProperties'].split(',')
-            try:
-                args['include_private'] = 'false'
-                res = db.list_sources(args)
-            except tdmq.errors.DBOperationalError:
-                raise wex.InternalServerError()
-            return jsonify(res)
+            with http_request_prom.labels(method='get', endpoint='sources').time():
+                args = {k: v for k, v in request.args.items()}
+                logger.debug("source: args is %s", args)
+                if 'roi' in args:
+                    args['roi'] = convert_roi(args['roi'])
+                if 'controlledProperties' in args:
+                    args['controlledProperties'] = \
+                        args['controlledProperties'].split(',')
+                try:
+                    args['include_private'] = 'false'
+                    res = db.list_sources(args)
+                except tdmq.errors.DBOperationalError:
+                    raise wex.InternalServerError()
+                res = jsonify(res)
+                http_response_prom.labels(method='get', endpoint='sources').observe(
+                    sys.getsizeof(res.data))
+                return res
         elif request.method == "POST":
             data = request.json
             try:
@@ -168,7 +187,8 @@ def add_routes(app):
             elif len(sources) == 0:
                 raise wex.NotFound()
             else:
-                raise RuntimeError(f"Got more than one source for tdmq_id {tdmq_id}")
+                raise RuntimeError(
+                    f"Got more than one source for tdmq_id {tdmq_id}")
         return jsonify(result)
 
     @app.route('/sources/<uuid:tdmq_id>/timeseries')
@@ -232,38 +252,44 @@ def add_routes(app):
         :status 200: no errors
         :returns: list of sources
         """
-        rargs = request.args
-        args = dict((k, rargs.get(k, None))
-                    for k in ['after', 'before', 'bucket', 'fields', 'op'])
-        if args['bucket'] is not None:
-            args['bucket'] = timedelta(seconds=float(args['bucket']))
-        if args['fields'] is not None:
-            args['fields'] = args['fields'].split(',')
 
-        # Forces returning data only for private_sources
-        args['include_private'] = False
+        with http_request_prom.labels(method='get', endpoint='timeseries').time():
+            rargs = request.args
+            args = dict((k, rargs.get(k, None))
+                        for k in ['after', 'before', 'bucket', 'fields', 'op'])
+            if args['bucket'] is not None:
+                args['bucket'] = timedelta(seconds=float(args['bucket']))
+            if args['fields'] is not None:
+                args['fields'] = args['fields'].split(',')
 
-        try:
-            result = db.get_timeseries(tdmq_id, args)
-        except tdmq.errors.RequestException:
-            logger.error("Bad request getting timeseries")
-            raise wex.BadRequest()
-      
-        if len(result["rows"]) == 0:
-            logger.error("did not find any timeseries corresponding to required args")
-            raise wex.NotFound()
+            # Forces returning data only for private_sources
+            args['include_private'] = False
 
-        res = _restructure_timeseries(result['rows'], result['properties'])
+            try:
+                result = db.get_timeseries(tdmq_id, args)
+            except tdmq.errors.RequestException:
+                logger.error("Bad request getting timeseries")
+                raise wex.BadRequest()
 
-        res["tdmq_id"] = tdmq_id
-        res["default_footprint"] = result['source_info']['default_footprint']
-        res["shape"] = result['source_info']['shape']
-        if args['bucket']:
-            res["bucket"] = {"interval": args['bucket'].total_seconds(), "op": args.get("op")}
-        else:
-            res['bucket'] = None
+            if len(result["rows"]) == 0:
+                logger.error(
+                    "did not find any timeseries corresponding to required args")
+                raise wex.NotFound()
 
-        return jsonify(res)
+            res = _restructure_timeseries(result['rows'], result['properties'])
+
+            res["tdmq_id"] = tdmq_id
+            res["default_footprint"] = result['source_info']['default_footprint']
+            res["shape"] = result['source_info']['shape']
+            if args['bucket']:
+                res["bucket"] = {
+                    "interval": args['bucket'].total_seconds(), "op": args.get("op")}
+            else:
+                res['bucket'] = None
+            res = jsonify(res)
+            http_response_prom.labels(method='get', endpoint='timeseries').observe(
+                sys.getsizeof(res.data))
+            return res
 
     @app.route('/records', methods=["POST"])
     def records():

@@ -1,7 +1,6 @@
 FROM python:3.7
 
-RUN pip install --upgrade pip && \
-  pip install flask gunicorn pytest sphinx sphinxcontrib-httpdomain
+RUN pip install --upgrade pip
 
 ENV TDMQ_DIST=/tdmq-dist
 ENV DATA_DIR="${TDMQ_DIST}/data"

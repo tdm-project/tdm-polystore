@@ -5,11 +5,13 @@ import tempfile
 from contextlib import contextmanager
 from datetime import datetime
 
-import pytest
+from prometheus_client.registry import CollectorRegistry
 
+import pytest
 from tdmq.app import create_app
 
 logger = logging.getLogger('test_api')
+
 
 @contextmanager
 def _create_new_app_test_client(config=None):
@@ -17,6 +19,7 @@ def _create_new_app_test_client(config=None):
         config = config.copy()
         config['TESTING'] = True
         config['LOG_LEVEL'] = 'DEBUG'
+        config['PROMETHEUS_REGISTRY'] = True
 
     app = create_app(config)
     with app.app_context():
@@ -51,25 +54,25 @@ def _filter_records_in_time_range(records, after=None, before=None):
     else:
         before = datetime.max
 
-    return [ r for r in records if
-             _parse_datetime(r['time']) >= after and
-             _parse_datetime(r['time']) < before ]
+    return [r for r in records if
+            _parse_datetime(r['time']) >= after and
+            _parse_datetime(r['time']) < before]
 
 
 def _filter_records_in_time_range_and_source(records, after=None, before=None, source_id=None):
     if source_id is not None:
-        return [ r for r in _filter_records_in_time_range(records, after, before) if r['source'] == source_id ]
+        return [r for r in _filter_records_in_time_range(records, after, before) if r['source'] == source_id]
     else:
         return _filter_records_in_time_range(records, after, before)
 
 
 def _get_active_sources_in_time_range(records, after=None, before=None):
     filtered_records = _filter_records_in_time_range(records, after, before)
-    return set( r['source'] for r in filtered_records )
+    return set(r['source'] for r in filtered_records)
 
 
 def _validate_ids(data, expected):
-    assert set( s['external_id'] for s in data ) == expected
+    assert set(s['external_id'] for s in data) == expected
 
 
 @pytest.mark.sources
@@ -93,7 +96,8 @@ def test_source_types(flask_client, db_data):
 
     for s in data:
         assert s.description['type'] == in_args['type']
-        assert s.controlledProperties == in_args['controlledProperties'].split(',')
+        assert s.controlledProperties == in_args['controlledProperties'].split(
+            ',')
 
 
 @pytest.mark.sources
@@ -121,6 +125,7 @@ def test_source_create_duplicate(flask_client, db_data):
     assert response.status == '409 CONFLICT'
     assert response.get_json() == {"error": "duplicated_resource"}
 
+
 @pytest.mark.sources
 def test_sources_method_not_allowed(flask_client):
     """
@@ -130,6 +135,7 @@ def test_sources_method_not_allowed(flask_client):
     assert response.status == '405 METHOD NOT ALLOWED'
     assert response.get_json() == {"error": "method_not_allowed"}
 
+
 @pytest.mark.sources
 def test_sources_no_args(flask_client, app, db_data, public_source_data):
     response = flask_client.get('/sources')
@@ -137,7 +143,8 @@ def test_sources_no_args(flask_client, app, db_data, public_source_data):
     data = response.get_json()
     assert isinstance(data, list)
     assert len(data) == len(public_source_data['sources'])
-    _validate_ids(data, set( s['id'] for s in public_source_data['sources'] ))
+    _validate_ids(data, set(s['id'] for s in public_source_data['sources']))
+
 
 @pytest.mark.sources
 def test_sources_only_geom(flask_client, app, db_data, public_source_data):
@@ -146,7 +153,8 @@ def test_sources_only_geom(flask_client, app, db_data, public_source_data):
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     data = response.get_json()
-    _validate_ids(data, { 'tdm/sensor_3', 'tdm/tiledb_sensor_6' })
+    _validate_ids(data, {'tdm/sensor_3', 'tdm/tiledb_sensor_6'})
+
 
 @pytest.mark.sources
 def test_sources_active_after_before(flask_client, app, db_data, public_source_data):
@@ -155,8 +163,10 @@ def test_sources_active_after_before(flask_client, app, db_data, public_source_d
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/tiledb_sensor_6' }
-    expected = _get_active_sources_in_time_range(public_source_data['records'], after, before)
+    expected = _get_active_sources_in_time_range(
+        public_source_data['records'], after, before)
     _validate_ids(response.get_json(), expected)
+
 
 @pytest.mark.sources
 def test_sources_active_after(flask_client, app, db_data, public_source_data):
@@ -165,8 +175,10 @@ def test_sources_active_after(flask_client, app, db_data, public_source_data):
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/sensor_1', 'tdm/tiledb_sensor_6' }
-    expected = _get_active_sources_in_time_range(public_source_data['records'], after)
+    expected = _get_active_sources_in_time_range(
+        public_source_data['records'], after)
     _validate_ids(response.get_json(), expected)
+
 
 @pytest.mark.sources
 def test_sources_active_before(flask_client, app, db_data, public_source_data):
@@ -175,8 +187,10 @@ def test_sources_active_before(flask_client, app, db_data, public_source_data):
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/sensor_1' }
-    expected = _get_active_sources_in_time_range(public_source_data['records'], None, before)
+    expected = _get_active_sources_in_time_range(
+        public_source_data['records'], None, before)
     _validate_ids(response.get_json(), expected)
+
 
 @pytest.mark.sources
 def test_sources_active_after_geom(flask_client, app, db_data, public_source_data):
@@ -186,9 +200,12 @@ def test_sources_active_after_geom(flask_client, app, db_data, public_source_dat
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/tiledb_sensor_6' }
-    expected = _get_active_sources_in_time_range(public_source_data['records'], after, None)
-    expected.remove('tdm/sensor_1')  # sensor_1 is out of the selected geographic region
+    expected = _get_active_sources_in_time_range(
+        public_source_data['records'], after, None)
+    # sensor_1 is out of the selected geographic region
+    expected.remove('tdm/sensor_1')
     _validate_ids(response.get_json(), expected)
+
 
 @pytest.mark.sources
 def test_sources_fail(flask_client):
@@ -198,6 +215,7 @@ def test_sources_fail(flask_client):
         flask_client.get(f'/sources?{q}')
         assert "roi" in ve.value
         assert geom in ve.value
+
 
 @pytest.mark.sources
 def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data):
@@ -209,7 +227,8 @@ def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data)
     # query again using tdmq_id
     response_with_tdmq_id = flask_client.get(f"/sources/{tdmq_id}")
 
-    assert item_with_id['external_id'] == response_with_tdmq_id.get_json()['external_id']
+    assert item_with_id['external_id'] == response_with_tdmq_id.get_json()[
+        'external_id']
 
 
 def test_timeseries(flask_client, app, db_data):
