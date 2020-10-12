@@ -459,7 +459,8 @@ def _bucketed_timeseries_select(properties, bucket_interval, bucket_op):
     elif bucket_op == 'jsonb_agg':
         operation_args = "(data->{})"
     else:
-        operation_args = "(data->{})::real"
+        operation_args = "( NULLIF (data->{}, '\"\"') )::real"
+
     access_template = "{}( " + operation_args + " ) AS {}"
 
     select_list.extend(
@@ -531,7 +532,7 @@ def get_timeseries(tdmq_id, args=None):
     query_template = sql.SQL("""
         SELECT {select_list}
         FROM {from_clause}
-        WHERE 
+        WHERE
         {where_clause}
         {grouping_clause}""")
 
