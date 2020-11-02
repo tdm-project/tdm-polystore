@@ -40,7 +40,7 @@ class Client:
         _logger.debug("New tdmq client object for %s", self.base_url)
 
         self.connected = False
-        self.tiledb_hdfs_root = None
+        self.tiledb_storage_root = None
         self.tiledb_ctx = None
         self.tiledb_vfs = None
 
@@ -62,14 +62,14 @@ class Client:
         service_info = self._do_get('service_info')
         _logger.debug("Service sent the following info: \n%s", service_info)
 
-        if service_info['version'] != '0.0':
+        if service_info['version'] != '0.1':
             raise NotImplementedError(f"This client isn't compatible with service version {service_info['version']}")
         if 'tiledb' in service_info:
-            self.tiledb_hdfs_root = service_info['tiledb']['hdfs.root']
+            self.tiledb_storage_root = service_info['tiledb']['storage.root']
             self.tiledb_ctx = tiledb.Ctx(service_info['tiledb'].get('config'))
             self.tiledb_vfs = tiledb.VFS(config=self.tiledb_ctx.config(), ctx=self.tiledb_ctx)
             _logger.info("Configured TileDB context")
-            _logger.debug("\t tiledb_hdfs_root: %s", self.tiledb_hdfs_root)
+            _logger.debug("\t tiledb_storage_root: %s", self.tiledb_storage_root)
             _logger.debug("\t tiledb_config:\n%s", self.tiledb_ctx.config())
 
         self.connected = True
@@ -88,7 +88,7 @@ class Client:
             tiledb.remove(array_name, ctx=self.tiledb_ctx)
 
     def _source_data_path(self, tdmq_id):
-        return os.path.join(self.tiledb_hdfs_root, tdmq_id)
+        return os.path.join(self.tiledb_storage_root, tdmq_id)
 
     @requires_connection
     def deregister_source(self, s):
@@ -200,8 +200,8 @@ class Client:
         schema = tiledb.ArraySchema(domain=dom, sparse=False,
                                     attrs=attrs, ctx=self.tiledb_ctx)
         # Create the (empty) array on disk.
-        _logger.debug('ensuring root HDFS directory exists: %s', self.tiledb_hdfs_root)
-        self.tiledb_vfs.create_dir(self.tiledb_hdfs_root)
+        _logger.debug('ensuring root storage directory exists: %s', self.tiledb_storage_root)
+        self.tiledb_vfs.create_dir(self.tiledb_storage_root)
         _logger.debug('trying creation on disk of %s', array_name)
         tiledb.DenseArray.create(array_name, schema, ctx=self.tiledb_ctx)
         _logger.debug('%s successfully created.', array_name)

@@ -270,15 +270,15 @@ def test_service_info(flask_client):
     assert info.get('version') is not None
     assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
     if 'tiledb' in info:
-        assert info['tiledb'].get('hdfs.root') is not None
+        assert info['tiledb'].get('storage.root') is not None
 
 
 def test_app_config_tiledb():
     hdfs_root = 'hdfs://someserver:8020/'
     hdfs_user = 'pippo'
     config = {
-        'TILEDB_HDFS_ROOT': hdfs_root,
-        'TILEDB_HDFS_USERNAME': hdfs_user
+        'TILEDB_VFS_ROOT': hdfs_root,
+        'TILEDB_VFS_CONFIG': { 'vfs.hdfs.username': hdfs_user }
     }
 
     with _create_new_app_test_client(config) as client:
@@ -286,13 +286,13 @@ def test_app_config_tiledb():
         _checkresp(resp)
         info = resp.json
         assert 'tiledb' in info
-        assert info['tiledb']['hdfs.root'] == hdfs_root
+        assert info['tiledb']['storage.root'] == hdfs_root
         assert info['tiledb']['config']['vfs.hdfs.username'] == hdfs_user
 
 
 def test_app_config_no_tiledb():
     config = {
-        'TILEDB_HDFS_ROOT': None
+        'TILEDB_VFS_ROOT': None
     }
 
     with _create_new_app_test_client(config) as client:
@@ -305,7 +305,7 @@ def test_app_config_no_tiledb():
 def test_app_config_from_file(monkeypatch):
     hdfs_root = 'hdfs://someserver:8020/'
     cfg = f"""
-TILEDB_HDFS_ROOT = '{hdfs_root}'
+TILEDB_VFS_ROOT = '{hdfs_root}'
     """
 
     with tempfile.NamedTemporaryFile(mode='w') as f:
@@ -318,5 +318,5 @@ TILEDB_HDFS_ROOT = '{hdfs_root}'
             _checkresp(resp)
             info = resp.json
             assert 'tiledb' in info
-            assert info['tiledb']['hdfs.root'] == hdfs_root
+            assert info['tiledb']['storage.root'] == hdfs_root
             assert info['tiledb']['config']['vfs.hdfs.username'] == 'root'

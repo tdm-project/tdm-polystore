@@ -300,14 +300,14 @@ def add_routes(app, registry=REGISTRY):
     @app.route('/service_info')
     def client_info():
         response = {
-            'version': '0.0'
+            'version': '0.1'
         }
 
-        if app.config.get('TILEDB_HDFS_ROOT'):
+        if app.config.get('TILEDB_VFS_ROOT'):
             response['tiledb'] = {
-                'hdfs.root': app.config['TILEDB_HDFS_ROOT'],
+                'storage.root': app.config['TILEDB_VFS_ROOT'],
                 'config': {
-                    'vfs.hdfs.username': app.config.get('TILEDB_HDFS_USERNAME', 'root')
+                    app.config.get('TILEDB_VFS_CONFIG')
                 }
             }
         return jsonify(response)
