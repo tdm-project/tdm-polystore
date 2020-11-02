@@ -1,0 +1,598 @@
+# vim: set et sw=2
+
+openapi: "3.0.0"
+
+info:
+  version: "0.0.1"
+  title: "TDM-Q API"
+  description: "TDM platform query service"
+
+servers:
+  - url: /api/v0.0/
+    description: Base server URL
+  - url: '{protocol}://{server}:{port}/api/v0.0/'
+    description: >
+      Variable server address.
+    variables:
+      protocol:
+        enum:
+          - "http"
+          - "https"
+        default: "http"
+      server:
+        enum:
+          - "localhost"
+          - "lifemonitor"
+          - "lm"
+        default: "lifemonitor"
+      port:
+        enum:
+          - "8443"
+          - "8000"
+        default: "8443"
+
+paths:
+  /:
+    get:
+      summary: "Method that says 'hello'"
+      responses:
+        '200':
+          description: "Success"
+          content:
+            application/text:
+              schema:
+                type: string
+
+  /service_info:
+    get:
+      description: >
+        Retrieve configuration parameters for the client.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schema/ServiceInfo'
+
+  /entity_types:
+    get:
+      description: "Retrieve list of entity types supported by the platform"
+      responses:
+        '200':
+          description: "Successful call. Returns list of strings."
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - entity_types
+                properties:
+                  entity_types:
+                    type: array
+                    items:
+                      type: string
+
+  /entity_categories:
+    get:
+      description: "Retrieve list of entity categories supported by the platform"
+      responses:
+        '200':
+          description: "Successful call. Returns list of strings."
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - entity_categories
+                properties:
+                  entity_categories:
+                    type: array
+                    items:
+                      type: string
+
+  /sources:
+    get:
+      description: >
+        Query a list of data sources.
+
+        With no parameters, return all sources. When ``roi``,
+        ``after`` and ``before`` are specified, return all sources
+        that have reported an event that intesect the corresponding
+        spatio-temporal region. It is
+        also possible to filter by any of the following:
+
+          * entity_type;
+          * entity_category;
+          * stationary True/False.
+
+        Moreover, sources can also be filtered by generic attributes
+        stored in their description field.
+
+        The roi should be specified using one of the following:
+         * circle((center_lon, center_lat), radius_in_meters)
+         * FIXME: rectangle?
+         * FIXME: arbitrary GeoJson?
+
+        **Example request**:
+
+          GET /sources?roi=circle((9.22, 30.0), 1000)
+                      &after=2019-05-02T11:00:00Z
+                      &before=2019-05-02T11:50:25Z HTTP/1.1
+
+          GET /sources?controlledProperties=temperature,humidity (unencoded URL)
+
+      parameters:
+        - $ref: '#/components/parameters/roi'
+        - $ref: '#/components/parameters/after'
+        - $ref: '#/components/parameters/before'
+        - $ref: '#/components/parameters/stationary'
+        - $ref: '#/components/parameters/entity_category'
+        - $ref: '#/components/parameters/entity_type'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - name: "controlledProperties"
+          in: query
+          description: >
+             Comma-separated list of property names required of source.
+          type: string
+        - name: "attribute"
+          in: query
+          schema:
+            type: string
+          description: >
+            **This is not a real parameter**.
+
+            You can provide extra parameters to this API endpoint, with a
+            corresponding value, to filter sources against their description.
+            For any of these extra parameters, the service will check the
+            top-level of the source description object return only sources that
+            contain the attribute and the matching value.
+            Example: `controlledProperties=temperature`
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceBrief'
+
+    post:
+      description: >
+        Register a list of sources.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/SourcePost"
+      responses:
+        '201':
+          description: "Sources registered. Returns tdmq ids for the new sources."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /sources/{tdmq_source_id}:
+    get:
+      description: >
+        Get properties about a source identified by its TDM id.
+      parameters:
+        - $ref: '#/components/parameters/tdmq_source_id'
+      responses:
+        '200':
+          description: Source retrieved
+          contents:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceGet'
+
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/tdmq_source_id'
+      responses:
+        '200':
+          description: >
+            Successfully deleted object. Returns array with the
+            id of the object that was deleted.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /sources/{tdmq_source_id}/timeseries:
+    get:
+      summary: Get timeseries for source ``tdmq_source_id`.
+      description: >
+        For the specified source and time interval, return all records and
+        the corresponding timedeltas array (expressed in seconds from the
+        initial time). Also returns the initial time as "timebase".
+
+        **Example request**::
+
+          GET /sources/0fd67c67-c9be-45c6-9719-4c4eada4becc/
+              timeseries?after=2019-02-21T11:03:25Z
+                        &before=2019-05-02T11:50:25Z HTTP/1.1
+
+      parameters:
+        - $ref: '#/components/parameters/tdmq_source_id'
+
+        - name: "after"
+          in: query
+          schema:
+            $ref: "#/components/schemas/Timestamp"
+          description: >
+            Consider only sources reporting after (included)
+            this time, e.g., '2019-02-21T11:03:25Z'
+
+        - name: "before"
+          in: query
+          schema:
+            $ref: "#/components/schemas/Timestamp"
+          description: >
+            Consider only sources reporting strictly before
+            this time, e.g., '2019-02-22T11:03:25Z'
+
+        - name: "bucket"
+          in: query
+          schema:
+            type: number
+          descriptioN: >
+            Time bucket for data aggregation, in seconds, e.g., 10.33
+
+        - name: "op"
+          in: query
+          schema:
+            $ref: '#/components/schemas/BucketOp'
+
+        - name: "fields"
+          in: query
+          type: string
+          description: >
+             Comma-separated controlledProperties from the source,
+             or nothing to select all of them.
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schema/Timeseries'
+
+  /records:
+    post:
+      description: >
+        Load a list of data records.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/DataRecord"
+      responses:
+        '201':
+          description: "Records loaded."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loaded:
+                    description: "Number of records loaded in operation"
+                    type: integer
+
+components:
+  parameters:
+    tdmq_source_id:
+      name: "tdmq_source_id"
+      description: "UUID for TDM data source"
+      in: path
+      schema:
+        type: string
+      required: true
+
+    after:
+      name: "after"
+      in: query
+      schema:
+        $ref: "#/components/schemas/Timestamp"
+      description: >
+        Consider only time points after (included)
+        this time, e.g., '2019-02-21T11:03:25Z'
+
+    before:
+      name: "before"
+      in: query
+      schema:
+        $ref: "#/components/schemas/Timestamp"
+      description: >
+        Consider only time points strictly before
+        this time, e.g., '2019-02-22T11:03:25Z'
+
+    roi:
+      name: "roi"
+      description: >
+        Select data within this region of interest.
+        The roi should be specified using one of the following:
+
+          * circle((center_lon, center_lat), radius_in_meters)
+          * FIXME: rectangle? (Not implemented)
+          * FIXME: arbitrary GeoJson? (Not implemented)
+      in: query
+      schema:
+        type: string
+
+    stationary:
+      name: "stationary"
+      description: "Whether the source moves or is stationary"
+      type: boolean
+
+    entity_category:
+      name: "entity_category"
+      description: "One of the entity categories returned by /entity_categories"
+      type: string
+
+    entity_type:
+      name: "entity_type"
+      description: "One of the entity types returned by /entity_types"
+      type: string
+
+    limit:
+      name: "limit"
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+      description: "Maximum number of items to retrieve"
+
+    offset:
+      name: "offset"
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: "Number of items skip before starting to retrieve from ordered collection"
+
+  responses:
+
+  schemas:
+    Timestamp:
+      type: string
+
+    Footprint:
+      type: object
+      description: >
+        GeoJSON specifying a geometry with  spatial referencing system
+        identifier (SRID) set to 4326 (Monte Mario).
+
+    Shape:
+      description: >
+        Shape of the data.
+        Empty array if the time series is scalar.
+        Proper dimensions for multi-dimensional data.
+      type: array
+      items:
+        type: integer
+
+  BucketOp:
+    description: >
+       Aggregation operation on data contained in bucket, e.g., `sum`, `count`.
+    type: string
+    enum:
+      - "avg"
+      - "count_records"
+      - "count_values"
+      - "max"
+      - "min"
+      - "sum"
+      - "stddev"
+      - "stddev_pop"
+      - "stddev_samp"
+      - "string_agg"
+      - "variance"
+      - "var_pop"
+      - "var_samp"
+
+    SourceBrief:
+      description: "Short source representation"
+      type: object
+      properties:
+        tdmq_id:
+          description: "Internal TDM-q id for the source"
+          type: string
+        external_id:
+          description: "Original source id"
+          type: string
+        default_footprint:
+          description: "GeoJSON of default position of the source"
+          $ref: '#/components/schemas/Footprint'
+        entity_category:
+          description: "One of the entity categories returned by /entity_categories"
+          type: string
+        entity_type:
+          description: "One of the entity types returned by /entity_types"
+          type: string
+      required:
+        - tdmq_id
+        - external_id
+        - default_footprint
+        - entity_category
+        - entity_type
+
+    SourceGet:
+      allOf:
+        - $ref: '#/components/schemas/SourceBrief'
+        - type: object
+          required:
+            - stationary
+            - description
+          properties:
+            stationary:
+              description: "Whether the source moves or is stationary"
+              type: boolean
+            description:
+              description: "Free-form object describing the source"
+              type: object
+
+    SourcePost:
+      type: object
+      properties:
+        id:
+          description: "Original source id"
+          type: string
+        default_footprint:
+          description: "GeoJSON of default position of the source"
+          $ref: '#/components/schemas/Footprint'
+        entity_category:
+          description: "One of the entity categories returned by /entity_categories"
+          type: string
+        entity_type:
+          description: "One of the entity types returned by /entity_types"
+          type: string
+        stationary:
+          description: "Whether the source moves or is stationary"
+          type: boolean
+          default: True
+        controlledProperties:
+          description: >
+            Array of property names provided by source.
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - default_footprint
+        - entity_category
+        - entity_type
+
+    Timeseries:
+      type: object
+      description: >
+        A time series extracted from TDM-q.  Timestamps, field values, and
+        associated geographical positions (footprints) are all in separate
+        arrays.
+
+        All arrays of the same length.
+
+        The fields that are included depend on the fields that were requested
+        in the query that generated this object.
+
+      required:
+        - tdmq_id
+        - default_footprint
+        - shape
+        - coords
+        - data
+      properties:
+        tdmq_id:
+          type: string
+          description: "TDM identifier for the source"
+
+        default_footprint:
+          description: >
+             Default footprint of the source.  If the source is stationary,
+             its footprint will be constant.
+          $ref: '#/components/schemas/Footprint'
+
+        shape:
+          $ref: '#/components/schemas/Shape'
+
+        bucket:
+          type: object
+          description: "Bucket operation applied to calculate this time series"
+          required:
+            - op
+            - interval
+          properties:
+            op:
+              schema:
+                $ref: '#/components/schemas/BucketOp'
+            interval:
+              type: number
+              description: "Bucket width, in seconds"
+
+        coords:
+          type: object
+          properties:
+            time:
+              type: array
+              items:
+                type:
+                  $ref: '#/components/schemas/Timestamp'
+            footprint:
+              type: array
+              items:
+                type:
+                  $ref: '#/components/schemas/Footprint'
+
+        data:
+          type: object
+          description: >
+            Set of fields, as specified by query.  Each field is an array,
+            with one item per time point and coordinate.  The type of the
+            individual items depends on the source data type and bucket
+            operation.
+          properties:
+
+
+    DataRecord:
+      type: object
+      description: >
+        Object representing a data point to be inserted into platform.
+        Example:  `{"time": "2019-05-02T11:00:10Z", "source": "tdm/sensor_0", "data": {"temperature": 23, "humidity": 0.222}}`
+      properties:
+        source:
+          description: "External source id of emitting device."
+        tdmq_id:
+          description: "TDM source id of emitting device."
+        time:
+          $ref: '#/components/schemas/Timestamp'
+        footprint:
+          description: >
+            Footprint associated with this specific data point, if the device
+            is mobile.
+          $ref: '#/components/schemas/Footprint'
+        data:
+          description: >
+            Object containing one or more `controlledProperties` and their
+            respective values.
+          type: object
+      anyOf:
+        - required: [ source ]
+        - required: [ tdmq_id ]
+      required:
+        - time
+        - data
+
+    ServiceInfo:
+      type: object
+      description: "Configuration parameters for the TDM-q client module."
+      required:
+        - version
+      properties:
+        version:
+          type: string
+          description: Version of the schema used by this ServiceInfo object.
+        tiledb:
+          type: object
+          required:
+            - config
+          properties:
+            config:
+              type: object
+              description: >
+                Parameters for TileDB configuration object.  See
+                https://tiledb-inc-tiledb-py.readthedocs-hosted.com/en/stable/python-api.html#tiledb.Config
+            hdfs.root:
+              type: string
+              description: "Base path in HDFS to use for storage"
