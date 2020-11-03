@@ -304,10 +304,12 @@ def add_routes(app, registry=REGISTRY):
         }
 
         if app.config.get('TILEDB_VFS_ROOT'):
-            response['tiledb'] = {
-                'storage.root': app.config['TILEDB_VFS_ROOT'],
-                'config': {
-                    app.config.get('TILEDB_VFS_CONFIG')
-                }
+            tiledb_conf = {
+                'storage.root': app.config['TILEDB_VFS_ROOT']
             }
+
+            if 'TILEDB_VFS_CONFIG' in app.config:
+                tiledb_conf['config'] = app.config.get('TILEDB_VFS_CONFIG')
+
+            response['tiledb'] = tiledb_conf
         return jsonify(response)
