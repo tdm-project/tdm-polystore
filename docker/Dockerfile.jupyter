@@ -20,7 +20,8 @@ COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
 #  Cartopy==0.17
 
 RUN apt-get update -q \
- && apt-get install -y --no-install-recommends \
+ && DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
         libgeos-dev \
         libproj-dev \
         proj-bin \
