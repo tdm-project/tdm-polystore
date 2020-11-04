@@ -21,7 +21,8 @@ COPY --chown=root ./requirements-client.txt "${TDMQ_DIST}/"
 #   Werkzeug==0.16 <- not a direct dependency but we need to fix its version or pytest-flask 0.15 won't work
 
 RUN apt-get update -q \
- && apt-get install -y --no-install-recommends \
+ && DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
         libnss-wrapper \
         python3-sqlalchemy-ext \
  && apt-get clean -y \
