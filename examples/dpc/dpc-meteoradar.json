@@ -1,4 +1,5 @@
 {"id": "dpc/meteo-radar-mosaic/v0",
+ "public": true,
  "alias": "Mosaic of dpc meteo radars",
  "entity_category": "Radar",
  "entity_type": "MeteoRadarMosaic",

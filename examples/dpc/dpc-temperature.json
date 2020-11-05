@@ -1,4 +1,5 @@
 {"id": "dpc/meteo-temp-mosaic/v0",
+  "public": true,
  "alias": "Mosaic of temperature field acquisitions",
  "entity_category": "Station",
  "entity_type": "TemperatureMosaic",
