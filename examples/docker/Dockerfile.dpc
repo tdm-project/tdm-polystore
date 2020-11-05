@@ -4,6 +4,7 @@ ENV DPC_HOME /opt/dpc
 COPY dpc $DPC_HOME
 WORKDIR $DPC_HOME
 
-RUN pip3 install tifffile
+RUN pip3 install tifffile clize
 
-ENTRYPOINT ["/entrypoint.sh","python3", "ingestor.py"]
+ENTRYPOINT ["/entrypoint.sh", "fake_user.sh", "python3", "setup_source.py"]
+# ENTRYPOINT ["tail", "-f", "/dev/null"]

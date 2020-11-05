@@ -13,18 +13,7 @@ Clean up HDFS, just in case:
    docker-compose -f ./docker/docker-compose-dev.yml exec --user 0 tdmqc /bin/bash -c 'fake_user.sh hdfs dfs -rm -r /arrays'
 
 
-Install missing modules:
+Create ingestor services:
 ::
-   docker-compose -f ./docker/docker-compose-dev.yml exec --user 0  tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/tests && fake_user.sh pip3 install tiffile' 
+   docker-compose -f ./docker/docker-compose-dev.yml -f examples/docker/docker-compose.yml up -d
 
-
-Now run setup:
-::
-   docker-compose -f ./docker/docker-compose-dev.yml exec --user $(id -u) tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/examples/dpc && fake_user.sh python3 setup_source.py --source temperature' 
-
-And now we can have an AirFlow cronjob that will ingest new data
-::
-   docker-compose -f ./docker/docker-compose-dev.yml exec --user $(id -u) tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/examples/dpc && fake_user.sh python3 ingestor.py --source temperature'
-
-   
-  667  docker-compose -f ./docker/docker-compose-dev.yml exec --user $(id -u) tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/tests && fake_user.sh bash -l' 
