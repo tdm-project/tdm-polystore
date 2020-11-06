@@ -4,7 +4,6 @@ import os
 
 import numpy as np
 import requests
-from prometheus_client import Summary
 
 import tiledb
 from tdmq.client.sources import NonScalarSource, ScalarSource
@@ -12,8 +11,7 @@ from tdmq.errors import (DuplicateItemException, TdmqError,
                          UnsupportedFunctionality)
 
 # FIXME need to do this to patch a overzealous logging by urllib3
-_logger = logging.getLogger('urllib3.connectionpool')
-_logger.setLevel(logging.ERROR)
+logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
 
 _logger = logging.getLogger(__name__)
 

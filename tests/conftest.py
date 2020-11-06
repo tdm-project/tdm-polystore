@@ -10,8 +10,6 @@ import tempfile
 import time
 from collections import defaultdict
 
-from prometheus_client.registry import CollectorRegistry
-
 import pytest
 import tdmq.db
 import tdmq.db_manager as db_manager
