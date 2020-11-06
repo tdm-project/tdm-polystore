@@ -181,7 +181,7 @@ class Client:
     def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots):
         array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
-        if tiledb.object_type(array_name) is not None:
+        if tiledb.object_type(array_name, self.tiledb_ctx) is not None:
             raise DuplicateItemException(f'duplicate object with path {array_name}')
         assert len(shape) > 0 and n_slots > 0
         dims = [tiledb.Dim(name="slot",
