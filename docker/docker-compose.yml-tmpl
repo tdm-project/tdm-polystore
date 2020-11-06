@@ -5,9 +5,9 @@ services:
   prometheus:
     image: prom/prometheus:v2.18.1
     ports:
-        - 9090:9090
+      - "9090:9090"
     volumes:
-        - "LOCAL_PATH/docker/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "LOCAL_PATH/docker/prometheus.yml:/etc/prometheus/prometheus.yml"
 
   timescaledb:
     image: tdmproject/tdmq-db
@@ -20,9 +20,9 @@ services:
       - START_DB=true
       - POSTGRES_RUN_MIGRATIONS=true
     healthcheck:
-        test: [ "CMD", "pg_isready", "--username=postgres" ]
-        interval: "15s"
-        retries: 5
+      test: [ "CMD", "pg_isready", "--username=postgres" ]
+      interval: "15s"
+      retries: 5
 
   tdmqj:
     image: tdmproject/tdmqj
@@ -46,8 +46,8 @@ services:
       - "8000:8000"
     #DEV user: USER_UID:USER_GID
     environment:
-    - "CREATE_DB=false"
-    - "DEV=false"
+      - "CREATE_DB=false"
+      - "DEV=false"
     #DEV volumes:
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
 
@@ -68,12 +68,40 @@ services:
     environment:
       - NAMENODE_HOSTNAME=namenode
 
+  # Another option for s3-compatible storage to use for testing
+  #cloudserver:
+  #  image: zenko/cloudserver
+  #  ports:
+  #    - "8000:8000"
+  #  environment:
+  #    - "S3BACKEND=mem"
+  #    - "REMOTE_MANAGEMENT_DISABLE=1"
+  #    - "SSL=false"
+  #    - "SCALITY_ACCESS_KEY_ID=tdm-user"
+  #    - "SCALITY_SECRET_ACCESS_KEY=tdm-user-s3"
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    environment:
+      - MINIO_ACCESS_KEY=tdm-user
+      - MINIO_SECRET_KEY=tdm-user-s3
+      - MINIO_BROWSER=off
+      - MINIO_HTTP_TRACE=/dev/stderr
+    command: server /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
 
   tdmqc:
     image: tdmproject/tdmqc
     depends_on:
-    - "namenode"
-    - "timescaledb"
+      - "namenode"
+      - "timescaledb"
     #DEV user: USER_UID:USER_GID
     #DEV volumes:
     #DEV - "LOCAL_PATH/examples:/tdmq-dist/examples"
