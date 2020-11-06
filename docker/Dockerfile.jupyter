@@ -2,35 +2,56 @@ ARG BASE_IMAGE=tdmproject/tdmq-client
 FROM $BASE_IMAGE AS jupyter-deps
 
 ARG PIP_BIN=pip3
-COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
+ARG PROJ_VERSION=7.2.0
+# The default bounding box is over all of Italy
+ARG PROJSYNC_BBOX=6.2,36.4,18.7,47.3
 
-# First order python dependencies:
-#  ckanapi==4.3
-#  colormap==1.0
-#  Cython==0.29
-#  easydev==0.9
-#  folium==0.10
-#  jupyter==1.0
-#  matplotlib==3.1
-#  psycopg2-binary==2.8
-#  pyproj==2.4.2.post1
-#  tifffile==2019.7.26
-#  wget==3.2
-#  xarray==0.14
-#  Cartopy==0.17
+# cartopy and pyproj must be installed after cython
+RUN $PIP_BIN install --no-cache-dir Cython==0.29
 
-RUN apt-get update -q \
+# Here we install Proj and the python packages that require
+# compilation.
+# The proj version packaged with ubuntu is very old.
+RUN \
+ apt-get update -q \
  && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
-        libgeos-dev \
-        libproj-dev \
-        proj-bin \
-        proj-data \
- && apt-get clean -y \
- && $PIP_BIN install --no-cache-dir -r "${TDMQ_DIST}/requirements-tdmqj.txt" \
- && $PIP_BIN install --no-cache-dir cartopy==0.17
-# cartopy must be installed after cython
+      libgeos-dev \
+      build-essential \
+      curl \
+      libcurl4-openssl-dev \
+      libcurl4 \
+      libsqlite3-dev \
+      libsqlite3-0 \
+      sqlite3 \
+      libtiff-dev \
+      libtiff5 \
+      pkg-config \
+      python3-dev \
+ && echo "Installing Proj.  This could take a while..." \
+ && cd /tmp/ \
+ && wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz \
+ && tar xzf proj-${PROJ_VERSION}.tar.gz \
+ && cd proj-${PROJ_VERSION} \
+ && ./configure && make -j 4 && make install && ldconfig \
+ && cd && rm -rf /tmp/* \
+ && echo "Installing more dependencies" \
+ && $PIP_BIN install --no-cache-dir shapely --no-binary shapely \
+ && $PIP_BIN install --no-cache-dir cartopy==0.18 pyproj \
+ && apt-get purge -y \
+      build-essential \
+      libcurl4-openssl-dev \
+      libsqlite3-dev \
+      libtiff-dev \
+      python3-dev \
+ && apt-get autoremove --purge -y \
+ && apt-get clean -y
 
+COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
+RUN $PIP_BIN install --no-cache-dir -r "${TDMQ_DIST}/requirements-tdmqj.txt"
+
+# Download proj data
+RUN projsync --system-directory --bbox ${PROJSYNC_BBOX}
 
 FROM jupyter-deps
 
