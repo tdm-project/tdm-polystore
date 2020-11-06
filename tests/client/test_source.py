@@ -6,7 +6,7 @@ from collections import Counter
 from tdmq.client import Client
 
 # use the `live_server` fixture from pytest-flask to fire up the application
-# so that we can sent real HTTP requests
+# so that we can send real HTTP requests
 # pytestmark = pytest.mark.usefixtures('live_server')
 
 
@@ -39,7 +39,7 @@ def register_scalar_sources(client, source_data):
     return register_sources(client, [d for d in source_data['sources'] if is_scalar(d)])
 
 
-def test_register_deregister_simple_source(clean_hdfs, clean_db, public_source_data, live_app):
+def test_register_deregister_simple_source(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
     srcs = register_scalar_sources(c, public_source_data)
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
@@ -56,7 +56,7 @@ def test_register_deregister_simple_source(clean_hdfs, clean_db, public_source_d
         assert tid not in sources
 
 
-def test_select_source_by_id(clean_hdfs, clean_db, public_source_data, live_app):
+def test_select_source_by_id(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
     srcs = register_scalar_sources(c, public_source_data)
     for s in srcs:
@@ -66,7 +66,7 @@ def test_select_source_by_id(clean_hdfs, clean_db, public_source_data, live_app)
         c.deregister_source(s)
 
 
-def test_select_sources_by_entity_type(clean_hdfs, clean_db, public_source_data, live_app):
+def test_select_sources_by_entity_type(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
     srcs = register_scalar_sources(c, public_source_data)
     counts = Counter([s.entity_type for s in srcs])

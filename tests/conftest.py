@@ -135,30 +135,79 @@ def _rand_str(length=6):
 # Used by in testing tdmq.client
 #
 @pytest.fixture(scope="session")
-def tdmq_config():
+def tdmq_s3_service_info():
     return {
-        'tdmq_base_url': 'http://web:8000/api/v0.0',
-        'tiledb_config': {'vfs.hdfs.username': 'root'},
-        'tiledb_hdfs_root': 'hdfs://namenode:8020/arrays'
-    }
+        'version' : '0.1',
+        'tiledb' : {
+            'storage.root' : 's3://firstbucket/',
+            'config': {
+                #"vfs.s3.endpoint_override": "172.30.10.101:32373",
+                #"vfs.s3.aws_access_key_id": "LM4PV12AXUNDRFRETAO7",
+                #"vfs.s3.aws_secret_access_key": "EBoY38pg4SaU1cK6VkAZ7Li34CAjDKfewZuD4JBm",
+                "vfs.s3.aws_access_key_id": "tdm-user",
+                "vfs.s3.aws_secret_access_key": "tdm-user-s3",
+                "vfs.s3.endpoint_override": "minio:9000",
+                "vfs.s3.scheme": "http",
+                "vfs.s3.region": "",
+                "vfs.s3.verify_ssl": "false",
+                "vfs.s3.use_virtual_addressing": "false",
+                "vfs.s3.use_multipart_upload": "false",
+                #"vfs.s3.logging_level": 'TRACE'
+                }
+            }
+        }
 
 
 @pytest.fixture
-def clean_hdfs(tdmq_config):
+def clean_s3(tdmq_s3_service_info):
     import tiledb
-    # FIXME make it configurable
-    ctx = tiledb.Ctx(tdmq_config['tiledb_config'])
+    config = tiledb.Config(params=tdmq_s3_service_info['tiledb']['config'])
+    bucket = tdmq_s3_service_info['tiledb']['storage.root']
+    assert bucket.startswith('s3://')
+    ctx = tiledb.Ctx(config=config)
+    vfs = tiledb.VFS(ctx=ctx)
+    if vfs.is_bucket(bucket):
+        vfs.empty_bucket(bucket)
+    else:
+        vfs.create_bucket(bucket)
+    return tdmq_s3_service_info
+
+
+@pytest.fixture(scope="session")
+def tdmq_hdfs_service_info():
+    return {
+        'version' : '0.1',
+        'tiledb' : {
+            'storage.root': 'hdfs://namenode:8020/arrays',
+            'config': {'vfs.hdfs.username': 'root'},
+            }
+        }
+
+
+@pytest.fixture
+def clean_hdfs(tdmq_hdfs_service_info):
+    import tiledb
+    ctx = tiledb.Ctx(tdmq_hdfs_service_info['tiledb']['config'])
     vfs = tiledb.VFS(config=ctx.config(), ctx=ctx)
-    array_root = tdmq_config['tiledb_hdfs_root']
+    array_root = tdmq_hdfs_service_info['tiledb']['storage.root']
     if vfs.is_dir(array_root):
         vfs.remove_dir(array_root)
+
+    return tdmq_hdfs_service_info
+
+
+@pytest.fixture
+def clean_storage(clean_db, clean_s3, clean_hdfs):
+    """
+    Combines cleaning actions for all storage fixtures.
+    """
+    pass
+
 
 ############################################################
 
 #  Code in part taken from pytest-flask version 0.15.
 #  FIXME:  contribute PR to fix LiveServer.stop()
-
-
 try:
     from urllib2 import URLError, urlopen
 except ImportError:
@@ -270,14 +319,20 @@ class SubprocessLiveServer(object):
         return '<SubprocessLiveServer listening at %s>' % self.url()
 
 
-@pytest.fixture(scope="session")
-def live_app(db, db_connection_config, pytestconfig):
+@pytest.fixture(scope="session", params=["hdfs", "s3"])
+def live_app(request, db, db_connection_config, pytestconfig, tdmq_s3_service_info, tdmq_hdfs_service_info):
     """Run application in a separate process.
 
        Get the URL with live_app.url().
     """
     import tdmq.wsgi as wsgi
     port = pytestconfig.getvalue('live_server_port')
+    if request.param == 'hdfs':
+        service_info = tdmq_hdfs_service_info
+    elif request.param == 's3':
+        service_info = tdmq_s3_service_info
+    else:
+        raise RuntimeError(f"Unrecognized parameter {request.param}")
 
     if port == 0:
         # Bind to an open port
@@ -298,6 +353,8 @@ DB_USER = "{db_connection_config['user']}"
 DB_PASSWORD = "{db_connection_config['password']}"
 LOG_LEVEL = "DEBUG"
 PROMETHEUS_REGISTRY = True
+TILEDB_VFS_ROOT = "{service_info['tiledb']['storage.root']}"
+TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
     """
 
     application_path = os.path.abspath(os.path.splitext(wsgi.__file__)[0])
