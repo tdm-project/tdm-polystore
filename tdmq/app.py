@@ -45,8 +45,17 @@ class DefaultConfig(object):
 
     LOG_LEVEL = "INFO"
 
-    TILEDB_VFS_ROOT = 'hdfs://namenode:8020/arrays'
-    TILEDB_VFS_CONFIG = { 'vfs.hdfs.username': 'root' }
+    TILEDB_VFS_ROOT = "s3://firstbucket/"
+    TILEDB_VFS_CONFIG = {
+        "vfs.s3.aws_access_key_id": "tdm-user",
+        "vfs.s3.aws_secret_access_key": "tdm-user-s3",
+        "vfs.s3.endpoint_override": "minio:9000",
+        "vfs.s3.scheme": "http",
+        "vfs.s3.region": "",
+        "vfs.s3.verify_ssl": "false",
+        "vfs.s3.use_virtual_addressing": "false",
+        "vfs.s3.use_multipart_upload": "false",
+    }
 
     # TileDB has tons of client configuration properties.
     # See https://docs.tiledb.com/main/solutions/tiledb-embedded/examples/configuration-parameters
@@ -54,7 +63,8 @@ class DefaultConfig(object):
     #
     # TileDB configuration properties relevant to S3.
     # See https://docs.tiledb.com/main/solutions/tiledb-embedded/backends/s3
-    # for full explanation.
+    # for the docs, but you'll need to print out a tiledb configuration
+    # (e.g., on the python shell) to see the full list.
     #
     # "vfs.s3.aws_access_key_id"
     # "vfs.s3.aws_secret_access_key"
@@ -65,18 +75,11 @@ class DefaultConfig(object):
     # "vfs.s3.endpoint_override" ""
     # "vfs.s3.use_virtual_addressing" "true"
     #
-    # Proxied access
-    # "vfs.s3.proxy_host"     ""      The S3 proxy host.
-    # "vfs.s3.proxy_port"     "0"     The S3 proxy port.
-    # "vfs.s3.proxy_scheme"   "https" The S3 proxy scheme.
-    # "vfs.s3.proxy_username" ""      The S3 proxy username.
-    # "vfs.s3.proxy_password" ""      The S3 proxy password.
-    #
     # Temporary security token:
     # "vfs.s3.aws_session_token" (session token corresponding to the configured key/secret pair)
     #
     # For debugging purposes it is possible to disable SSL/TLS certificate verification:
-    # "vfs.s3.verify_ssl" [false], true
+    # "vfs.s3.verify_ssl" ["false"], "true"
 
 
 def create_app(test_config=None):
