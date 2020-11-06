@@ -1,9 +1,11 @@
 
 
 import logging
-import numpy as np
+import os
+
 from datetime import datetime, timedelta
 
+import numpy as np
 from tdmq.client import Client
 from tdmq.client.sources import NonScalarSource
 from test_source import register_sources, is_scalar
@@ -69,7 +71,30 @@ def register_nonscalar_sources(c, source_data):
                             check_source=check_source)
 
 
-def test_nonscalar_source_register_deregister(clean_hdfs, clean_db, source_data, live_app):
+def test_basic_tiledb_s3_operativity(clean_s3):
+    import tiledb
+
+    storage_config = clean_s3['tiledb']
+    array_name = os.path.join(storage_config['storage.root'], 'basic-tiledb-s3-operativity')
+    logging.debug("tiledb config parameters: %s", storage_config['config'])
+    logging.debug("Array uri: %s", array_name)
+    config = tiledb.Config(params=storage_config['config'])
+
+    ctx = tiledb.Ctx(config=config)
+
+    a = np.arange(5)
+    logging.debug("trying to write array to s3: %s", array_name)
+    schema = tiledb.schema_like(a, ctx=ctx)
+    tiledb.DenseArray.create(array_name, schema)
+    with tiledb.DenseArray(array_name, 'w', ctx=ctx) as T:
+        T[:] = a
+
+    logging.debug("reading back s3-backed array %s ", array_name)
+    with tiledb.DenseArray(array_name, ctx=ctx) as t:
+        assert (t[0:5] == a).all()
+
+
+def test_nonscalar_source_register_deregister(clean_storage, source_data, live_app):
     c = Client(live_app.url())
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
@@ -87,7 +112,7 @@ def test_nonscalar_source_register_deregister(clean_hdfs, clean_db, source_data,
     check_deallocation(c, tdmq_ids)
 
 
-def test_add_record_to_one_nonscalar_source(clean_hdfs, clean_db, source_data, live_app):
+def test_add_record_to_one_nonscalar_source(clean_storage, source_data, live_app):
     N = 1
     c = Client(live_app.url())
 
@@ -99,7 +124,7 @@ def test_add_record_to_one_nonscalar_source(clean_hdfs, clean_db, source_data, l
     check_records(source, timebase, dt, N)
 
 
-def test_nonscalar_source_add_records(clean_hdfs, clean_db, source_data, live_app):
+def test_nonscalar_source_add_records(clean_storage, source_data, live_app):
     N = 3
     c = Client(live_app.url())
     srcs = register_nonscalar_sources(c, source_data)
