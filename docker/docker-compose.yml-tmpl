@@ -29,11 +29,13 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - "LOCAL_PATH/notebooks:/home/jupyter/notebooks"
+      - "LOCAL_PATH/notebooks:/home/jovyan/work"
     #DEV   - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
-    user: USER_UID:USER_GID
+    #user: USER_UID:USER_GID
     environment:
-      - NAMENODE_HOSTNAME=namenode
+      - NB_UID=USER_UID
+      - NB_GID=USER_GID
+      - JUPYTER_ENABLE_LAB=yes
 
   web:
     # Remember that this service is using its default configuration

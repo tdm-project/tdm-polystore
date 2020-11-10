@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 PSWD=foobar
 
-TDMQ_FILES=$(wildcard tdmq/*.py tdmq/client/*.py)
+TDMQ_FILES=$(wildcard tdmq/*.txt tdmq/*.py tdmq/client/*.py)
 
 DOCKER_STACKS_REV := dc9744740e128ad7ca7c235d5f54791883c2ea69
 # DOCKER_STACKS_REV := 3b1f4f5e6cc1fd81a14bd57e805fbb25daa3063c
@@ -12,7 +12,7 @@ NB_USER := tdm
 
 all: images
 
-images: base-images jupyterhub
+images: base-images
 
 base-images: tdmqc jupyter web tdmq-db
 
@@ -21,27 +21,15 @@ docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests examples
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
 	cp -rf apidocs setup.py tdmq tests examples docker/tdmq-dist
 
-tdmq-client: docker/Dockerfile.tdmqc
+tdmq-client: docker/tdmq-dist docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc --target=tdmq-client -t tdmproject/tdmq-client docker
 
 tdmqc: docker/tdmq-dist tdmq-client docker/Dockerfile.tdmqc
 	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
 
-jupyter: docker/tdmq-dist tdmq-client docker/Dockerfile.jupyter
-	docker build -f docker/Dockerfile.jupyter --target=jupyter-deps -t ${TDMQJ_DEPS} docker
+jupyter: docker/tdmq-dist docker/Dockerfile.jupyter notebooks
+	cp -rf notebooks docker/notebooks
 	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
-
-jupyterhub:
-	if [[ ! -d docker-stacks ]]; then git clone --single-branch --branch=master https://github.com/jupyter/docker-stacks.git; fi
-	cd docker-stacks && git checkout ${DOCKER_STACKS_REV}
-	build_arg_user="--build-arg NB_USER=${NB_USER}"; \
-    echo $${build_arg_user}; \
-	cd docker-stacks/base-notebook/ && docker build -t tdmproject/base-notebook --build-arg BASE_CONTAINER=${HADOOP_CLIENT_IMAGE} $${build_arg_user}  . &&  \
-	cd ../minimal-notebook/ && docker build -t  tdmproject/minimal-notebook --build-arg  BASE_CONTAINER=tdmproject/base-notebook $${build_arg_user} .
-	HADOOP_CLASSPATH=$$(docker run --rm --entrypoint "" ${HADOOP_CLIENT_IMAGE} /opt/hadoop/bin/hadoop classpath --glob) && \
-	docker build -f docker/Dockerfile.tdmqc -t tdmproject/tdmqc:conda --target tdmq-client --build-arg BASE_IMAGE=tdmproject/minimal-notebook --build-arg PIP_BIN=pip docker &&  \
-	docker build -f docker/Dockerfile.jupyter -t tdmproject/tdmqj:conda --target=jupyter-deps --build-arg BASE_IMAGE=tdmproject/tdmqc:conda --build-arg PIP_BIN=pip docker &&  \
-	docker build -f docker/Dockerfile.jupyterhub -t tdmproject/tdmqj-hub  --build-arg BASE_IMAGE=tdmproject/tdmqj:conda $${build_arg_user} --build-arg HADOOP_CLASSPATH=$${HADOOP_CLASSPATH}  docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
 	docker build -f docker/Dockerfile.web -t tdmproject/tdmq docker
@@ -98,4 +86,4 @@ run-tests: start
 clean: stop
 	rm -rf docker-stacks
 
-.PHONY: all tdmqc-deps tdmqc jupyter jupyterhub web images base-images run start stop startdev stopdev clean
+.PHONY: all tdmqc-deps tdmqc jupyter web images base-images run start stop startdev stopdev clean

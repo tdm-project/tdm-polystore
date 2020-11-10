@@ -1,9 +1,0 @@
-alembic==1.3
-Click==7
-Flask==1.1
-psycopg2-binary==2.8
-requests==2.22
-tifffile==2019.7.26.2
-imagecodecs-lite==2019.12.3
-# Werkzeug is not a direct dependency but we need to fix its version or pytest-flask 0.15 won't work
-Werkzeug==0.16

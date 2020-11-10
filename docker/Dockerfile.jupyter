@@ -1,74 +1,49 @@
-ARG BASE_IMAGE=tdmproject/tdmq-client
+ARG BASE_IMAGE=jupyter/base-notebook:lab-2.2.9
 FROM $BASE_IMAGE AS jupyter-deps
 
-ARG PIP_BIN=pip3
-ARG PROJ_VERSION=7.2.0
-# The default bounding box is over all of Italy
-ARG PROJSYNC_BBOX=6.2,36.4,18.7,47.3
+ENV TDMQ_DIST=/opt/tdmq-dist
 
-# cartopy and pyproj must be installed after cython
-RUN $PIP_BIN install --no-cache-dir Cython==0.29
-
-# Here we install Proj and the python packages that require
-# compilation.
-# The proj version packaged with ubuntu is very old.
-RUN \
- apt-get update -q \
- && DEBIAN_FRONTEND=noninteractive \
-    apt-get install -y --no-install-recommends \
-      libgeos-dev \
-      build-essential \
-      curl \
-      libcurl4-openssl-dev \
-      libcurl4 \
-      libsqlite3-dev \
-      libsqlite3-0 \
-      sqlite3 \
-      libtiff-dev \
-      libtiff5 \
-      pkg-config \
-      python3-dev \
- && echo "Installing Proj.  This could take a while..." \
- && cd /tmp/ \
- && wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz \
- && tar xzf proj-${PROJ_VERSION}.tar.gz \
- && cd proj-${PROJ_VERSION} \
- && ./configure && make -j 4 && make install && ldconfig \
- && cd && rm -rf /tmp/* \
- && echo "Installing more dependencies" \
- && $PIP_BIN install --no-cache-dir shapely --no-binary shapely \
- && $PIP_BIN install --no-cache-dir cartopy==0.18 pyproj \
- && apt-get purge -y \
-      build-essential \
-      libcurl4-openssl-dev \
-      libsqlite3-dev \
-      libtiff-dev \
-      python3-dev \
- && apt-get autoremove --purge -y \
- && apt-get clean -y
+#ARG PROJ_VERSION=7.2.0
 
 COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
-RUN $PIP_BIN install --no-cache-dir -r "${TDMQ_DIST}/requirements-tdmqj.txt"
 
-# Download proj data
-RUN projsync --system-directory --bbox ${PROJSYNC_BBOX}
+## Install packages to the docker-stacks image as documented here:
+##     https://jupyter-docker-stacks.readthedocs.io/en/latest/using/recipes.html#using-pip-install-or-conda-install-in-a-child-docker-image
+
+RUN conda install -v --yes --file "${TDMQ_DIST}/requirements-tdmqj.txt" \
+ && fix-permissions $CONDA_DIR \
+ && fix-permissions /home/$NB_USER \
+ && conda clean --all -f -y
+
+### Uncomment if we want ot include proj data in the notebook container
+# # The default bounding box is over all of Italy
+# ARG PROJSYNC_BBOX=6.2,36.4,18.7,47.3
+# 
+# # Download proj data
+# RUN projsync --system-directory --bbox ${PROJSYNC_BBOX}
+
+
+
 
 FROM jupyter-deps
 
-RUN useradd -m jupyter
-ENV HOME=/home/jupyter
-EXPOSE 8888
+ENV JUPYTER_ENABLE_LAB=yes
 
-ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqj-entrypoint.sh" ]
-CMD [ "--notebook-dir=/home/jupyter/notebooks" ]
+## Install tdmq client
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
+USER root
+RUN cd "${TDMQ_DIST}" \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx
+USER $NB_USER
 
-COPY --chown=root tdmqj-entrypoint.sh /usr/local/bin/
-RUN chmod 755 /usr/local/bin/tdmqj-entrypoint.sh
+RUN conda install -v --yes --file "${TDMQ_DIST}/tdmq/requirements-client.txt" \
+ && fix-permissions $CONDA_DIR \
+ && fix-permissions /home/$NB_USER \
+ && conda clean --all -f -y
 
-USER jupyter
+# FIXME:  this should be installed with conda
+RUN cd "${TDMQ_DIST}" && pip3 install .
 
-RUN mkdir --parents "${HOME}/.jupyter" "${HOME}/notebooks" \
- && find "${HOME}" -type f -print0 | xargs -0 chmod a+rw \
- && find "${HOME}" -type d -print0 | xargs -0 chmod a+rwx
+COPY --chown=$NB_USER:$NB_GID notebooks "${HOME}/examples/"
 
-WORKDIR /home/jupyter/notebooks
