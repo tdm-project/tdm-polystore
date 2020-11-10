@@ -19,8 +19,8 @@ RUN apt-get update -q \
 
 # setuptools must be installed before some of the other client requirements
 RUN $PIP install --no-cache-dir setuptools
-COPY --chown=root ./requirements-client.txt "${TDMQ_DIST}/"
-RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/requirements-client.txt"
+COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
+RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-client.txt"
 
 ENV DATA_DIR="${TDMQ_DIST}/data" \
     HADOOP_LOG_DIR="/tmp/hadoop_logs" \
@@ -55,12 +55,14 @@ WORKDIR "${TDMQ_DIST}"
 RUN cd "${TDMQ_DIST}" \
  && find . -type f -print0 | xargs -0 chmod a+r \
  && find . -type d -print0 | xargs -0 chmod a+rx \
- && python3 setup.py install
+ && $PIP install --no-cache-dir -r tdmq/requirements-client.txt \
+ && $PIP install .
 
 
 #################################################
 FROM tdmq-client AS tdmqc
 
+RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
 RUN $PIP install --no-cache-dir \
         pytest==5.3 \
         pytest-flask==0.15 \
