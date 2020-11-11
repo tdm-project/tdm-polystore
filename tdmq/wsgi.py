@@ -27,7 +27,7 @@ class PrefixMiddleware(object):
 def get_wsgi_app():
     app = create_app()
     prom_app = make_wsgi_app()
-    app.wsgi_app = PrefixMiddleware(app.wsgi_app, prom_app, prefix='/api/v0.0')
+    app.wsgi_app = PrefixMiddleware(app.wsgi_app, prom_app)
     return app
 
 if __name__ == "__main__":
