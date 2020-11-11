@@ -13,7 +13,7 @@ from collections import defaultdict
 import pytest
 import tdmq.db
 import tdmq.db_manager as db_manager
-from tdmq.app import create_app
+from tdmq.app import create_app, PREFIX
 
 
 @pytest.fixture(scope="session")
@@ -139,9 +139,6 @@ def tdmq_s3_service_info():
         'tiledb' : {
             'storage.root' : 's3://firstbucket/',
             'config': {
-                #"vfs.s3.endpoint_override": "172.30.10.101:32373",
-                #"vfs.s3.aws_access_key_id": "LM4PV12AXUNDRFRETAO7",
-                #"vfs.s3.aws_secret_access_key": "EBoY38pg4SaU1cK6VkAZ7Li34CAjDKfewZuD4JBm",
                 "vfs.s3.aws_access_key_id": "tdm-user",
                 "vfs.s3.aws_secret_access_key": "tdm-user-s3",
                 "vfs.s3.endpoint_override": "minio:9000",
@@ -361,7 +358,7 @@ TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
     with tempfile.NamedTemporaryFile(mode='w') as f:
         f.write(cfg)
         f.flush()
-        server = SubprocessLiveServer(f.name, application_path, host, port, '')
+        server = SubprocessLiveServer(f.name, application_path, host, port, PREFIX)
         server.start()
         try:
             yield server

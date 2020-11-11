@@ -5,10 +5,8 @@ import tempfile
 from contextlib import contextmanager
 from datetime import datetime
 
-from prometheus_client.registry import CollectorRegistry
-
 import pytest
-from tdmq.app import create_app
+from tdmq.app import create_app, PREFIX
 
 logger = logging.getLogger('test_api')
 
@@ -81,7 +79,7 @@ def test_sources_db_error(flask_client):
     Tests that, if a database error occurs when a client tries to get the sources, it returns a 500 error
     """
     # IMPORTANT: it must be left as first test in the file otherwise it fails since the other tests create the db
-    response = flask_client.get('/sources')
+    response = flask_client.get(f'{PREFIX}/sources')
     assert response.status == '500 INTERNAL SERVER ERROR'
     assert response.get_json() == {"error": "error_retrieving_data"}
 
@@ -90,7 +88,7 @@ def test_sources_db_error(flask_client):
 def test_source_types(flask_client, db_data):
     in_args = {"type": "multisource", "controlledProperties": "temperature"}
     q = "&".join(f"{k}={v}" for k, v in in_args.items())
-    response = flask_client.get(f'/sources?{q}')
+    response = flask_client.get(f'{PREFIX}/sources?{q}')
     _checkresp(response)
     data = response.get_json()
 
@@ -119,9 +117,9 @@ def test_source_create_duplicate(flask_client, db_data):
         "shape": [],
         "description": {}
     }]
-    response = flask_client.post('/sources', json=source_data)
+    response = flask_client.post(f'{PREFIX}/sources', json=source_data)
     _checkresp(response)
-    response = flask_client.post('/sources', json=source_data)
+    response = flask_client.post(f'{PREFIX}/sources', json=source_data)
     assert response.status == '409 CONFLICT'
     assert response.get_json() == {"error": "duplicated_resource"}
 
@@ -131,14 +129,14 @@ def test_sources_method_not_allowed(flask_client):
     """
     Tests that, if /sources is called using an http method different from POST and GET it returns a 405 METHOD NOT ALLOWED
     """
-    response = flask_client.delete('/sources')
+    response = flask_client.delete(f'{PREFIX}/sources')
     assert response.status == '405 METHOD NOT ALLOWED'
     assert response.get_json() == {"error": "method_not_allowed"}
 
 
 @pytest.mark.sources
 def test_sources_no_args(flask_client, app, db_data, public_source_data):
-    response = flask_client.get('/sources')
+    response = flask_client.get(f'{PREFIX}/sources')
     _checkresp(response)
     data = response.get_json()
     assert isinstance(data, list)
@@ -150,7 +148,7 @@ def test_sources_no_args(flask_client, app, db_data, public_source_data):
 def test_sources_only_geom(flask_client, app, db_data, public_source_data):
     geom = 'circle((9.132, 39.248), 1000)'
     q = f'roi={geom}'
-    response = flask_client.get(f'/sources?{q}')
+    response = flask_client.get(f'{PREFIX}/sources?{q}')
     _checkresp(response)
     data = response.get_json()
     _validate_ids(data, {'tdm/sensor_3', 'tdm/tiledb_sensor_6'})
@@ -160,7 +158,7 @@ def test_sources_only_geom(flask_client, app, db_data, public_source_data):
 def test_sources_active_after_before(flask_client, app, db_data, public_source_data):
     after, before = '2019-05-02T11:30:00Z', '2019-05-02T12:30:00Z'
     q = f'after={after}&before={before}'
-    response = flask_client.get(f'/sources?{q}')
+    response = flask_client.get(f'{PREFIX}/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/tiledb_sensor_6' }
     expected = _get_active_sources_in_time_range(
@@ -172,7 +170,7 @@ def test_sources_active_after_before(flask_client, app, db_data, public_source_d
 def test_sources_active_after(flask_client, app, db_data, public_source_data):
     after = '2019-05-02T11:00:22Z'
     q = f'after={after}'
-    response = flask_client.get(f'/sources?{q}')
+    response = flask_client.get(f'{PREFIX}/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/sensor_1', 'tdm/tiledb_sensor_6' }
     expected = _get_active_sources_in_time_range(
@@ -184,7 +182,7 @@ def test_sources_active_after(flask_client, app, db_data, public_source_data):
 def test_sources_active_before(flask_client, app, db_data, public_source_data):
     before = '2019-05-02T11:00:00Z'
     q = f'before={before}'
-    response = flask_client.get(f'/sources?{q}')
+    response = flask_client.get(f'{PREFIX}/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/sensor_1' }
     expected = _get_active_sources_in_time_range(
@@ -197,7 +195,7 @@ def test_sources_active_after_geom(flask_client, app, db_data, public_source_dat
     geom = 'circle((8.93, 39.0), 10000)'  # point is near the town of Pula
     after = '2019-05-02T11:00:22Z'
     q = f'roi={geom}&after={after}'
-    response = flask_client.get(f'/sources?{q}')
+    response = flask_client.get(f'{PREFIX}/sources?{q}')
     _checkresp(response)
     #  expected = { 'tdm/sensor_0', 'tdm/tiledb_sensor_6' }
     expected = _get_active_sources_in_time_range(
@@ -212,7 +210,7 @@ def test_sources_fail(flask_client):
     geom = 'circle((9.2 33), 1000)'  # note the missing comma
     q = f'roi={geom}'
     with pytest.raises(ValueError) as ve:
-        flask_client.get(f'/sources?{q}')
+        flask_client.get(f'{PREFIX}/sources?{q}')
         assert "roi" in ve.value
         assert geom in ve.value
 
@@ -220,12 +218,12 @@ def test_sources_fail(flask_client):
 @pytest.mark.sources
 def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data):
     external_source_id = public_source_data['sources'][0]['id']
-    response_with_id = flask_client.get(f'/sources?id={external_source_id}')
+    response_with_id = flask_client.get(f'{PREFIX}/sources?id={external_source_id}')
     item_with_id = response_with_id.get_json()[0]
     tdmq_id = item_with_id['tdmq_id']
 
     # query again using tdmq_id
-    response_with_tdmq_id = flask_client.get(f"/sources/{tdmq_id}")
+    response_with_tdmq_id = flask_client.get(f"{PREFIX}/sources/{tdmq_id}")
 
     assert item_with_id['external_id'] == response_with_tdmq_id.get_json()[
         'external_id']
@@ -233,12 +231,12 @@ def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data)
 
 def test_timeseries(flask_client, app, db_data):
     source_id = 'tdm/sensor_1'
-    response = flask_client.get(f'/sources?id={source_id}')
+    response = flask_client.get(f'{PREFIX}/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
 
     bucket, op = 20 * 60, 'sum'
     q = f'bucket={bucket}&op={op}'
-    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
+    response = flask_client.get(f'{PREFIX}/sources/{tdmq_id}/timeseries?{q}')
     _checkresp(response)
     d = response.get_json()
 
@@ -258,13 +256,13 @@ def test_timeseries(flask_client, app, db_data):
 
 def test_timeseries_for_private_sources(flask_client, app, db_data):
     source_id = 'tdm/sensor_7'
-    response = flask_client.get(f'/sources?id={source_id}')
+    response = flask_client.get(f'{PREFIX}/sources?id={source_id}')
     assert response.status == '200 OK'
     _checkresp(response, [])
 
 
 def test_service_info(flask_client):
-    resp = flask_client.get('service_info')
+    resp = flask_client.get(f'{PREFIX}/service_info')
     _checkresp(resp)
     info = resp.json
     assert info.get('version') is not None
@@ -282,7 +280,7 @@ def test_app_config_tiledb():
     }
 
     with _create_new_app_test_client(config) as client:
-        resp = client.get('service_info')
+        resp = client.get(f'{PREFIX}/service_info')
         _checkresp(resp)
         info = resp.json
         assert 'tiledb' in info
@@ -296,7 +294,7 @@ def test_app_config_no_tiledb():
     }
 
     with _create_new_app_test_client(config) as client:
-        resp = client.get('service_info')
+        resp = client.get(f'{PREFIX}/service_info')
         _checkresp(resp)
         info = resp.json
         assert 'tiledb' not in info
@@ -315,7 +313,7 @@ TILEDB_VFS_CONFIG = {{ 'vfs.hdfs.username': 'hdfs_user' }}
 
         monkeypatch.setenv('TDMQ_FLASK_CONFIG', f.name)
         with _create_new_app_test_client() as client:
-            resp = client.get('service_info')
+            resp = client.get(f'{PREFIX}/service_info')
             _checkresp(resp)
             info = resp.json
             assert 'tiledb' in info
