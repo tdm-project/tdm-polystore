@@ -45,5 +45,6 @@ RUN conda install -v --yes --file "${TDMQ_DIST}/tdmq/requirements-client.txt" \
 # FIXME:  this should be installed with conda
 RUN cd "${TDMQ_DIST}" && pip3 install .
 
-COPY --chown=$NB_USER:$NB_GID notebooks "${HOME}/examples/"
+ENV DATA_DIR="${HOME}/examples"
+COPY --chown=$NB_USER:$NB_GID notebooks/* "${HOME}/examples/"
 
