@@ -112,10 +112,10 @@ services:
     environment:
       - NAMENODE_HOSTNAME=namenode
 
-  tdmqj-hub:
-    image: tdmproject/tdmqj-hub
-    container_name: tdmq-notebook
-    environment:
-      - NAMENODE_HOSTNAME=namenode
-    volumes:
-      - "LOCAL_PATH/.travis/quickstart_dense.py:/quickstart_dense.py"
+  #tdmqj-hub:
+  #  image: tdmproject/tdmqj-hub
+  #  container_name: tdmq-notebook
+  #  environment:
+  #    - NAMENODE_HOSTNAME=namenode
+  #  volumes:
+  #    - "LOCAL_PATH/.travis/quickstart_dense.py:/quickstart_dense.py"
