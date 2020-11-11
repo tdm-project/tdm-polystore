@@ -46,5 +46,10 @@ RUN conda install -v --yes --file "${TDMQ_DIST}/tdmq/requirements-client.txt" \
 RUN cd "${TDMQ_DIST}" && pip3 install .
 
 ENV DATA_DIR="${HOME}/examples"
-COPY --chown=$NB_UID:$NB_GID notebooks/* "${HOME}/examples/"
-
+# COPY --chown=$NB_UID:$NB_GID notebooks/* "${HOME}/examples/"
+#  Work around issue on docker version in TravisCI:  COPY doesn't resolve
+#  uid and gid specified as environment variables.
+USER root
+COPY notebooks/* "${HOME}/examples/"
+RUN chown -R $NB_UID:$NB_GID "${HOME}/examples/"
+USER $NB_USER
