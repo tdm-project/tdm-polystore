@@ -13,7 +13,7 @@ from prometheus_client.utils import INF
 from tdmq.api import tdmq_bp
 from tdmq.db import add_db_cli, close_db
 
-PREFIX = '/api/v0.0'
+DEFAULT_PREFIX = '/api/v0.0'
 
 ERROR_CODES = {
     400: "bad_request",
@@ -53,6 +53,8 @@ def configure_prometheus_registry(app):
 
 class DefaultConfig(object):
     SECRET_KEY = 'dev'
+
+    APP_PREFIX = DEFAULT_PREFIX
 
     DB_HOST = 'timescaledb'
     DB_NAME = 'tdmqtest'
@@ -118,7 +120,7 @@ def create_app(test_config=None):
     add_db_cli(app)
 
     configure_prometheus_registry(app)
-    app.register_blueprint(tdmq_bp, url_prefix=PREFIX)
+    app.register_blueprint(tdmq_bp, url_prefix=app.config['APP_PREFIX'])
 
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):
