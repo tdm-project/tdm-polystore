@@ -13,7 +13,7 @@ from collections import defaultdict
 import pytest
 import tdmq.db
 import tdmq.db_manager as db_manager
-from tdmq.app import create_app, PREFIX
+from tdmq.app import create_app
 
 
 @pytest.fixture(scope="session")
@@ -94,7 +94,8 @@ def app(db_connection_config):
         'DB_USER': db_connection_config['user'],
         'DB_PASSWORD': db_connection_config['password'],
         'LOG_LEVEL': 'DEBUG',
-        'PROMETHEUS_REGISTRY': True
+        'PROMETHEUS_REGISTRY': True,
+        'APP_PREFIX': ''
     })
 
     app.testing = True
@@ -350,6 +351,7 @@ LOG_LEVEL = "DEBUG"
 PROMETHEUS_REGISTRY = True
 TILEDB_VFS_ROOT = "{service_info['tiledb']['storage.root']}"
 TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
+APP_PREFIX = ''
     """
 
     application_path = os.path.abspath(os.path.splitext(wsgi.__file__)[0])
@@ -358,7 +360,7 @@ TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
     with tempfile.NamedTemporaryFile(mode='w') as f:
         f.write(cfg)
         f.flush()
-        server = SubprocessLiveServer(f.name, application_path, host, port, PREFIX)
+        server = SubprocessLiveServer(f.name, application_path, host, port, '')
         server.start()
         try:
             yield server
