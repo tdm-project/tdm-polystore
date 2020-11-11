@@ -46,5 +46,5 @@ RUN conda install -v --yes --file "${TDMQ_DIST}/tdmq/requirements-client.txt" \
 RUN cd "${TDMQ_DIST}" && pip3 install .
 
 ENV DATA_DIR="${HOME}/examples"
-COPY --chown=$NB_USER:$NB_GID notebooks/* "${HOME}/examples/"
+COPY --chown=$NB_UID:$NB_GID notebooks/* "${HOME}/examples/"
 
