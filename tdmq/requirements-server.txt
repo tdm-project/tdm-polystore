@@ -7,4 +7,4 @@ prometheus_client==0.8.0
 gunicorn==20.0.4
 sphinx
 sphinxcontrib-httpdomain
-pytest
+pytest==6.1

@@ -64,8 +64,8 @@ FROM tdmq-client AS tdmqc
 
 RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
 RUN $PIP install --no-cache-dir \
-        pytest==5.3 \
-        pytest-flask==0.15 \
+        pytest==6.1 \
+        pytest-flask==1.1 \
         s3cmd==2.1
 
 ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
