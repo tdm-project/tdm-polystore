@@ -85,5 +85,7 @@ run-tests: start
 
 clean: stop
 	rm -rf docker-stacks
+	rm -rf docker/tdmq-dist
+	rm -rf docker/notebooks
 
 .PHONY: all tdmqc-deps tdmqc jupyter web images base-images run start stop startdev stopdev clean
