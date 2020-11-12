@@ -306,6 +306,7 @@ def test_app_config_from_file(monkeypatch):
     hdfs_root = 'hdfs://someserver:8020/'
     cfg = f"""
 TILEDB_VFS_ROOT = '{hdfs_root}'
+TILEDB_VFS_CONFIG = {{ 'vfs.hdfs.username': 'hdfs_user' }}
     """
 
     with tempfile.NamedTemporaryFile(mode='w') as f:
@@ -319,4 +320,4 @@ TILEDB_VFS_ROOT = '{hdfs_root}'
             info = resp.json
             assert 'tiledb' in info
             assert info['tiledb']['storage.root'] == hdfs_root
-            assert info['tiledb']['config']['vfs.hdfs.username'] == 'root'
+            assert info['tiledb']['config']['vfs.hdfs.username'] == 'hdfs_user'
