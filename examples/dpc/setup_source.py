@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-
+import dateparser
 import numpy as np
 from clize import parameters, run
 from dpc import fetch_dpc_data
@@ -23,6 +23,8 @@ def setup_logging(level_name):
 def main(source: parameters.one_of('radar', 'temperature'),
          *,
          tdmq_url: ('u'),
+         start='6 days ago',
+         end='now',
          log_level: ('v',
                      parameters.one_of("DEBUG", "INFO", "WARN", "ERROR",
                                        "CRITICAL")) = 'INFO'):
@@ -30,7 +32,6 @@ def main(source: parameters.one_of('radar', 'temperature'),
 
     desc = load_desc(source)
 
-    now = datetime.now()
     dt = timedelta(seconds=desc['description']['acquisition_period'])
 
     c = Client(tdmq_url)
@@ -43,16 +44,16 @@ def main(source: parameters.one_of('radar', 'temperature'),
         s = c.register_source(desc)
         logger.info(f"Created source {s.tdmq_id} for {s.id}.")
 
+    start = dateparser.parse(start)
+    end = dateparser.parse(end)
     try:
-        ts = s.timeseries()
+        ts = s.timeseries(after=start, before=end)
     except Exception as ex:  # FIXME too general
         ts = []
     # The DPC source keeps data available for only one week
     time_base = ts.time[0] if len(ts) > 0 else create_timebase(
-        now, timedelta(seconds=6 * 24 * 3600))
-    # It is unlikely that the last frame will be ready, so we stop the
-    # request at now - dt.
-    times = np.arange(time_base, now - dt, dt)
+        end, end - start)
+    times = np.arange(time_base, end, dt)
     filled = times[np.searchsorted(times, ts.time)]\
         if len(ts) > 0 else []
     to_be_filled = set(times) - set(filled)

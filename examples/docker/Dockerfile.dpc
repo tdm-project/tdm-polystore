@@ -4,7 +4,6 @@ ENV DPC_HOME /opt/dpc
 COPY dpc $DPC_HOME
 WORKDIR $DPC_HOME
 
-RUN pip3 install tifffile clize
+RUN pip3 install tifffile clize dateparser
 
 ENTRYPOINT ["/entrypoint.sh", "fake_user.sh", "python3", "setup_source.py"]
-# ENTRYPOINT ["tail", "-f", "/dev/null"]
