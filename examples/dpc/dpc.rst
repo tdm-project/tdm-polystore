@@ -13,7 +13,7 @@ Clean up HDFS, just in case:
    docker-compose -f ./docker/docker-compose-dev.yml exec --user 0 tdmqc /bin/bash -c 'fake_user.sh hdfs dfs -rm -r /arrays'
 
 
-Create ingestor services:
+Ingest data (for example the temperature time series):
 ::
-   docker-compose -f ./docker/docker-compose-dev.yml -f examples/docker/docker-compose.yml up -d
+   docker run --rm --network docker_default --user 1000:1000 --env NAMENODE_HOSTNAME=namenode tdmproject/dpc_ingestor -u http://web:8000 -v DEBUG temperature
 
