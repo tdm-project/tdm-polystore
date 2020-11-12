@@ -73,14 +73,12 @@ stop:
 
 run-tests: start
 	docker-compose -f ./docker/docker-compose.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
-	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -mkdir /tiledb"
+	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -mkdir -p /tiledb"
 	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
-	docker-compose -f ./docker/docker-compose.yml logs tdmqj-hub
-	docker-compose -f ./docker/docker-compose.yml exec tdmqj-hub bash -c "sed -i s/localhost/namenode/ /opt/hadoop/etc/hadoop/core-site.xml"
-	docker-compose -f ./docker/docker-compose.yml exec --user $$(id -u) tdmqj-hub fake_user.sh /bin/bash -c "python /quickstart_dense.py -f hdfs://namenode:8020/tiledb"
+	docker-compose -f ./docker/docker-compose.yml logs tdmqj
+	docker-compose -f ./docker/docker-compose.yml exec tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
+	docker-compose -f ./docker/docker-compose.yml exec tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array'
 	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
-	docker-compose -f ./docker/docker-compose.yml exec tdmqj-hub bash -c "python -c 'import tdmq, matplotlib'"
-
 
 
 clean: stop

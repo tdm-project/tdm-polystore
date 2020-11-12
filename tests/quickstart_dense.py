@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # quickstart_dense.py
 #
 # LICENSE
@@ -34,13 +36,15 @@
 
 
 import argparse
+import os
+from contextlib import contextmanager
+from urllib.parse import urlparse
 
 import numpy as np
 import tiledb
 
 
 def create_array(array_name):
-
     # The array will be 4x4 with dimensions "rows" and "cols", with domain [1,4].
     dom = tiledb.Domain(tiledb.Dim(name="rows", domain=(1, 4), tile=4, dtype=np.int32),
                         tiledb.Dim(name="cols", domain=(1, 4), tile=4, dtype=np.int32))
@@ -71,14 +75,60 @@ def read_array(array_name):
         print(data["a"])
 
 
-if __name__ == '__main__':
+def s3_context(vfs, array_name):
+    url_parts = urlparse(array_name)
+    bucket_url = f"s3://{url_parts.netloc}"
+
+    new_bucket = False
+    if not vfs.is_bucket(bucket_url):
+        vfs.create_bucket(bucket_url)
+        new_bucket = True
+
+    try:
+        yield
+    finally:
+        if new_bucket:
+            vfs.empty_bucket(bucket_url)
+            vfs.remove_bucket(bucket_url)
+
+
+@contextmanager
+def storage_context(vfs, array_name):
+    if array_name.startswith('s3:'):
+        yield s3_context(vfs, array_name)
+    else:
+        yield
+
+
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", dest="file", default="hdfs://namenode:8020/quickstart_dense")
+    parser.add_argument("-f", dest="file", default="s3://quickdense/quickstart_dense")
+    tiledb.default_ctx(config={
+        "vfs.s3.aws_access_key_id": os.environ.get('AWS_ACCESS_KEY_ID', ''),
+        "vfs.s3.aws_secret_access_key": os.environ.get('AWS_SECRET_ACCESS_KEY', ''),
+        "vfs.s3.endpoint_override": os.environ.get('AWS_S3_ENDPOINT', ''),
+        "vfs.s3.region": os.environ.get('AWS_DEFAULT_REGION', ""),
+        "vfs.s3.scheme": "http",
+        "vfs.s3.verify_ssl": "false",
+        "vfs.s3.use_virtual_addressing": "false",
+        "vfs.s3.use_multipart_upload": "false",
+    })
+    vfs = tiledb.VFS()
+
     args = parser.parse_args()
     array_name = args.file
 
-    if tiledb.object_type(array_name) != "array":
-        create_array(array_name)
-        write_array(array_name)
+    with storage_context(vfs, array_name):
+        array_created = False
+        if tiledb.object_type(array_name) != "array":
+            create_array(array_name)
+            array_created = True
+            write_array(array_name)
 
-    read_array(array_name)
+        read_array(array_name)
+
+        if array_created:
+            vfs.remove_dir(array_name)
+
+if __name__ == '__main__':
+    main()
