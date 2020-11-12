@@ -65,7 +65,12 @@ def main(source: parameters.one_of('radar', 'temperature'),
             data[f] = fetch_dpc_data(s, t, f)
         slot = int((t - time_base).total_seconds() // dt.total_seconds())
         logger.info(f"Ingesting data at time {t}, slot {slot}.")
-        s.ingest(t, data, slot)
+        try:
+            s.ingest(t, data, slot)
+        except Exception as e:
+            logger.error(
+                'an error occurred when ingesting time %s at slot %s. Exception: %s',
+                t, slot, e)
     logger.info(f"Done ingesting.")
 
 
