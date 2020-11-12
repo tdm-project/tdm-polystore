@@ -24,19 +24,6 @@ services:
       interval: "15s"
       retries: 5
 
-  tdmqj:
-    image: tdmproject/tdmqj
-    ports:
-      - "8888:8888"
-    volumes:
-      - "LOCAL_PATH/notebooks:/home/jovyan/work"
-    #DEV   - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
-    #user: USER_UID:USER_GID
-    environment:
-      - NB_UID=USER_UID
-      - NB_GID=USER_GID
-      - JUPYTER_ENABLE_LAB=yes
-
   web:
     # Remember that this service is using its default configuration
     # to access the database, so the settings must match the environment
@@ -86,9 +73,9 @@ services:
     image: minio/minio
     ports:
       - "9000:9000"
+    env_file: &env_file
+      - settings.conf
     environment:
-      - MINIO_ACCESS_KEY=tdm-user
-      - MINIO_SECRET_KEY=tdm-user-s3
       - MINIO_BROWSER=off
       - MINIO_HTTP_TRACE=/dev/stderr
     command: server /data
@@ -98,6 +85,19 @@ services:
       timeout: 20s
       retries: 3
 
+  tdmqj:
+    image: tdmproject/tdmqj
+    ports:
+      - "8888:8888"
+    volumes:
+      - "LOCAL_PATH/notebooks:/home/jovyan/work"
+    #DEV   - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
+    #user: USER_UID:USER_GID
+    env_file: *env_file
+    environment:
+      - NB_UID=USER_UID
+      - NB_GID=USER_GID
+      - JUPYTER_ENABLE_LAB=yes
 
   tdmqc:
     image: tdmproject/tdmqc
@@ -109,6 +109,7 @@ services:
     #DEV - "LOCAL_PATH/examples:/tdmq-dist/examples"
     #DEV - "LOCAL_PATH/tests:/tdmq-dist/tests"
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
+    env_file: *env_file
     environment:
       - NAMENODE_HOSTNAME=namenode
 
