@@ -100,6 +100,7 @@ def s3_context(vfs, array_name):
     try:
         yield
     finally:
+        vfs.remove_dir(array_name)
         if new_bucket:
             log.info("Removing bucket %s", bucket_url)
             vfs.empty_bucket(bucket_url)
