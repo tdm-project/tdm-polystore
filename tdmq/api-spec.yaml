@@ -92,6 +92,7 @@ paths:
 
   /sources:
     get:
+      summary: "Get a list of sources."
       description: >
         Query a list of data sources.
 
@@ -113,13 +114,45 @@ paths:
          * FIXME: rectangle?
          * FIXME: arbitrary GeoJson?
 
-        **Example request**:
+         ## Example request
 
-          GET /sources?roi=circle((9.22, 30.0), 1000)
-                      &after=2019-05-02T11:00:00Z
-                      &before=2019-05-02T11:50:25Z HTTP/1.1
+            GET /sources?roi=circle((9.22, 30.0), 1000)
+                        &after=2019-05-02T11:00:00Z
+                        &before=2019-05-02T11:50:25Z HTTP/1.1
 
-          GET /sources?controlledProperties=temperature,humidity (unencoded URL)
+            GET /sources?controlledProperties=temperature,humidity (unencoded URL)
+
+        ## Parameters
+
+        * roi: consider only sources with footprint intersecting
+          the given roi e.g., ``circle((9.3, 32), 1000)``
+
+        * after: consider only sources reporting  after (included)
+          this time, e.g., ``2019-02-21T11:03:25Z``
+
+        * before: consider only sources reporting strictly before
+          this time, e.g., ``2019-02-22T11:03:25Z``
+
+        * {other attribute}: select sources whose description has the
+            specified value(s) for the chosen attribute
+            (top-level JSON key, e.g., controlledProperties=temperature)
+
+
+          ## Example response
+
+          ```
+            HTTP/1.1 200 OK
+            Content-Type: application/json
+
+            [{"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5a",
+              "id": "source_0",
+              "geometry_type": "Point",
+              "entity_type": "entity_type0},
+             {"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5b",
+              "id": "source_1",
+              "geometry_type": "Point",
+              "entity_type": "entity_type_1"}]
+            ```
 
       parameters:
         - $ref: '#/components/parameters/roi'
