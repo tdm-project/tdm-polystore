@@ -52,70 +52,9 @@ def entity_categories():
 
 @tdmq_bp.route('/sources', methods=['GET', 'POST'])
 def sources():
-    """Return a list of sources.
-
-    .. :quickref: Get sources
-
-    With no parameters, return all sources. When ``roi``,
-    ``after`` and ``before`` are specified, return all sources
-    that have reported an event that intesect the corresponding
-    spatio-temporal region. It is
-    also possible to filter by any of the following:
-
-      * entity_type;
-      * entity_category;
-      * stationary True/False.
-
-    Moreover, sources can also be filtered by generic attributes
-    stored in their description field.
-
-    The roi should be specified using one of the following:
-     - circle((center_lon, center_lat), radius_in_meters)
-     - FIXME: rectangle?
-     - FIXME: arbitrary GeoJson?
-
-    **Example request**::
-
-      GET /sources?roi=circle((9.22, 30.0), 1000)
-                  &after=2019-05-02T11:00:00Z
-                  &before=2019-05-02T11:50:25Z HTTP/1.1
-
-      GET /sources?controlledProperties=temperature,humidity
-    (unencoded URL)
-
-    **Example response**:
-
-    .. sourcecode:: http
-
-      HTTP/1.1 200 OK
-      Content-Type: application/json
-
-      [{"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5a",
-        "id": "source_0",
-        "geometry_type": "Point",
-        "entity_type": "entity_type0},
-       {"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5b",
-        "id": "source_1",
-        "geometry_type": "Point",
-        "entity_type": "entity_type_1"}]
-
-    :resheader Content-Type: application/json
-
-    :query roi: consider only sources with footprint intersecting
-      the given roi e.g., ``circle((9.3, 32), 1000)``
-
-    :query after: consider only sources reporting  after (included)
-      this time, e.g., ``2019-02-21T11:03:25Z``
-
-    :query before: consider only sources reporting strictly before
-      this time, e.g., ``2019-02-22T11:03:25Z``
-
-    :query {attribute}: select sources whose description has the
-        specified value(s) for the chosen attribute
-        (top-level JSON key, e.g., controlledProperties=temperature)
-    :status 200: no error
-    :returns: list of sources
-
+    """
+    Return a list of sources.
+    See spec for documentation.
     """
     if request.method == "GET":
         with current_app.http_request_prom.labels(method='get', endpoint='sources').time():
