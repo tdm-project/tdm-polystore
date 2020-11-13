@@ -36,12 +36,15 @@
 
 
 import argparse
+import logging
 import os
 from contextlib import contextmanager
 from urllib.parse import urlparse
 
 import numpy as np
 import tiledb
+
+log = logging.getLogger(__name__)
 
 
 def create_array(array_name):
@@ -80,7 +83,9 @@ def s3_context(vfs, array_name):
     bucket_url = f"s3://{url_parts.netloc}"
 
     new_bucket = False
+    log.debug("Checking Bucket %s", bucket_url)
     if not vfs.is_bucket(bucket_url):
+        log.debug("Bucket %s not found. Creating it", bucket_url)
         vfs.create_bucket(bucket_url)
         new_bucket = True
 
@@ -88,6 +93,7 @@ def s3_context(vfs, array_name):
         yield
     finally:
         if new_bucket:
+            log.info("Removing bucket %s", bucket_url)
             vfs.empty_bucket(bucket_url)
             vfs.remove_bucket(bucket_url)
 
@@ -95,14 +101,23 @@ def s3_context(vfs, array_name):
 @contextmanager
 def storage_context(vfs, array_name):
     if array_name.startswith('s3:'):
-        yield s3_context(vfs, array_name)
+        log.info("Using S3 storage")
+        yield from s3_context(vfs, array_name)
     else:
+        log.info("Using HDFS storage")
         yield
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", dest="file", default="s3://quickdense/quickstart_dense")
+    parser.add_argument("--log-level",
+                        choices=['DEBUG', "INFO", "WARN", "ERROR", "FATAL"],
+                        default="INFO")
+    args = parser.parse_args()
+
+    logging.basicConfig(level=getattr(logging, args.log_level))
+
     tiledb.default_ctx(config={
         "vfs.s3.aws_access_key_id": os.environ.get('AWS_ACCESS_KEY_ID', ''),
         "vfs.s3.aws_secret_access_key": os.environ.get('AWS_SECRET_ACCESS_KEY', ''),
@@ -115,7 +130,6 @@ def main():
     })
     vfs = tiledb.VFS()
 
-    args = parser.parse_args()
     array_name = args.file
 
     with storage_context(vfs, array_name):
@@ -129,6 +143,7 @@ def main():
 
         if array_created:
             vfs.remove_dir(array_name)
+
 
 if __name__ == '__main__':
     main()
