@@ -38,6 +38,7 @@
 import argparse
 import logging
 import os
+import time
 from contextlib import contextmanager
 from urllib.parse import urlparse
 
@@ -88,7 +89,14 @@ def s3_context(vfs, array_name):
         log.debug("Bucket %s not found. Creating it", bucket_url)
         vfs.create_bucket(bucket_url)
         new_bucket = True
-
+        for _ in range(10):
+            if vfs.is_bucket(bucket_url):
+                log.info("Bucket %s created", bucket_url)
+                break
+            log.debug("Bucket not present yet.  Waiting")
+            time.sleep(1)
+        else:
+            raise RuntimeError(f"Failed to create bucket {bucket_url}!")
     try:
         yield
     finally:
