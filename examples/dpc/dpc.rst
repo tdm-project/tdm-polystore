@@ -13,18 +13,7 @@ Clean up HDFS, just in case:
    docker-compose -f ./docker/docker-compose-dev.yml exec --user 0 tdmqc /bin/bash -c 'fake_user.sh hdfs dfs -rm -r /arrays'
 
 
-Install missing modules:
+Ingest data (for example the temperature time series):
 ::
-   docker-compose -f ./docker/docker-compose-dev.yml exec --user 0  tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/tests && fake_user.sh pip3 install tiffile' 
+   docker run --rm --network docker_default --user 1000:1000 --env NAMENODE_HOSTNAME=namenode tdmproject/dpc_ingestor -u http://web:8000 -v DEBUG temperature
 
-
-Now run setup:
-::
-   docker-compose -f ./docker/docker-compose-dev.yml exec --user $(id -u) tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/examples/dpc && fake_user.sh python3 setup_source.py --source temperature' 
-
-And now we can have an AirFlow cronjob that will ingest new data
-::
-   docker-compose -f ./docker/docker-compose-dev.yml exec --user $(id -u) tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/examples/dpc && fake_user.sh python3 ingestor.py --source temperature'
-
-   
-  667  docker-compose -f ./docker/docker-compose-dev.yml exec --user $(id -u) tdmqc /bin/bash -c 'cd ${TDMQ_DIST}/tests && fake_user.sh bash -l' 
