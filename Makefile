@@ -77,7 +77,7 @@ run-tests: start
 	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
 	docker-compose -f ./docker/docker-compose.yml logs tdmqj
 	docker-compose -f ./docker/docker-compose.yml exec tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
-	docker-compose -f ./docker/docker-compose.yml exec tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array'
+	docker-compose -f ./docker/docker-compose.yml exec tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
 	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
 
 
