@@ -2,6 +2,14 @@
 from tdmq.client import Client
 
 
+def test_strip_trailing_slash_from_url():
+    some_url = 'http://web:8080/some_url'
+    c = Client(some_url)
+    assert c.base_url == some_url
+    c = Client(some_url + '/')
+    assert c.base_url == some_url
+
+
 def test_connect(live_app):
     c = Client(live_app.url())
     assert not c.connected
