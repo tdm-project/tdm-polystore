@@ -110,6 +110,9 @@ def create_app(test_config=None):
     elif 'TDMQ_FLASK_CONFIG' in os.environ:
         app.config.from_envvar('TDMQ_FLASK_CONFIG')
 
+    # Strip any trailing slashes from the prefix
+    app.config['APP_PREFIX'] = app.config['APP_PREFIX'].rstrip('/')
+
     configure_logging(app)
 
     try:

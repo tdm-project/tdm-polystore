@@ -34,6 +34,8 @@ class Client:
         self.base_url = (tdmq_base_url or
                          os.getenv('TDMQ_BASE_URL') or
                          self.DEFAULT_TDMQ_BASE_URL)
+        # Strip any trailing slashes from the prefix
+        self.base_url = self.base_url.rstrip('/')
 
         _logger.debug("New tdmq client object for %s", self.base_url)
 
