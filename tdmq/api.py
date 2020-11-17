@@ -1,9 +1,11 @@
 import logging
 import sys
 from datetime import timedelta
+from functools import wraps
 
-import werkzeug.exceptions as wex
+import flask
 from flask import Blueprint, current_app, jsonify, request, url_for
+import werkzeug.exceptions as wex
 
 import tdmq.db as db
 import tdmq.errors
@@ -24,16 +26,31 @@ def _restructure_timeseries(res, properties):
     return result
 
 
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not request.headers.get('Authorization: Bearer'):
+            raise wex.Forbidden("Access token required")
+        if flask.g.auth_token != request.headers.get('Authorization: Bearer'):
+            raise wex.Forbidden("Invalid access token")
+        else:
+            return f(*args, **kwargs)
+
+    return decorated_function
+
+
 @tdmq_bp.before_request
 def print_args():
     logger.debug("request.args: %s", request.args)
+
 
 @tdmq_bp.route('/')
 def index():
     return 'The URL for this page is {}'.format(url_for('tdmq.index'))
 
+
 @tdmq_bp.route('/entity_types')
-def entity_types():
+def entity_types_get():
     with current_app.http_request_prom.labels(method='get', endpoint='entity_types').time():
         types = db.list_entity_types()
         res = jsonify({'entity_types': types})
@@ -41,8 +58,9 @@ def entity_types():
             sys.getsizeof(res.data))
         return res
 
+
 @tdmq_bp.route('/entity_categories')
-def entity_categories():
+def entity_categories_get():
     with current_app.http_request_prom.labels(method='get', endpoint='entity_categories').time():
         categories = db.list_entity_categories()
         res = jsonify({'entity_categories': categories})
@@ -50,141 +68,64 @@ def entity_categories():
             sys.getsizeof(res.data))
         return res
 
-@tdmq_bp.route('/sources', methods=['GET', 'POST'])
-def sources():
+@tdmq_bp.route('/sources', methods=['GET'])
+def sources_get():
     """
     Return a list of sources.
     See spec for documentation.
     """
-    if request.method == "GET":
-        with current_app.http_request_prom.labels(method='get', endpoint='sources').time():
-            args = {k: v for k, v in request.args.items()}
-            logger.debug("source: args is %s", args)
-            if 'roi' in args:
-                args['roi'] = convert_roi(args['roi'])
-            if 'controlledProperties' in args:
-                args['controlledProperties'] = \
-                    args['controlledProperties'].split(',')
-            try:
-                args['include_private'] = 'false'
-                res = db.list_sources(args)
-            except tdmq.errors.DBOperationalError:
-                raise wex.InternalServerError()
-            res = jsonify(res)
-            current_app.http_response_prom.labels(method='get', endpoint='sources').observe(
-                sys.getsizeof(res.data))
-            return res
-    elif request.method == "POST":
-        data = request.json
+    with current_app.http_request_prom.labels(method='get', endpoint='sources').time():
+        args = {k: v for k, v in request.args.items()}
+        logger.debug("source: args is %s", args)
+        if 'roi' in args:
+            args['roi'] = convert_roi(args['roi'])
+        if 'controlledProperties' in args:
+            args['controlledProperties'] = \
+                args['controlledProperties'].split(',')
         try:
-            tdmq_ids = db.load_sources(data)
-        except tdmq.errors.DuplicateItemException:
-            raise wex.Conflict()
-        return jsonify(tdmq_ids)
+            args['include_private'] = 'false'
+            res = db.list_sources(args)
+        except tdmq.errors.DBOperationalError:
+            raise wex.InternalServerError()
+        res = jsonify(res)
+        current_app.http_response_prom.labels(method='get', endpoint='sources').observe(
+            sys.getsizeof(res.data))
+        return res
+
+
+@tdmq_bp.route('/sources', methods=['POST'])
+@auth_required
+def sources_post():
+    data = request.json
+    try:
+        tdmq_ids = db.load_sources(data)
+    except tdmq.errors.DuplicateItemException:
+        raise wex.Conflict()
+    return jsonify(tdmq_ids)
+
+
+@tdmq_bp.route('/sources/<uuid:tdmq_id>')
+def sources_get_one(tdmq_id):
+    srcs = db.get_sources([tdmq_id], include_private=False)
+    if len(srcs) == 1:
+        result = srcs[0]
+        return jsonify(result)
+    elif len(srcs) == 0:
+        raise wex.NotFound()
     else:
-        raise wex.MethodNotAllowed()
+        raise RuntimeError(
+            f"Got more than one source for tdmq_id {tdmq_id}")
 
-@tdmq_bp.route('/sources/<uuid:tdmq_id>', methods=['GET', 'DELETE'])
-def source(tdmq_id):
-    """Return description of source with uuid ``tdmq_id``.
 
-    .. :quickref: Get source description
-
-    **Example request**::
-
-      GET /sources/0fd67c67-c9be-45c6-9719-4c4eada4becc HTTP/1.1
-
-    **Example response**:
-
-    .. sourcecode:: http
-
-      HTTP/1.1 200 OK
-      Content-Type: application/json
-
-      {"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5a",
-       "id": "source_0",
-       "geometry_ype": "Point",
-       "entity_type": "entity_type_0"}
-
-    :resheader Content-Type: application/json
-    :status 200: no error
-    :returns: source description
-    """
-    if request.method == "DELETE":
-        result = db.delete_sources([tdmq_id])
-    else:
-        srcs = db.get_sources([tdmq_id], include_private=False)
-        if len(srcs) == 1:
-            result = srcs[0]
-        elif len(srcs) == 0:
-            raise wex.NotFound()
-        else:
-            raise RuntimeError(
-                f"Got more than one source for tdmq_id {tdmq_id}")
+@tdmq_bp.route('/sources/<uuid:tdmq_id>', methods=['DELETE'])
+@auth_required
+def sources_delete(tdmq_id):
+    result = db.delete_sources([tdmq_id])
     return jsonify(result)
 
+
 @tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
-def timeseries(tdmq_id):
-    """Return timeseries for source ``tdmq_id``.
-
-    .. :quickref: Get time series data for source
-
-    For the specified source and time interval, return all records and
-    the corresponding timedeltas array (expressed in seconds from the
-    initial time). Also returns the initial time as "timebase".
-
-    **Example request**::
-
-      GET /sources/0fd67c67-c9be-45c6-9719-4c4eada4becc/
-          timeseries?after=2019-02-21T11:03:25Z
-                    &before=2019-05-02T11:50:25Z HTTP/1.1
-
-    **Example response**:
-
-    .. sourcecode:: http
-
-      HTTP/1.1 200 OK
-      Content-Type: application/json
-
-      {
-        "source_id": "...",
-        "default_footprint": {...},
-        "shape": [...],
-        "bucket": null,
-      <oppure>
-        "bucket": { "interval": 10, "op": "avg" },
-
-        "coords": {
-            "footprint": [...],
-            "time": [...]
-        },
-        "data": {
-          "humidity": [...],
-          "temperature": [...],
-        }
-      }
-
-    :resheader Content-Type: application/json
-
-    :query after: consider only sources reporting after (included)
-                  this time, e.g., '2019-02-21T11:03:25Z'
-
-    :query before: consider only sources reporting strictly before
-                  this time, e.g., '2019-02-22T11:03:25Z'
-
-    :query bucket: time bucket for data aggregation, in seconds,
-                   e.g., 10.33
-
-    :query op: aggregation operation on data contained in bucket,
-               e.g., `sum`, `count`.
-
-     :query fields: comma-separated controlledProperties from the source,
-                or nothing to select all of them.
-
-    :status 200: no errors
-    :returns: list of sources
-    """
-
+def timeseries_get(tdmq_id):
     with current_app.http_request_prom.labels(method='get', endpoint='timeseries').time():
         rargs = request.args
         args = dict((k, rargs.get(k, None))
@@ -223,14 +164,17 @@ def timeseries(tdmq_id):
             sys.getsizeof(res.data))
         return res
 
+
 @tdmq_bp.route('/records', methods=["POST"])
-def records():
+@auth_required
+def records_post():
     data = request.json
     n = db.load_records(data)
     return jsonify({"loaded": n})
 
+
 @tdmq_bp.route('/service_info')
-def client_info():
+def service_info_get():
     response = {
         'version': '0.1'
     }
