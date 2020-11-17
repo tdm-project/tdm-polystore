@@ -2,6 +2,7 @@
 
 import logging
 import os
+import secrets
 
 import flask
 from flask.json import jsonify
@@ -17,6 +18,7 @@ DEFAULT_PREFIX = '/api/v0.0'
 
 ERROR_CODES = {
     400: "bad_request",
+    403: "forbidden",
     404: "not_found",
     405: "method_not_allowed",
     409: "duplicated_resource",
@@ -75,6 +77,8 @@ class DefaultConfig(object):
         "vfs.s3.use_multipart_upload": "false",
     }
 
+    AUTH_TOKEN = secrets.token_urlsafe(32)
+
     # TileDB has tons of client configuration properties.
     # See https://docs.tiledb.com/main/solutions/tiledb-embedded/examples/configuration-parameters
     # for a full list.
@@ -121,6 +125,10 @@ def create_app(test_config=None):
         pass
 
     add_db_cli(app)
+
+    app.logger.info("The access token is %s", app.config['AUTH_TOKEN'])
+    with app.app_context():
+        flask.g.auth_token = app.config['AUTH_TOKEN']
 
     configure_prometheus_registry(app)
     app.register_blueprint(tdmq_bp, url_prefix=app.config['APP_PREFIX'])
