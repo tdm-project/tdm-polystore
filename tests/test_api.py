@@ -73,6 +73,10 @@ def _validate_ids(data, expected):
     assert set(s['external_id'] for s in data) == expected
 
 
+def _create_auth_header(token):
+    return {'Authorization': f'Bearer {token}'} if token is not None else {}
+
+
 @pytest.mark.sources
 def test_sources_db_error(flask_client):
     """
@@ -405,6 +409,7 @@ def test_entity_categories_method_not_allowed(flask_client):
         assert response.status == '405 METHOD NOT ALLOWED'
 
 
+@pytest.mark.config
 def test_get_service_info(flask_client):
     resp = flask_client.get(f'/service_info')
     _checkresp(resp)
@@ -412,15 +417,34 @@ def test_get_service_info(flask_client):
     assert info.get('version') is not None
     assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
     if 'tiledb' in info:
-        assert info['tiledb'].get('storage.root') is not None
+        assert 'storage.root' in info['tiledb']
+        assert 'config' in info['tiledb']
+        assert info['tiledb']['storage.root'] is not None
+        # By default, credentials for s3 storage are configured,
+        # so we may have a key like vfs.s3.aws_secret_access_key.
+        # This shouldn't be returned unless the token is provided.
+        assert all(('secret' not in s for s in info['tiledb']['config']))
 
 
+@pytest.mark.config
+def test_get_service_info_authenticated(flask_client):
+    resp = flask_client.get(f'/service_info',
+                            headers=_create_auth_header(flask_client.auth_token))
+    _checkresp(resp)
+    info = resp.json
+    assert info.get('version') is not None
+    assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
+    if 'tiledb' in info:
+        assert 'vfs.s3.aws_access_key_id' in info['tiledb']['config']
+        assert 'vfs.s3.aws_secret_access_key' in info['tiledb']['config']
+
+@pytest.mark.config
 def test_app_config_tiledb():
     hdfs_root = 'hdfs://someserver:8020/'
-    hdfs_user = 'pippo'
+    k, v = 'vfs.hdfs.property', 'pippo'
     config = {
         'TILEDB_VFS_ROOT': hdfs_root,
-        'TILEDB_VFS_CONFIG': {'vfs.hdfs.username': hdfs_user},
+        'TILEDB_VFS_CONFIG': {k: v},
         'APP_PREFIX': ''
     }
 
@@ -430,9 +454,11 @@ def test_app_config_tiledb():
         info = resp.json
         assert 'tiledb' in info
         assert info['tiledb']['storage.root'] == hdfs_root
-        assert info['tiledb']['config']['vfs.hdfs.username'] == hdfs_user
+        assert info['tiledb']['config'][k] == v
 
 
+
+@pytest.mark.config
 def test_app_config_no_tiledb():
     config = {
         'TILEDB_VFS_ROOT': None,
@@ -446,6 +472,7 @@ def test_app_config_no_tiledb():
         assert 'tiledb' not in info
 
 
+@pytest.mark.config
 def test_app_config_from_file(monkeypatch):
     vfs_root = 's3://mybucket/'
     cfg = f"TILEDB_VFS_ROOT = '{vfs_root}'\n" \
