@@ -29,12 +29,17 @@ def _restructure_timeseries(res, properties):
 def auth_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not request.headers.get('Authorization: Bearer'):
-            raise wex.Forbidden("Access token required")
-        if flask.g.auth_token != request.headers.get('Authorization: Bearer'):
-            raise wex.Forbidden("Invalid access token")
-        else:
-            return f(*args, **kwargs)
+        if not request.headers.get('Authorization'):
+            raise wex.Unauthorized("Access token required")
+
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header.startswith('Bearer'):
+            raise wex.Unauthorized('Only Bearer token authentication is supported')
+        if f"Bearer {flask.g.auth_token}" != auth_header:
+            raise wex.Unauthorized("Invalid access token")
+
+        return f(*args, **kwargs)
 
     return decorated_function
 
