@@ -1,8 +1,8 @@
 
-import pytest
-
 from collections import Counter
 
+import pytest
+from requests.exceptions import HTTPError
 from tdmq.client import Client
 
 # use the `live_server` fixture from pytest-flask to fire up the application
@@ -39,8 +39,8 @@ def register_scalar_sources(client, source_data):
     return register_sources(client, [d for d in source_data['sources'] if is_scalar(d)])
 
 
-def test_register_deregister_simple_source(clean_storage, public_source_data, live_app):
-    c = Client(live_app.url())
+def test_register_deregister_simple_source_as_admin(clean_storage, public_source_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_scalar_sources(c, public_source_data)
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     tdmq_ids = []
@@ -56,8 +56,28 @@ def test_register_deregister_simple_source(clean_storage, public_source_data, li
         assert tid not in sources
 
 
-def test_select_source_by_id(clean_storage, public_source_data, live_app):
+def test_register_simple_source_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
+    
+    with pytest.raises(HTTPError) as ve:
+        srcs = register_scalar_sources(c, public_source_data)
+        ve.code = 401    
+
+
+def test_deregister_simple_source_as_user(clean_storage, public_source_data, live_app):
+    # first it creates a source with an admin client
+    c = Client(live_app.url(), auth_token='supersecret')
+    srcs = register_scalar_sources(c, public_source_data)
+
+    # then tries to deregister it with user client
+    c = Client(live_app.url())
+    with pytest.raises(HTTPError) as ve:
+        c.deregister_source(srcs[0])
+        assert ve.code == 401
+
+
+def test_select_source_by_id(clean_storage, public_source_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_scalar_sources(c, public_source_data)
     for s in srcs:
         s2 = c.find_sources({'id': s.id})
@@ -67,7 +87,7 @@ def test_select_source_by_id(clean_storage, public_source_data, live_app):
 
 
 def test_select_sources_by_entity_type(clean_storage, public_source_data, live_app):
-    c = Client(live_app.url())
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_scalar_sources(c, public_source_data)
     counts = Counter([s.entity_type for s in srcs])
     for k in counts:
@@ -79,6 +99,14 @@ def test_select_sources_by_entity_type(clean_storage, public_source_data, live_a
 
 
 def test_find_source_by_roi(db_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
+    geom = 'circle((9.132, 39.248), 1000)'
+    results = c.find_sources(args={ 'roi': geom })
+    external_ids = set( s.id for s in results )
+    assert external_ids == { 'tdm/sensor_3', 'tdm/tiledb_sensor_6' }
+
+
+def test_find_source_by_roi_as_user(db_data, live_app):
     c = Client(live_app.url())
     geom = 'circle((9.132, 39.248), 1000)'
     results = c.find_sources(args={ 'roi': geom })

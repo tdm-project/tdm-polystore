@@ -95,7 +95,8 @@ def app(db_connection_config):
         'DB_PASSWORD': db_connection_config['password'],
         'LOG_LEVEL': 'DEBUG',
         'PROMETHEUS_REGISTRY': True,
-        'APP_PREFIX': ''
+        'APP_PREFIX': '',
+        'ADMIN_TOKEN': 'supersecret'
     })
 
     app.testing = True
@@ -352,6 +353,7 @@ PROMETHEUS_REGISTRY = True
 TILEDB_VFS_ROOT = "{service_info['tiledb']['storage.root']}"
 TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
 APP_PREFIX = ''
+ADMIN_TOKEN = 'supersecret'
     """
 
     application_path = os.path.abspath(os.path.splitext(wsgi.__file__)[0])

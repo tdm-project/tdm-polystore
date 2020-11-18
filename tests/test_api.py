@@ -98,6 +98,55 @@ def test_source_types(flask_client, db_data):
             ',')
 
 
+def _create_source(flask_client):
+    """
+    Tests that, when a client tries to create a Source that already exist, a 409 CONFLICT error is returned
+    """
+    source_data = [{
+        "id": "st1",
+        "alias": "st1",
+        "entity_type": "WeatherObserver",
+        "entity_category": "Station",
+        "default_footprint": {
+            "type": "Point",
+            "coordinates": [1.1, 2.2]
+        },
+        "stationary": True,
+        "controlledProperties": ["windDirection", "windSpeed"],
+        "shape": [],
+        "description": {}
+    }]
+    headers = {
+        'Authorization': 'Bearer supersecret'
+    }
+    return flask_client.post('/sources', json=source_data, headers=headers)
+
+
+@pytest.mark.sources
+def test_source_create(flask_client, db_data):
+    response = _create_source(flask_client)
+    _checkresp(response)
+
+
+@pytest.mark.sources
+def test_source_delete(flask_client, db_data):
+    response = _create_source(flask_client)
+    tdmq_id = response.get_json()[0]
+    headers = {
+        'Authorization': 'Bearer supersecret'
+    }
+    response = flask_client.delete(f'/sources/{tdmq_id}', headers=headers)
+    assert response.status == '200 OK'
+
+
+@pytest.mark.sources
+def test_source_delete_unauthorized(flask_client, db_data):
+    response = _create_source(flask_client)
+    tdmq_id = response.get_json()[0]
+    response = flask_client.delete(f'/sources/{tdmq_id}')
+    assert response.status == '401 UNAUTHORIZED'
+
+
 @pytest.mark.sources
 def test_source_create_duplicate(flask_client, db_data):
     """
@@ -117,11 +166,38 @@ def test_source_create_duplicate(flask_client, db_data):
         "shape": [],
         "description": {}
     }]
-    response = flask_client.post('/sources', json=source_data)
+    headers = {
+        'Authorization': 'Bearer supersecret'
+    }
+    response = flask_client.post('/sources', json=source_data, headers=headers)
     _checkresp(response)
-    response = flask_client.post('/sources', json=source_data)
+    response = flask_client.post('/sources', json=source_data, headers=headers)
     assert response.status == '409 CONFLICT'
     assert response.get_json() == {"error": "duplicated_resource"}
+
+
+@pytest.mark.sources
+def test_source_create_unauthorized(flask_client, db_data):
+    """
+    Tests that, when a client tries to create a Source that already exist, a 409 CONFLICT error is returned
+    """
+    source_data = [{
+        "id": "st1",
+        "alias": "st1",
+        "entity_type": "WeatherObserver",
+        "entity_category": "Station",
+        "default_footprint": {
+            "type": "Point",
+            "coordinates": [1.1, 2.2]
+        },
+        "stationary": True,
+        "controlledProperties": ["windDirection", "windSpeed"],
+        "shape": [],
+        "description": {}
+    }]
+    response = flask_client.post('/sources', json=source_data)
+    assert response.status == '401 UNAUTHORIZED'
+    assert response.get_json() == {"error": "unauthorized"}
 
 
 @pytest.mark.sources
@@ -135,7 +211,7 @@ def test_sources_method_not_allowed(flask_client):
 
 
 @pytest.mark.sources
-def test_sources_no_args(flask_client, app, db_data, public_source_data):
+def test_sources_get_no_args(flask_client, app, db_data, public_source_data):
     response = flask_client.get('/sources')
     _checkresp(response)
     data = response.get_json()
@@ -145,7 +221,7 @@ def test_sources_no_args(flask_client, app, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_only_geom(flask_client, app, db_data, public_source_data):
+def test_sources_get_only_geom(flask_client, app, db_data, public_source_data):
     geom = 'circle((9.132, 39.248), 1000)'
     q = f'roi={geom}'
     response = flask_client.get(f'/sources?{q}')
@@ -155,7 +231,7 @@ def test_sources_only_geom(flask_client, app, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_active_after_before(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after_before(flask_client, app, db_data, public_source_data):
     after, before = '2019-05-02T11:30:00Z', '2019-05-02T12:30:00Z'
     q = f'after={after}&before={before}'
     response = flask_client.get(f'/sources?{q}')
@@ -167,7 +243,7 @@ def test_sources_active_after_before(flask_client, app, db_data, public_source_d
 
 
 @pytest.mark.sources
-def test_sources_active_after(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after(flask_client, app, db_data, public_source_data):
     after = '2019-05-02T11:00:22Z'
     q = f'after={after}'
     response = flask_client.get(f'/sources?{q}')
@@ -179,7 +255,7 @@ def test_sources_active_after(flask_client, app, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_active_before(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_before(flask_client, app, db_data, public_source_data):
     before = '2019-05-02T11:00:00Z'
     q = f'before={before}'
     response = flask_client.get(f'/sources?{q}')
@@ -191,7 +267,7 @@ def test_sources_active_before(flask_client, app, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_active_after_geom(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after_geom(flask_client, app, db_data, public_source_data):
     geom = 'circle((8.93, 39.0), 10000)'  # point is near the town of Pula
     after = '2019-05-02T11:00:22Z'
     q = f'roi={geom}&after={after}'
@@ -206,7 +282,7 @@ def test_sources_active_after_geom(flask_client, app, db_data, public_source_dat
 
 
 @pytest.mark.sources
-def test_sources_fail(flask_client):
+def test_sources_get_fail(flask_client):
     geom = 'circle((9.2 33), 1000)'  # note the missing comma
     q = f'roi={geom}'
     with pytest.raises(ValueError) as ve:
@@ -229,7 +305,60 @@ def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data)
         'external_id']
 
 
-def test_timeseries(flask_client, app, db_data):
+@pytest.mark.timeseries
+def test_timeseries_method_not_allowed(flask_client):
+    # Test the records endpoint
+    for method in ('delete', 'put', 'get'):
+        response = getattr(flask_client, method)(f'/records')
+        assert response.status == '405 METHOD NOT ALLOWED'
+
+    # Test the sources/{tdmq_id}/timeseries endpoint
+    response = _create_source(flask_client)
+    tdmq_id = response.get_json()[0]
+
+    for method in ('delete', 'put', 'post'):
+        response = getattr(flask_client, method)(f'/sources/{tdmq_id}/timeseries')
+        assert response.status == '405 METHOD NOT ALLOWED'
+
+
+@pytest.mark.timeseries
+def test_create_timeseries(flask_client, app, db_data):
+    _create_source(flask_client)    
+    timeseries_data = [{
+        "time": "2019-05-02T10:50:00Z", 
+        "source": "st1", 
+        "data": {"temperature": 20}
+    }]
+    headers = {
+        'Authorization': 'Bearer supersecret'
+    }
+    response = flask_client.post(
+        '/records', json=timeseries_data, headers=headers)
+    assert response.status == '200 OK'
+    assert response.is_json
+    assert response.get_json() == {'loaded': 1}
+
+
+@pytest.mark.timeseries
+def test_create_timeseries_unauthorized(flask_client, app, db_data):
+    _create_source(flask_client)    
+    timeseries_data = [{
+        "source": "s1",
+        "time": "2020-11-17T14:20:30Z",
+        "footprint": {
+            "type": "Point",
+            "coordinates": [1, 0]
+        },
+        "data": {"temperature": 14.0}
+    }]
+
+    response = flask_client.post('/records', json=timeseries_data)
+    assert response.status == '401 UNAUTHORIZED'
+    assert response.get_json() == {"error": "unauthorized"}
+
+
+@pytest.mark.timeseries
+def test_get_timeseries(flask_client, app, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -254,14 +383,29 @@ def test_timeseries(flask_client, app, db_data):
     assert 'temperature' in d['data'] and 'humidity' in d['data']
 
 
-def test_timeseries_for_private_sources(flask_client, app, db_data):
+@pytest.mark.timeseries
+def test_get_timeseries_for_private_sources(flask_client, app, db_data):
     source_id = 'tdm/sensor_7'
     response = flask_client.get(f'/sources?id={source_id}')
     assert response.status == '200 OK'
     _checkresp(response, [])
 
 
-def test_service_info(flask_client):
+def test_entity_types_method_not_allowed(flask_client):
+
+    for method in ('post', 'delete', 'put'):
+        response = getattr(flask_client, method)(f'/entity_types', json={})
+        assert response.status == '405 METHOD NOT ALLOWED'
+
+
+def test_entity_categories_method_not_allowed(flask_client):
+
+    for method in ('post', 'delete', 'put'):
+        response = getattr(flask_client, method)(f'/entity_categories', json={})
+        assert response.status == '405 METHOD NOT ALLOWED'
+
+
+def test_get_service_info(flask_client):
     resp = flask_client.get(f'/service_info')
     _checkresp(resp)
     info = resp.json
@@ -276,7 +420,7 @@ def test_app_config_tiledb():
     hdfs_user = 'pippo'
     config = {
         'TILEDB_VFS_ROOT': hdfs_root,
-        'TILEDB_VFS_CONFIG': { 'vfs.hdfs.username': hdfs_user },
+        'TILEDB_VFS_CONFIG': {'vfs.hdfs.username': hdfs_user},
         'APP_PREFIX': ''
     }
 
@@ -305,8 +449,8 @@ def test_app_config_no_tiledb():
 def test_app_config_from_file(monkeypatch):
     vfs_root = 's3://mybucket/'
     cfg = f"TILEDB_VFS_ROOT = '{vfs_root}'\n" \
-           "TILEDB_VFS_CONFIG = { 'vfs.s3.property': 'bla' }\n" \
-           "APP_PREFIX = ''"
+        "TILEDB_VFS_CONFIG = { 'vfs.s3.property': 'bla' }\n" \
+        "APP_PREFIX = ''"
 
     with tempfile.NamedTemporaryFile(mode='w') as f:
         f.write(cfg)
