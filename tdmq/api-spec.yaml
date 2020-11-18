@@ -46,7 +46,8 @@ paths:
   /service_info:
     get:
       description: >
-        Retrieve configuration parameters for the client.
+        Retrieve configuration parameters for the client.  These include the
+        configuration for the TileDB client to access arrays.
       responses:
         '200':
           content:
@@ -212,8 +213,25 @@ paths:
 
   /sources/{tdmq_source_id}:
     get:
+      summary: >
+        Return description of source identified by its TDM id.
       description: >
-        Get properties about a source identified by its TDM id.
+
+        ## Example request
+          GET /sources/0fd67c67-c9be-45c6-9719-4c4eada4becc HTTP/1.1
+
+        ## Example response
+
+        ```
+          HTTP/1.1 200 OK
+          Content-Type: application/json
+
+          {"tdmq_id": "c034f147-8e54-50bd-97bb-9db1addcdc5a",
+           "id": "source_0",
+           "geometry_ype": "Point",
+           "entity_type": "entity_type_0"}
+        ```
+
       parameters:
         - $ref: '#/components/parameters/tdmq_source_id'
       responses:
@@ -241,17 +259,60 @@ paths:
 
   /sources/{tdmq_source_id}/timeseries:
     get:
-      summary: Get timeseries for source ``tdmq_source_id`.
+      summary: Get timeseries for source `tdmq_source_id`.
       description: >
         For the specified source and time interval, return all records and
         the corresponding timedeltas array (expressed in seconds from the
         initial time). Also returns the initial time as "timebase".
 
-        **Example request**::
+        ## Example request
 
-          GET /sources/0fd67c67-c9be-45c6-9719-4c4eada4becc/
+        ```
+            GET /sources/0fd67c67-c9be-45c6-9719-4c4eada4becc/
               timeseries?after=2019-02-21T11:03:25Z
                         &before=2019-05-02T11:50:25Z HTTP/1.1
+        ```
+
+        ## Description of parameters
+        *  after: consider only sources reporting after (included)
+                  this time, e.g., '2019-02-21T11:03:25Z'
+
+        *  before: consider only sources reporting strictly before
+                  this time, e.g., '2019-02-22T11:03:25Z'
+
+        *  bucket: time bucket for data aggregation, in seconds,
+                   e.g., 10.33
+
+        *  op: aggregation operation on data contained in bucket,
+               e.g., `sum`, `count`.
+
+        *  fields: comma-separated controlledProperties from the source,
+                or nothing to select all of them.
+
+        ## Example response
+
+        ```
+          HTTP/1.1 200 OK
+          Content-Type: application/json
+
+          {
+            "source_id": "...",
+            "default_footprint": {...},
+            "shape": [...],
+            "bucket": null,
+          <oppure>
+            "bucket": { "interval": 10, "op": "avg" },
+
+            "coords": {
+                "footprint": [...],
+                "time": [...]
+            },
+            "data": {
+              "humidity": [...],
+              "temperature": [...],
+            }
+          }
+        ```
 
       parameters:
         - $ref: '#/components/parameters/tdmq_source_id'
