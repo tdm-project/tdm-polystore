@@ -2,13 +2,15 @@
 
 import logging
 import os
-
 from datetime import datetime, timedelta
 
 import numpy as np
+import pytest
+from requests.exceptions import HTTPError
 from tdmq.client import Client
 from tdmq.client.sources import NonScalarSource
-from test_source import register_sources, is_scalar
+
+from test_source import is_scalar, register_sources
 
 
 def create_data_frame(shape, properties, fill_value):
@@ -94,8 +96,8 @@ def test_basic_tiledb_s3_operativity(clean_s3):
         assert (t[0:5] == a).all()
 
 
-def test_nonscalar_source_register_deregister(clean_storage, source_data, live_app):
-    c = Client(live_app.url())
+def test_nonscalar_source_register_deregister_as_admin(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
@@ -112,9 +114,44 @@ def test_nonscalar_source_register_deregister(clean_storage, source_data, live_a
     check_deallocation(c, tdmq_ids)
 
 
+def test_nonscalar_source_register_as_user(clean_storage, source_data, live_app):
+    c = Client(live_app.url())
+    with pytest.raises(HTTPError) as ve:
+        register_nonscalar_sources(c, source_data)
+        assert ve.code == 401
+        
+
+def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_app):
+    # first it creates a source with an admin client
+    c = Client(live_app.url(), auth_token='supersecret')
+    srcs = register_nonscalar_sources(c, source_data)
+
+    c = Client(live_app.url())
+    with pytest.raises(HTTPError) as ve:
+        c.deregister_source(srcs[0])
+        assert ve.code == 401
+
+def test_nonscalar_source_access_as_user(clean_storage, source_data, live_app):
+    # first creates the source as admin
+    c = Client(live_app.url(), auth_token='supersecret')
+    srcs = register_nonscalar_sources(c, source_data)
+    logging.debug("Registered %s sources", len(srcs))
+    
+    # then access the sources with the user client
+    c = Client(live_app.url())
+    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
+    tdmq_ids = []
+    for s in srcs:
+        logging.debug("source: id %s, shape: %s; type: %s", s.id, s.shape, type(s))
+        assert s.tdmq_id in sources
+        assert s.id == sources[s.tdmq_id].id
+        assert s.tdmq_id == sources[s.tdmq_id].tdmq_id
+        assert isinstance(s, NonScalarSource)
+
+
 def test_add_record_to_one_nonscalar_source(clean_storage, source_data, live_app):
     N = 1
-    c = Client(live_app.url())
+    c = Client(live_app.url(), auth_token='supersecret')
 
     mosaic_def = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
     source = c.register_source(mosaic_def, nslots=N)
@@ -126,7 +163,7 @@ def test_add_record_to_one_nonscalar_source(clean_storage, source_data, live_app
 
 def test_nonscalar_source_add_records(clean_storage, source_data, live_app):
     N = 3
-    c = Client(live_app.url())
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
     tdmq_ids = []

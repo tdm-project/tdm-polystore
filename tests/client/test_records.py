@@ -1,8 +1,11 @@
-from tdmq.client import Client
-from test_source import register_scalar_sources
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
+
 import numpy as np
+import pytest
+from requests.exceptions import HTTPError
+from tdmq.client import Client
+
+from test_source import register_scalar_sources
 
 # import pytest
 # pytestmark = pytest.mark.skip(reason="not up-to-date with new pytest setup")
@@ -25,8 +28,8 @@ source_desc = {
 }
 
 
-def test_add_scalar_records(clean_db, public_source_data, live_app):
-    c = Client(live_app.url())
+def test_add_scalar_records_as_admin(clean_db, public_source_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
@@ -39,8 +42,22 @@ def test_add_scalar_records(clean_db, public_source_data, live_app):
         assert tid not in sources
 
 
-def test_add_scalar_record(clean_db, public_source_data, live_app):
-    c = Client(live_app.url())
+def test_add_scalar_records_as_user(clean_db, public_source_data, live_app):
+    # first create the resource with admin client
+    c = Client(live_app.url(), auth_token='supersecret')
+    srcs = register_scalar_sources(c, public_source_data)
+
+    # then get the sources as user and tries to add records
+    c = Client(live_app.url())    
+    by_source = public_source_data['records_by_source']
+    for s in c.find_sources():
+        with pytest.raises(HTTPError) as ve:
+            s.add_records(by_source[s.id])
+            ve.code == 401
+
+
+def test_add_scalar_record_as_admin(clean_db, public_source_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
@@ -54,8 +71,23 @@ def test_add_scalar_record(clean_db, public_source_data, live_app):
         assert tid not in sources
 
 
-def test_ingest_scalar_record(clean_db, public_source_data, live_app):
-    c = Client(live_app.url())
+def test_add_scalar_record_as_user(clean_db, public_source_data, live_app):
+    # first create the resource with admin client
+    c = Client(live_app.url(), auth_token='supersecret')
+    srcs = register_scalar_sources(c, public_source_data)
+
+    # then get the sources as user and tries to add record
+    c = Client(live_app.url())    
+    by_source = public_source_data['records_by_source']
+    for s in c.find_sources():
+        with pytest.raises(HTTPError) as ve:
+            for r in by_source[s.id]:
+                s.add_record(r)
+            ve.code == 401
+
+
+def test_ingest_scalar_record_as_admin(clean_db, public_source_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
@@ -74,8 +106,28 @@ def test_ingest_scalar_record(clean_db, public_source_data, live_app):
         assert tid not in sources
 
 
-def test_check_timeseries(clean_db, live_app):
+def test_ingest_scalar_record_as_user(clean_db, public_source_data, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
+    srcs = register_scalar_sources(c, public_source_data)
+    by_source = public_source_data['records_by_source']
+    tdmq_ids = []
+
+    # then get the sources as user and tries to add record
     c = Client(live_app.url())
+    for s in c.find_sources():
+        for r in by_source[s.id]:
+            try:
+                t = datetime.strptime(r['time'], c.TDMQ_DT_FMT)
+            except ValueError:
+                t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
+            data = r['data']
+            with pytest.raises(HTTPError) as ve:
+                s.ingest(t, data)
+                ve.code = 401
+
+
+def test_check_timeseries(clean_db, live_app):
+    c = Client(live_app.url(), auth_token='supersecret')
     s = c.register_source(source_desc)
     N = 10
     now = datetime.now()

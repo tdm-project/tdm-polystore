@@ -30,7 +30,7 @@ class Client:
     TDMQ_DT_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
 
-    def __init__(self, tdmq_base_url=None):
+    def __init__(self, tdmq_base_url=None, auth_token=None):
         self.base_url = (tdmq_base_url or
                          os.getenv('TDMQ_BASE_URL') or
                          self.DEFAULT_TDMQ_BASE_URL)
@@ -43,6 +43,8 @@ class Client:
         self.tiledb_storage_root = None
         self.tiledb_ctx = None
         self.tiledb_vfs = None
+        self.headers = {'Authorization': f'Bearer {auth_token}'} if auth_token is not None else {}
+        
 
     def requires_connection(func):
         """
@@ -76,12 +78,12 @@ class Client:
         _logger.info("Client connected to TDMQ service at %s", self.base_url)
 
     def _do_get(self, resource, params=None):
-        r = requests.get(f'{self.base_url}/{resource}', params=params)
+        r = requests.get(f'{self.base_url}/{resource}', params=params, headers=self.headers)
         r.raise_for_status()
         return r.json()
 
     def _destroy_source(self, tdmq_id):
-        r = requests.delete(f'{self.base_url}/sources/{tdmq_id}')
+        r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers)
         r.raise_for_status()
         array_name = self._source_data_path(tdmq_id)
         if tiledb.object_type(self._source_data_path(tdmq_id), ctx=self.tiledb_ctx) == 'array':
@@ -106,7 +108,7 @@ class Client:
         """
         assert isinstance(definition, dict)
         _logger.debug('registering source id=%s', definition['id'])
-        r = requests.post(f'{self.base_url}/sources', json=[definition])
+        r = requests.post(f'{self.base_url}/sources', json=[definition], headers=self.headers)
         r.raise_for_status()
         tdmq_id = r.json()[0]
         if 'shape' in definition and len(definition['shape']) > 0:
@@ -123,7 +125,7 @@ class Client:
 
     @requires_connection
     def add_records(self, records):
-        r = requests.post(f'{self.base_url}/records', json=records)
+        r = requests.post(f'{self.base_url}/records', json=records, headers=self.headers)
         r.raise_for_status()
 
     @requires_connection
