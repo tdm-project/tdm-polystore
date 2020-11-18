@@ -18,6 +18,7 @@ DEFAULT_PREFIX = '/api/v0.0'
 
 ERROR_CODES = {
     400: "bad_request",
+    401: "unauthorized",
     403: "forbidden",
     404: "not_found",
     405: "method_not_allowed",
@@ -126,9 +127,11 @@ def create_app(test_config=None):
 
     add_db_cli(app)
 
+    if 'TDMQ_AUTH_TOKEN' in os.environ:
+        app.config['AUTH_TOKEN'] = os.environ['TDMQ_AUTH_TOKEN']
+        app.logger.info("Setting TDM-q access token from environment variable TDMQ_AUTH_TOKEN")
+
     app.logger.info("The access token is %s", app.config['AUTH_TOKEN'])
-    with app.app_context():
-        flask.g.auth_token = app.config['AUTH_TOKEN']
 
     configure_prometheus_registry(app)
     app.register_blueprint(tdmq_bp, url_prefix=app.config['APP_PREFIX'])
