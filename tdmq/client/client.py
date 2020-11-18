@@ -193,7 +193,10 @@ class Client:
         _logger.debug('trying domain creation for %s', array_name)
         dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
         _logger.debug('trying attribute creation for %s', array_name)
-        attrs = [tiledb.Attr(name=aname, dtype=np.float32) for aname in properties]
+        attrs = [tiledb.Attr(name=aname,
+                             dtype=np.float32,
+                             filters=tiledb.FilterList(
+                             [tiledb.ZstdFilter()])) for aname in properties]
         _logger.debug('trying ArraySchema creation for %s', array_name)
         schema = tiledb.ArraySchema(domain=dom, sparse=False,
                                     attrs=attrs, ctx=self.tiledb_ctx)
