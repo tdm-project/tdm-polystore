@@ -3,7 +3,6 @@ import sys
 from datetime import timedelta
 from functools import wraps
 
-import flask
 from flask import Blueprint, current_app, jsonify, request, url_for
 import werkzeug.exceptions as wex
 
@@ -36,7 +35,7 @@ def auth_required(f):
 
         if not auth_header.startswith('Bearer'):
             raise wex.Unauthorized('Only Bearer token authentication is supported')
-        if f"Bearer {flask.g.auth_token}" != auth_header:
+        if f"Bearer {current_app.config['AUTH_TOKEN']}" != auth_header:
             raise wex.Unauthorized("Invalid access token")
 
         return f(*args, **kwargs)
