@@ -416,14 +416,14 @@ def test_get_service_info(flask_client):
     info = resp.json
     assert info.get('version') is not None
     assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
-    if 'tiledb' in info:
-        assert 'storage.root' in info['tiledb']
-        assert 'config' in info['tiledb']
-        assert info['tiledb']['storage.root'] is not None
-        # By default, credentials for s3 storage are configured,
-        # so we may have a key like vfs.s3.aws_secret_access_key.
-        # This shouldn't be returned unless the token is provided.
-        assert all(('secret' not in s for s in info['tiledb']['config']))
+    assert 'tiledb' in info
+    assert 'storage.root' in info['tiledb']
+    assert 'config' in info['tiledb']
+    assert info['tiledb']['storage.root'] is not None
+    # By default, credentials for s3 storage are configured,
+    # so we may have a key like vfs.s3.aws_secret_access_key.
+    # This shouldn't be returned unless the token is provided.
+    assert all(('secret' not in s for s in info['tiledb']['config']))
 
 
 @pytest.mark.config
@@ -434,9 +434,9 @@ def test_get_service_info_authenticated(flask_client):
     info = resp.json
     assert info.get('version') is not None
     assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
-    if 'tiledb' in info:
-        assert 'vfs.s3.aws_access_key_id' in info['tiledb']['config']
-        assert 'vfs.s3.aws_secret_access_key' in info['tiledb']['config']
+    assert 'tiledb' in info
+    assert 'vfs.s3.aws_access_key_id' in info['tiledb']['config']
+    assert 'vfs.s3.aws_secret_access_key' in info['tiledb']['config']
 
 @pytest.mark.config
 def test_app_config_tiledb():
