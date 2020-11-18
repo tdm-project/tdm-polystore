@@ -66,16 +66,18 @@ class DefaultConfig(object):
 
     LOG_LEVEL = "INFO"
 
-    TILEDB_VFS_ROOT = "s3://firstbucket/"
+    TILEDB_VFS_ROOT = "s3://tdm-public/"
     TILEDB_VFS_CONFIG = {
-        "vfs.s3.aws_access_key_id": "tdm-user",
-        "vfs.s3.aws_secret_access_key": "tdm-user-s3",
         "vfs.s3.endpoint_override": "minio:9000",
         "vfs.s3.scheme": "http",
         "vfs.s3.region": "",
         "vfs.s3.verify_ssl": "false",
         "vfs.s3.use_virtual_addressing": "false",
         "vfs.s3.use_multipart_upload": "false",
+    }
+    TILEDB_VFS_CREDENTIALS = {
+        "vfs.s3.aws_access_key_id": "tdm-user",
+        "vfs.s3.aws_secret_access_key": "tdm-user-s3",
     }
 
     AUTH_TOKEN = secrets.token_urlsafe(32)

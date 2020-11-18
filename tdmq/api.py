@@ -25,6 +25,11 @@ def _restructure_timeseries(res, properties):
     return result
 
 
+def _request_authorized():
+    auth_header = request.headers.get('Authorization')
+    return f"Bearer {current_app.config['AUTH_TOKEN']}" == auth_header
+
+
 def auth_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -190,6 +195,9 @@ def service_info_get():
 
         if 'TILEDB_VFS_CONFIG' in current_app.config:
             tiledb_conf['config'] = current_app.config.get('TILEDB_VFS_CONFIG')
+
+        if 'TILEDB_VFS_CREDENTIALS' in current_app.config and _request_authorized():
+            tiledb_conf['config'].update(current_app.config.get('TILEDB_VFS_CREDENTIALS'))
 
         response['tiledb'] = tiledb_conf
     return jsonify(response)
