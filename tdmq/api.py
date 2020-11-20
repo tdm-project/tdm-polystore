@@ -1,3 +1,4 @@
+import copy
 import logging
 import sys
 from datetime import timedelta
@@ -197,6 +198,9 @@ def service_info_get():
             tiledb_conf['config'] = current_app.config.get('TILEDB_VFS_CONFIG')
 
         if 'TILEDB_VFS_CREDENTIALS' in current_app.config and _request_authorized():
+            # We're recycling the configuration object in the response.  Copy
+            # it before merging in the credentials to avoid modifying it.
+            tiledb_conf['config'] = copy.deepcopy(tiledb_conf['config'])
             tiledb_conf['config'].update(current_app.config.get('TILEDB_VFS_CREDENTIALS'))
 
         response['tiledb'] = tiledb_conf
