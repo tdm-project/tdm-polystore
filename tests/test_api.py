@@ -437,6 +437,16 @@ def test_get_service_info_authenticated(flask_client):
     assert 'tiledb' in info
     assert 'vfs.s3.aws_access_key_id' in info['tiledb']['config']
     assert 'vfs.s3.aws_secret_access_key' in info['tiledb']['config']
+    # Request again without authentication
+    resp = flask_client.get(f'/service_info')
+    _checkresp(resp)
+    info = resp.json
+    assert 'tiledb' in info
+    assert 'vfs.s3.aws_access_key_id' not in info['tiledb']['config']
+    assert 'vfs.s3.aws_secret_access_key' not in info['tiledb']['config']
+
+
+
 
 @pytest.mark.config
 def test_app_config_tiledb():
