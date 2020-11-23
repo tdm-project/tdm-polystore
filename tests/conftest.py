@@ -407,6 +407,7 @@ AUTH_TOKEN = '{auth_token}'
         f.flush()
         server = SubprocessLiveServer(f.name, application_path, host, port, '')
         server.start()
+        server.auth_token = auth_token
         try:
             yield server
         finally:

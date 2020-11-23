@@ -19,7 +19,7 @@ def test_connect(live_app):
 
 
 def test_get_entity_categories_as_admin(live_app):
-    c = Client(live_app.url(), auth_token='supesecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     r = c.get_entity_categories()
     assert 'entity_categories' in r
     assert len(r['entity_categories']) > 0
@@ -35,7 +35,7 @@ def test_get_entity_categories_as_user(live_app):
 
 
 def test_get_entity_types_as_admin(live_app):
-    c = Client(live_app.url(), auth_token='supesecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     r = c.get_entity_types()
     assert 'entity_types' in r
     the_list = r['entity_types']

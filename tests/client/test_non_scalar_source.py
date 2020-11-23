@@ -97,7 +97,7 @@ def test_basic_tiledb_s3_operativity(clean_s3):
 
 
 def test_nonscalar_source_register_deregister_as_admin(clean_storage, source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
@@ -123,7 +123,7 @@ def test_nonscalar_source_register_as_user(clean_storage, source_data, live_app)
 
 def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_app):
     # first it creates a source with an admin client
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_nonscalar_sources(c, source_data)
 
     c = Client(live_app.url())
@@ -133,7 +133,7 @@ def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_ap
 
 def test_nonscalar_source_access_as_user(clean_storage, source_data, live_app):
     # first creates the source as admin
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
     
@@ -151,7 +151,7 @@ def test_nonscalar_source_access_as_user(clean_storage, source_data, live_app):
 
 def test_add_record_to_one_nonscalar_source(clean_storage, source_data, live_app):
     N = 1
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
 
     mosaic_def = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
     source = c.register_source(mosaic_def, nslots=N)
@@ -163,7 +163,7 @@ def test_add_record_to_one_nonscalar_source(clean_storage, source_data, live_app
 
 def test_nonscalar_source_add_records(clean_storage, source_data, live_app):
     N = 3
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
     tdmq_ids = []
