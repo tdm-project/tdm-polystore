@@ -120,9 +120,7 @@ def _create_source(flask_client):
         "shape": [],
         "description": {}
     }]
-    headers = {
-        'Authorization': 'Bearer supersecret'
-    }
+    headers = _create_auth_header(flask_client.auth_token)
     return flask_client.post('/sources', json=source_data, headers=headers)
 
 
@@ -136,9 +134,7 @@ def test_source_create(flask_client, db_data):
 def test_source_delete(flask_client, db_data):
     response = _create_source(flask_client)
     tdmq_id = response.get_json()[0]
-    headers = {
-        'Authorization': 'Bearer supersecret'
-    }
+    headers = _create_auth_header(flask_client.auth_token)
     response = flask_client.delete(f'/sources/{tdmq_id}', headers=headers)
     assert response.status == '200 OK'
 
@@ -170,9 +166,7 @@ def test_source_create_duplicate(flask_client, db_data):
         "shape": [],
         "description": {}
     }]
-    headers = {
-        'Authorization': 'Bearer supersecret'
-    }
+    headers = _create_auth_header(flask_client.auth_token)
     response = flask_client.post('/sources', json=source_data, headers=headers)
     _checkresp(response)
     response = flask_client.post('/sources', json=source_data, headers=headers)
@@ -333,9 +327,7 @@ def test_create_timeseries(flask_client, app, db_data):
         "source": "st1", 
         "data": {"temperature": 20}
     }]
-    headers = {
-        'Authorization': 'Bearer supersecret'
-    }
+    headers = _create_auth_header(flask_client.auth_token)
     response = flask_client.post(
         '/records', json=timeseries_data, headers=headers)
     assert response.status == '200 OK'
