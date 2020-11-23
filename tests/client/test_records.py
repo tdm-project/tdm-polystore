@@ -29,7 +29,7 @@ source_desc = {
 
 
 def test_add_scalar_records_as_admin(clean_db, public_source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
@@ -44,7 +44,7 @@ def test_add_scalar_records_as_admin(clean_db, public_source_data, live_app):
 
 def test_add_scalar_records_as_user(clean_db, public_source_data, live_app):
     # first create the resource with admin client
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
 
     # then get the sources as user and tries to add records
@@ -57,7 +57,7 @@ def test_add_scalar_records_as_user(clean_db, public_source_data, live_app):
 
 
 def test_add_scalar_record_as_admin(clean_db, public_source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
@@ -73,7 +73,7 @@ def test_add_scalar_record_as_admin(clean_db, public_source_data, live_app):
 
 def test_add_scalar_record_as_user(clean_db, public_source_data, live_app):
     # first create the resource with admin client
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
 
     # then get the sources as user and tries to add record
@@ -87,7 +87,7 @@ def test_add_scalar_record_as_user(clean_db, public_source_data, live_app):
 
 
 def test_ingest_scalar_record_as_admin(clean_db, public_source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
@@ -107,7 +107,7 @@ def test_ingest_scalar_record_as_admin(clean_db, public_source_data, live_app):
 
 
 def test_ingest_scalar_record_as_user(clean_db, public_source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
@@ -127,7 +127,7 @@ def test_ingest_scalar_record_as_user(clean_db, public_source_data, live_app):
 
 
 def test_check_timeseries(clean_db, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     N = 10
     now = datetime.now()

@@ -40,7 +40,7 @@ def register_scalar_sources(client, source_data):
 
 
 def test_register_deregister_simple_source_as_admin(clean_storage, public_source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
     tdmq_ids = []
@@ -66,7 +66,7 @@ def test_register_simple_source_as_user(clean_storage, public_source_data, live_
 
 def test_deregister_simple_source_as_user(clean_storage, public_source_data, live_app):
     # first it creates a source with an admin client
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
 
     # then tries to deregister it with user client
@@ -77,7 +77,7 @@ def test_deregister_simple_source_as_user(clean_storage, public_source_data, liv
 
 
 def test_select_source_by_id(clean_storage, public_source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     for s in srcs:
         s2 = c.find_sources({'id': s.id})
@@ -87,7 +87,7 @@ def test_select_source_by_id(clean_storage, public_source_data, live_app):
 
 
 def test_select_sources_by_entity_type(clean_storage, public_source_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     counts = Counter([s.entity_type for s in srcs])
     for k in counts:
@@ -99,7 +99,7 @@ def test_select_sources_by_entity_type(clean_storage, public_source_data, live_a
 
 
 def test_find_source_by_roi(db_data, live_app):
-    c = Client(live_app.url(), auth_token='supersecret')
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
     geom = 'circle((9.132, 39.248), 1000)'
     results = c.find_sources(args={ 'roi': geom })
     external_ids = set( s.id for s in results )
