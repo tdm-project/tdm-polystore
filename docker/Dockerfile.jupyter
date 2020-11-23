@@ -9,8 +9,17 @@ COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
 
 ## Install packages to the docker-stacks image as documented here:
 ##     https://jupyter-docker-stacks.readthedocs.io/en/latest/using/recipes.html#using-pip-install-or-conda-install-in-a-child-docker-image
+#
+# The JupyterLab extension is installed as per the suggestion found in this issue on github;
+# https://github.com/jupyterlab/jupyterlab/issues/4930
 
 RUN conda install -v --yes --file "${TDMQ_DIST}/requirements-tdmqj.txt" \
+ && jupyter labextension install --clean -y jupyter-leaflet \
+ && jupyter lab clean \
+ && jlpm cache clean \
+ && npm cache clean --force \
+ && rm -rf $HOME/.node-gyp \
+ && rm -rf $HOME/.local \
  && fix-permissions $CONDA_DIR \
  && fix-permissions /home/$NB_USER \
  && conda clean --all -f -y
@@ -21,8 +30,6 @@ RUN conda install -v --yes --file "${TDMQ_DIST}/requirements-tdmqj.txt" \
 # 
 # # Download proj data
 # RUN projsync --system-directory --bbox ${PROJSYNC_BBOX}
-
-
 
 
 FROM jupyter-deps
