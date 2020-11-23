@@ -315,7 +315,7 @@ class SubprocessLiveServer(object):
         return '<SubprocessLiveServer listening at %s>' % self.url()
 
 
-@pytest.fixture(scope="session", params=["hdfs", "s3"])
+@pytest.fixture(scope="session", params=["s3", "hdfs"])
 def live_app(request, db, db_connection_config, pytestconfig, tdmq_s3_service_info, tdmq_hdfs_service_info):
     """Run application in a separate process.
 
