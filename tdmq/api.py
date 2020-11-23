@@ -154,11 +154,6 @@ def timeseries_get(tdmq_id):
             logger.error("Bad request getting timeseries")
             raise wex.BadRequest()
 
-        if len(result["rows"]) == 0:
-            logger.error(
-                "did not find any timeseries corresponding to required args")
-            raise wex.NotFound()
-
         res = _restructure_timeseries(result['rows'], result['properties'])
 
         res["tdmq_id"] = tdmq_id

@@ -91,9 +91,9 @@ def test_empty_timeseries(clean_db, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     # empty timeseries
-    with pytest.raises(requests.exceptions.HTTPError) as he:
-        s.timeseries()
-        assert he.status_code == '404'
+    ts = s.timeseries()
+    assert len(ts.get_shape()) == 1
+    assert len(ts) == 0
     c.deregister_source(s)
 
 
