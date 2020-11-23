@@ -2,6 +2,7 @@
 
 import logging
 import os
+import secrets
 
 import flask
 from flask.json import jsonify
@@ -17,6 +18,8 @@ DEFAULT_PREFIX = '/api/v0.0'
 
 ERROR_CODES = {
     400: "bad_request",
+    401: "unauthorized",
+    403: "forbidden",
     404: "not_found",
     405: "method_not_allowed",
     409: "duplicated_resource",
@@ -63,10 +66,8 @@ class DefaultConfig(object):
 
     LOG_LEVEL = "INFO"
 
-    TILEDB_VFS_ROOT = "s3://firstbucket/"
+    TILEDB_VFS_ROOT = "s3://tdm-public/"
     TILEDB_VFS_CONFIG = {
-        "vfs.s3.aws_access_key_id": "tdm-user",
-        "vfs.s3.aws_secret_access_key": "tdm-user-s3",
         "vfs.s3.endpoint_override": "minio:9000",
         "vfs.s3.scheme": "http",
         "vfs.s3.region": "",
@@ -74,6 +75,12 @@ class DefaultConfig(object):
         "vfs.s3.use_virtual_addressing": "false",
         "vfs.s3.use_multipart_upload": "false",
     }
+    TILEDB_VFS_CREDENTIALS = {
+        "vfs.s3.aws_access_key_id": "tdm-user",
+        "vfs.s3.aws_secret_access_key": "tdm-user-s3",
+    }
+
+    AUTH_TOKEN = secrets.token_urlsafe(32)
 
     # TileDB has tons of client configuration properties.
     # See https://docs.tiledb.com/main/solutions/tiledb-embedded/examples/configuration-parameters
@@ -121,6 +128,12 @@ def create_app(test_config=None):
         pass
 
     add_db_cli(app)
+
+    if 'TDMQ_AUTH_TOKEN' in os.environ:
+        app.config['AUTH_TOKEN'] = os.environ['TDMQ_AUTH_TOKEN']
+        app.logger.info("Setting TDM-q access token from environment variable TDMQ_AUTH_TOKEN")
+
+    app.logger.info("The access token is %s", app.config['AUTH_TOKEN'])
 
     configure_prometheus_registry(app)
     app.register_blueprint(tdmq_bp, url_prefix=app.config['APP_PREFIX'])

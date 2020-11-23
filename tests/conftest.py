@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import os
@@ -14,6 +15,11 @@ import pytest
 import tdmq.db
 import tdmq.db_manager as db_manager
 from tdmq.app import create_app
+
+
+@pytest.fixture(scope="session")
+def auth_token():
+    return 'supersecret'
 
 
 @pytest.fixture(scope="session")
@@ -84,7 +90,7 @@ def clean_db(db):
 
 
 @pytest.fixture
-def app(db_connection_config):
+def app(db_connection_config, auth_token):
     """Create and configure a new app instance for each test."""
     app = create_app({
         'TESTING': True,
@@ -95,7 +101,8 @@ def app(db_connection_config):
         'DB_PASSWORD': db_connection_config['password'],
         'LOG_LEVEL': 'DEBUG',
         'PROMETHEUS_REGISTRY': True,
-        'APP_PREFIX': ''
+        'APP_PREFIX': '',
+        'AUTH_TOKEN': auth_token
     })
 
     app.testing = True
@@ -106,8 +113,13 @@ def app(db_connection_config):
 
 @pytest.fixture
 def flask_client(app):
-    """A test client for the app."""
-    return app.test_client()
+    """
+    A test client for the app.
+    You can retrieve the authentication token through the `auth_token` attribute.
+    """
+    client = app.test_client()
+    client.auth_token = app.config['AUTH_TOKEN']
+    return client
 
 
 @pytest.fixture
@@ -134,14 +146,20 @@ def _rand_str(length=6):
 # Used by in testing tdmq.client
 #
 @pytest.fixture(scope="session")
+def tdmq_s3_credentials():
+    return {
+        "vfs.s3.aws_access_key_id": "tdm-user",
+        "vfs.s3.aws_secret_access_key": "tdm-user-s3",
+    }
+
+
+@pytest.fixture(scope="session")
 def tdmq_s3_service_info():
     return {
         'version' : '0.1',
         'tiledb' : {
             'storage.root' : 's3://firstbucket/',
             'config': {
-                "vfs.s3.aws_access_key_id": "tdm-user",
-                "vfs.s3.aws_secret_access_key": "tdm-user-s3",
                 "vfs.s3.endpoint_override": "minio:9000",
                 "vfs.s3.scheme": "http",
                 "vfs.s3.region": "",
@@ -154,19 +172,31 @@ def tdmq_s3_service_info():
         }
 
 
+@pytest.fixture(scope="session")
+def tdmq_s3_service_info_with_creds(tdmq_s3_service_info, tdmq_s3_credentials):
+    conf = copy.deepcopy(tdmq_s3_service_info)
+    conf['tiledb']['config'].update(tdmq_s3_credentials)
+    return conf
+
+
 @pytest.fixture
-def clean_s3(tdmq_s3_service_info):
+def clean_s3(tdmq_s3_service_info_with_creds):
     import tiledb
-    config = tiledb.Config(params=tdmq_s3_service_info['tiledb']['config'])
-    bucket = tdmq_s3_service_info['tiledb']['storage.root']
+    bucket = tdmq_s3_service_info_with_creds['tiledb']['storage.root']
     assert bucket.startswith('s3://')
+    config = tiledb.Config(params=tdmq_s3_service_info_with_creds['tiledb']['config'])
     ctx = tiledb.Ctx(config=config)
     vfs = tiledb.VFS(ctx=ctx)
     if vfs.is_bucket(bucket):
         vfs.empty_bucket(bucket)
     else:
         vfs.create_bucket(bucket)
-    return tdmq_s3_service_info
+    return tdmq_s3_service_info_with_creds
+
+
+@pytest.fixture(scope="session")
+def tdmq_hdfs_credentials():
+    return {'vfs.hdfs.username': 'root'}
 
 
 @pytest.fixture(scope="session")
@@ -175,21 +205,30 @@ def tdmq_hdfs_service_info():
         'version' : '0.1',
         'tiledb' : {
             'storage.root': 'hdfs://namenode:8020/arrays',
-            'config': {'vfs.hdfs.username': 'root'},
+            'config': {},
             }
         }
 
 
+@pytest.fixture(scope="session")
+def tdmq_hdfs_service_info_with_creds(tdmq_hdfs_service_info, tdmq_hdfs_credentials):
+    conf = copy.deepcopy(tdmq_hdfs_service_info)
+    conf['tiledb']['config'].update(tdmq_hdfs_credentials)
+    return conf
+
+
 @pytest.fixture
-def clean_hdfs(tdmq_hdfs_service_info):
+def clean_hdfs(tdmq_hdfs_service_info_with_creds):
     import tiledb
-    ctx = tiledb.Ctx(tdmq_hdfs_service_info['tiledb']['config'])
-    vfs = tiledb.VFS(config=ctx.config(), ctx=ctx)
-    array_root = tdmq_hdfs_service_info['tiledb']['storage.root']
+    array_root = tdmq_hdfs_service_info_with_creds['tiledb']['storage.root']
+    assert array_root.startswith("hdfs://")
+    config = tiledb.Config(params=tdmq_hdfs_service_info_with_creds['tiledb']['config'])
+    ctx = tiledb.Ctx(config=config)
+    vfs = tiledb.VFS(ctx=ctx)
     if vfs.is_dir(array_root):
         vfs.remove_dir(array_root)
 
-    return tdmq_hdfs_service_info
+    return tdmq_hdfs_service_info_with_creds
 
 
 @pytest.fixture
@@ -316,7 +355,9 @@ class SubprocessLiveServer(object):
 
 
 @pytest.fixture(scope="session", params=["s3", "hdfs"])
-def live_app(request, db, db_connection_config, pytestconfig, tdmq_s3_service_info, tdmq_hdfs_service_info):
+def live_app(request, db, db_connection_config, pytestconfig, auth_token,
+             tdmq_s3_service_info, tdmq_s3_credentials,
+             tdmq_hdfs_service_info, tdmq_hdfs_credentials):
     """Run application in a separate process.
 
        Get the URL with live_app.url().
@@ -325,8 +366,10 @@ def live_app(request, db, db_connection_config, pytestconfig, tdmq_s3_service_in
     port = pytestconfig.getvalue('live_server_port')
     if request.param == 'hdfs':
         service_info = tdmq_hdfs_service_info
+        credentials = tdmq_hdfs_credentials
     elif request.param == 's3':
         service_info = tdmq_s3_service_info
+        credentials = tdmq_s3_credentials
     else:
         raise RuntimeError(f"Unrecognized parameter {request.param}")
 
@@ -351,7 +394,9 @@ LOG_LEVEL = "DEBUG"
 PROMETHEUS_REGISTRY = True
 TILEDB_VFS_ROOT = "{service_info['tiledb']['storage.root']}"
 TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
+TILEDB_VFS_CREDENTIALS = {credentials}
 APP_PREFIX = ''
+AUTH_TOKEN = '{auth_token}'
     """
 
     application_path = os.path.abspath(os.path.splitext(wsgi.__file__)[0])
