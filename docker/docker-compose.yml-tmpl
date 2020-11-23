@@ -34,6 +34,8 @@ services:
     ports:
       - "8000:8000"
     #DEV user: USER_UID:USER_GID
+    env_file: &env_file
+      - settings.conf
     environment:
       - "CREATE_DB=false"
       - "DEV=false"
@@ -73,8 +75,7 @@ services:
     image: minio/minio
     ports:
       - "9000:9000"
-    env_file: &env_file
-      - settings.conf
+    env_file: *env_file
     environment:
       - MINIO_BROWSER=off
       - MINIO_HTTP_TRACE=/dev/stderr
