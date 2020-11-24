@@ -79,7 +79,8 @@ services:
     environment:
       - MINIO_BROWSER=off
       - MINIO_HTTP_TRACE=/dev/stderr
-    command: server /data
+    entrypoint: [ "/bin/sh", "-c",
+                  "mkdir -p /data/$${STORAGE_BUCKET} && exec /usr/bin/docker-entrypoint.sh minio server /data" ]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -99,6 +100,7 @@ services:
       - NB_UID=USER_UID
       - NB_GID=USER_GID
       - JUPYTER_ENABLE_LAB=yes
+      #DEV - PYTHONPATH=/tdmq-dist/
 
   tdmqc:
     image: tdmproject/tdmqc
@@ -113,11 +115,3 @@ services:
     env_file: *env_file
     environment:
       - NAMENODE_HOSTNAME=namenode
-
-  #tdmqj-hub:
-  #  image: tdmproject/tdmqj-hub
-  #  container_name: tdmq-notebook
-  #  environment:
-  #    - NAMENODE_HOSTNAME=namenode
-  #  volumes:
-  #    - "LOCAL_PATH/.travis/quickstart_dense.py:/quickstart_dense.py"
