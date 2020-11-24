@@ -1,4 +1,5 @@
 import abc
+import warnings
 import numpy as np
 from datetime import datetime
 
@@ -20,7 +21,7 @@ class TimeSeries(abc.ABC):
         :returns: dict mapping:  controlledProperty -> list
         """
         if not self.source.is_stationary:
-            raise NotImplementedError("Mobile data sources aren't implemented in the Client")
+            warnings.warn("Mobile data sources aren't implemented in the Client")
 
         args = {'after': self.after, 'before': self.before,
                 'bucket': self.bucket, 'op': self.op}
