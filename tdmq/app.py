@@ -140,7 +140,18 @@ def create_app(test_config=None):
 
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):
-        return jsonify({"error": ERROR_CODES.get(e.code)}), e.code
+        # adopt the JSON API convention for errors: https://jsonapi.org/examples/#error-objects
+        error = {
+            "status": str(e.code),
+            "source": { "pointer": flask.request.path },
+            "title":  ERROR_CODES.get(e.code),
+            }
+        if e.description:
+            error['detail'] = e.description
+
+        response_data = { 'errors' : [ error ] }
+
+        return jsonify(response_data), e.code
 
     @app.teardown_appcontext
     def teardown_db(arg):

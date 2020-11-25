@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 import requests
+from requests.exceptions import HTTPError
 
 import tiledb
 from tdmq.client.sources import NonScalarSource, ScalarSource
@@ -44,7 +45,7 @@ class Client:
         self.tiledb_ctx = None
         self.tiledb_vfs = None
         self.headers = {'Authorization': f'Bearer {auth_token}'} if auth_token is not None else {}
-        
+
 
     def requires_connection(func):
         """
@@ -121,7 +122,12 @@ class Client:
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
                 self._destroy_source(tdmq_id)
                 raise TdmqError(f"Internal failure in registering {definition.get('id', '(id unavailable)')}.")
-        return self.get_source(tdmq_id)
+        try:
+            return self.get_source(tdmq_id)
+        except HTTPError as e:
+            _logger.error("Failed to retrieve newly created source %s", tdmq_id)
+            raise
+
 
     @requires_connection
     def add_records(self, records):
