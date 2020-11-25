@@ -16,3 +16,5 @@ rasterio
 GDAL
 xarray
 ipyleaflet
+altair
+vega_datasets
