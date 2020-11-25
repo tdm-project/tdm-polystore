@@ -1,5 +1,6 @@
-import requests
 from datetime import datetime
+
+import requests
 
 SARDINIA_BBOX = "41.273966,8.034185;38.800759,9.836935"
 HERE_PBT_FMT = '%Y-%m-%dT%H:%M:%SZ'
@@ -41,7 +42,7 @@ def merge_segments_slow(segments):
     begins = {}
     ends = {}
     # Assumes no flips
-    for i, s in enumerate(segments):
+    for _, s in enumerate(segments):
         begins.setdefault(tuple(s[0]), []).append(s)
         ends.setdefault(tuple(s[-1]), []).append(s)
     strain_begins = []
