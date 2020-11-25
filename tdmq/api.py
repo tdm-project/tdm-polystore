@@ -109,8 +109,10 @@ def sources_post():
     data = request.json
     try:
         tdmq_ids = db.load_sources(data)
-    except tdmq.errors.DuplicateItemException:
-        raise wex.Conflict()
+    except tdmq.errors.DuplicateItemException as e:
+        logger.debug("Duplicate item exception")
+        logger.debug(e)
+        raise wex.Conflict("Duplicate source id")
     return jsonify(tdmq_ids)
 
 
