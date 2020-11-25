@@ -130,6 +130,7 @@ def get_description_of_src(here_desc):
         "alias": alias,
         "entity_category": "Station",
         "entity_type": "TrafficObserver",
+        "public": True,
         "default_footprint": here_desc['geojson'],
         "stationary": True,
         "controlledProperties": ['SP', 'SU', 'FF', 'JF', 'CN'],

@@ -18,8 +18,8 @@ def build_parser():
                         help="here data source", required=True)
     parser.add_argument("--tdmq", dest='tdmq', help="tdmq web server address",
                         required=False)
-    parser.add_argument("-V", dest='tdmq_version', help="tdmq version",
-                        default='0.0', required=False)
+    parser.add_argument("--tdmq-token", dest='tdmq_token', help="Authorization token for write access to service",
+                        required=True)
     parser.add_argument("--app-id", dest='app_id', help="here app_id",
                         required=True)
     parser.add_argument("--app-code", dest='app_code', help="here app_code",
@@ -31,7 +31,11 @@ def main(args):
     parser = build_parser()
     opts = parser.parse_args(args)
 
-    c = Client()
+    if opts.tdmq:
+        c = Client(opts.tdmq, opts.tdmq_token)
+    else:
+        c = Client(auth_token=opts.tdmq_token)
+
     logger.info("pre-loading existing srcs.")
     srcs = dict((s.id, s)
                 for s in c.find_sources({'entity_category': 'Station',
