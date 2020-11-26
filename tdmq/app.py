@@ -130,8 +130,11 @@ def create_app(test_config=None):
     add_db_cli(app)
 
     if 'TDMQ_AUTH_TOKEN' in os.environ:
-        app.config['AUTH_TOKEN'] = os.environ['TDMQ_AUTH_TOKEN']
-        app.logger.info("Setting TDM-q access token from environment variable TDMQ_AUTH_TOKEN")
+        if os.environ['TDMQ_AUTH_TOKEN']:
+            app.config['AUTH_TOKEN'] = os.environ['TDMQ_AUTH_TOKEN']
+            app.logger.info("Setting TDM-q access token from environment variable TDMQ_AUTH_TOKEN")
+        else:
+            app.logger.warning("Ignoring empty token value in TDMQ_AUTH_TOKEN environment variable")
 
     app.logger.info("The access token is %s", app.config['AUTH_TOKEN'])
 
