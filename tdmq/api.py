@@ -31,8 +31,35 @@ def _request_authorized():
     return f"Bearer {current_app.config['AUTH_TOKEN']}" == auth_header
 
 
-def _should_return_private_data(source_is_public, private_data_requested=False):
+def _should_anonymize_private_data(source_is_public, private_data_requested=False):
     return source_is_public or (_request_authorized() and private_data_requested)
+
+
+def _anonymize_source(src_dict):
+    safe_keys = (
+        'entity_category',
+        'entity_type',
+        'public',
+        'stationary',
+        'tdmq_id')
+    safe_description_keys = (
+        'controlledProperties',
+        'description',
+        'entity_category',
+        'entity_type',
+        'shape',
+        'stationary')
+    sanitized = dict()
+    for k in safe_description_keys:
+        if k in src_dict['description']:
+            sanitized[k] = src_dict['description'][k]
+
+    sanitized = dict(description=sanitized)
+    for k in safe_keys:
+        if k in src_dict:
+            sanitized[k] = src_dict[k]
+
+    return sanitized
 
 
 def auth_required(f):
@@ -91,6 +118,11 @@ def sources_get():
     with current_app.http_request_prom.labels(method='get', endpoint='sources').time():
         args = {k: v for k, v in request.args.items()}
         logger.debug("source: args is %s", args)
+
+        private_requested = str_to_bool(request.args.get('include_private'))
+        if private_requested and not _request_authorized():
+            raise wex.Unauthorized("Unauthorized request for private data")
+
         if 'roi' in args:
             args['roi'] = convert_roi(args['roi'])
         if 'controlledProperties' in args:
@@ -120,10 +152,17 @@ def sources_post():
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>')
 def sources_get_one(tdmq_id):
-    srcs = db.get_sources([tdmq_id], include_private=False)
+    private_requested = str_to_bool(request.args.get('include_private'))
+    if private_requested and not _request_authorized():
+        raise wex.Unauthorized("Unauthorized request for private data")
+
+    srcs = db.get_sources([tdmq_id], include_private=True)
     if len(srcs) == 1:
-        result = srcs[0]
-        return jsonify(result)
+        source = srcs[0]
+        if not _should_anonymize_private_data(source_is_public=source.get('public', False),
+                                              private_data_requested=private_requested):
+            source = _anonymize_source(source)
+        return jsonify(source)
     elif len(srcs) == 0:
         raise wex.NotFound()
     else:
@@ -142,7 +181,11 @@ def sources_delete(tdmq_id):
 def timeseries_get(tdmq_id):
     with current_app.http_request_prom.labels(method='get', endpoint='timeseries').time():
         rargs = request.args
-        include_private = str_to_bool(rargs.get('include_private'))
+
+        private_requested = str_to_bool(rargs.get('include_private'))
+        if private_requested and not _request_authorized():
+            raise wex.Unauthorized("Unauthorized request for private data")
+
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'fields', 'op'])
         if args['bucket'] is not None:
@@ -172,7 +215,7 @@ def timeseries_get(tdmq_id):
         # If private data is to be returned, we leave location data in the result: i.e.,
         # the default_footprint and the timestamped footprint.
         # Otherwise, we erase the mobile footprint from the result by replacing it with nulls.
-        if _should_return_private_data(result['public'], include_private):
+        if _should_anonymize_private_data(result['public'], private_requested):
             res["default_footprint"] = result['source_info']['default_footprint']
         else:
             res["coords"]["footprint"] = [ None ] * len(res["coords"]["footprint"])

@@ -23,6 +23,10 @@ NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 _db_connection = None
 
 
+def _compute_tdmq_id(external_id):
+    return uuid.uuid5(NAMESPACE_TDMQ, external_id)
+
+
 def get_db():
     """
     Requires active application context.
@@ -103,6 +107,7 @@ def list_sources(args):
             external_id,
             ST_AsGeoJSON(ST_Transform(default_footprint, 4326))::json
                 as default_footprint,
+            stationary,
             entity_category,
             entity_type,
             description,
@@ -295,7 +300,7 @@ def load_sources_conn(conn, data, validate=False, chunk_size=500):
     Return the list of UUIDs assigned to each object.
     """
     def gen_source_tuple(d):
-        tdmq_id = uuid.uuid5(NAMESPACE_TDMQ, d['id'])
+        tdmq_id = _compute_tdmq_id(d['id'])
         external_id = d['id']
         entity_type = d['entity_type']
         entity_cat = d['entity_category']

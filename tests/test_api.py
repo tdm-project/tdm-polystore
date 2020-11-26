@@ -92,7 +92,7 @@ def test_sources_db_error(flask_client):
 def test_source_types(flask_client, db_data):
     in_args = {"type": "multisource", "controlledProperties": "temperature"}
     q = "&".join(f"{k}={v}" for k, v in in_args.items())
-    response = flask_client.get('/sources?{q}')
+    response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     data = response.get_json()
 
@@ -299,8 +299,78 @@ def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data)
     # query again using tdmq_id
     response_with_tdmq_id = flask_client.get(f"/sources/{tdmq_id}")
 
-    assert item_with_id['external_id'] == response_with_tdmq_id.get_json()[
-        'external_id']
+    assert item_with_id['external_id'] == response_with_tdmq_id.get_json()['external_id']
+
+
+@pytest.mark.sources
+def test_private_source_query_by_tdmq_id_unauthenticated(flask_client, db_data, source_data):
+    from tdmq.db import _compute_tdmq_id
+    private_source = next(s for s in source_data['sources'] if not s.get('public'))
+    private_source_tdmq_id = str(_compute_tdmq_id(private_source['id']))
+
+    response = flask_client.get(f'/sources/{private_source_tdmq_id}')
+    struct = response.get_json()
+    assert private_source_tdmq_id == struct['tdmq_id']
+    assert set(struct.keys()) <= set(('description',
+                                      'entity_category',
+                                      'entity_type',
+                                      'public',
+                                      'stationary',
+                                      'tdmq_id'))
+    assert set(struct['description'].keys()) <= set(('controlledProperties',
+                                                     'description',
+                                                     'entity_category',
+                                                     'entity_type',
+                                                     'shape',
+                                                     'stationary'))
+
+@pytest.mark.sources
+def test_private_source_query_by_tdmq_id_unauthenticated_include_private(flask_client, db_data, source_data):
+    from tdmq.db import _compute_tdmq_id
+    private_source = next(s for s in source_data['sources'] if not s.get('public'))
+    private_source_tdmq_id = _compute_tdmq_id(private_source['id'])
+
+    response = flask_client.get(f'/sources/{private_source_tdmq_id}?include_private=true')
+    assert response.status == '401 UNAUTHORIZED'
+
+
+@pytest.mark.sources
+def test_private_source_query_by_tdmq_id_authenticated(flask_client, db_data, source_data):
+    from tdmq.db import _compute_tdmq_id
+    private_source = next(s for s in source_data['sources'] if not s.get('public'))
+    private_source_tdmq_id = str(_compute_tdmq_id(private_source['id']))
+
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.get(f'/sources/{private_source_tdmq_id}', headers=headers)
+    _checkresp(response)
+    struct = response.get_json()
+    assert private_source_tdmq_id == struct['tdmq_id']
+    assert set(struct.keys()) <= set(('description',
+                                      'entity_category',
+                                      'entity_type',
+                                      'public',
+                                      'stationary',
+                                      'tdmq_id'))
+    assert set(struct['description'].keys()) <= set(('controlledProperties',
+                                                     'description',
+                                                     'entity_category',
+                                                     'entity_type',
+                                                     'shape',
+                                                     'stationary'))
+
+
+@pytest.mark.sources
+def test_private_source_query_by_tdmq_id_authenticated_include_private(flask_client, db_data, source_data):
+    from tdmq.db import _compute_tdmq_id
+    private_source = next(s for s in source_data['sources'] if not s.get('public'))
+    private_source_tdmq_id = str(_compute_tdmq_id(private_source['id']))
+
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.get(f'/sources/{private_source_tdmq_id}?include_private=true', headers=headers)
+    _checkresp(response)
+    struct = response.get_json()
+    assert private_source_tdmq_id == struct['tdmq_id']
+    assert private_source['id'] == struct.get('external_id')
 
 
 @pytest.mark.timeseries
@@ -321,10 +391,10 @@ def test_timeseries_method_not_allowed(flask_client):
 
 @pytest.mark.timeseries
 def test_create_timeseries(flask_client, app, db_data):
-    _create_source(flask_client)    
+    _create_source(flask_client)
     timeseries_data = [{
-        "time": "2019-05-02T10:50:00Z", 
-        "source": "st1", 
+        "time": "2019-05-02T10:50:00Z",
+        "source": "st1",
         "data": {"temperature": 20}
     }]
     headers = _create_auth_header(flask_client.auth_token)
