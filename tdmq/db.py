@@ -567,7 +567,11 @@ def get_timeseries(tdmq_id, args=None):
 
     query = query_template.format(**clauses)
     rows = query_db_all(query)
-    return dict(source_info=description, properties=properties, rows=rows)
+
+    return dict(source_info=description,
+                public=(not source_is_private),
+                properties=properties,
+                rows=rows)
 
 
 def add_db_cli(app):

@@ -395,22 +395,86 @@ def test_get_timeseries(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_timeseries_for_private_sources(flask_client, app, db_data):
+def test_get_private_timeseries_unauthenticated(flask_client, clean_db, source_data):
+    private_source = [ next(s for s in source_data['sources'] if not s.get('public')) ]
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.post('/sources', json=private_source, headers=headers)
+    _checkresp(response)
+    tdmq_id = response.get_json()[0]
+
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries')
+    _checkresp(response)
+    d = response.get_json()
+    assert d['tdmq_id'] == tdmq_id
+    assert 'default_footprint' not in d
+    assert all(pos is None for pos in d['coords']['footprint'])
+
+
+@pytest.mark.timeseries
+def test_get_private_timeseries_authenticated(flask_client, clean_db, source_data):
+    private_source = [ next(s for s in source_data['sources'] if not s.get('public')) ]
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.post('/sources', json=private_source, headers=headers)
+    _checkresp(response)
+    tdmq_id = response.get_json()[0]
+
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries', headers=headers)
+    _checkresp(response)
+    d = response.get_json()
+    assert d['tdmq_id'] == tdmq_id
+    assert 'default_footprint' not in d
+    assert all(pos is None for pos in d['coords']['footprint'])
+
+
+@pytest.mark.timeseries
+def test_get_private_timeseries_authenticated_no_private(flask_client, clean_db, source_data):
+    private_source = [ next(s for s in source_data['sources'] if not s.get('public')) ]
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.post('/sources', json=private_source, headers=headers)
+    _checkresp(response)
+    tdmq_id = response.get_json()[0]
+
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries', headers=headers)
+    _checkresp(response)
+    d = response.get_json()
+    assert d['tdmq_id'] == tdmq_id
+    assert 'default_footprint' not in d
+    assert all(pos is None for pos in d['coords']['footprint'])
+
+
+@pytest.mark.timeseries
+def test_get_private_timeseries_authenticated_req_private(flask_client, clean_db, source_data):
+    private_source = [ next(s for s in source_data['sources'] if not s.get('public')) ]
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.post('/sources', json=private_source, headers=headers)
+    _checkresp(response)
+    tdmq_id = response.get_json()[0]
+
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?include_private=true', headers=headers)
+    _checkresp(response)
+    d = response.get_json()
+    assert d['tdmq_id'] == tdmq_id
+    assert 'default_footprint' in d
+    assert d['default_footprint'] is not None
+
+
+@pytest.mark.sources
+def test_search_for_private_sources(flask_client, app, db_data):
     source_id = 'tdm/sensor_7'
     response = flask_client.get(f'/sources?id={source_id}')
     assert response.status == '200 OK'
     _checkresp(response, [])
 
 
+@pytest.mark.sources
 def test_entity_types_method_not_allowed(flask_client):
-
     for method in ('post', 'delete', 'put'):
         response = getattr(flask_client, method)(f'/entity_types', json={})
         assert response.status == '405 METHOD NOT ALLOWED'
 
 
+@pytest.mark.sources
 def test_entity_categories_method_not_allowed(flask_client):
-
     for method in ('post', 'delete', 'put'):
         response = getattr(flask_client, method)(f'/entity_categories', json={})
         assert response.status == '405 METHOD NOT ALLOWED'

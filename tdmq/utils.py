@@ -28,3 +28,7 @@ def chdir_context(new_dir):
         yield
     finally:
         os.chdir(old_dir)
+
+
+def str_to_bool(s):
+    return s is not None and s.lower() in ('t', 'true', '1')

@@ -9,7 +9,7 @@ import werkzeug.exceptions as wex
 
 import tdmq.db as db
 import tdmq.errors
-from tdmq.utils import convert_roi
+from tdmq.utils import convert_roi, str_to_bool
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,10 @@ def _restructure_timeseries(res, properties):
 def _request_authorized():
     auth_header = request.headers.get('Authorization')
     return f"Bearer {current_app.config['AUTH_TOKEN']}" == auth_header
+
+
+def _should_return_private_data(source_is_public, private_data_requested=False):
+    return source_is_public or (_request_authorized() and private_data_requested)
 
 
 def auth_required(f):
@@ -138,6 +142,7 @@ def sources_delete(tdmq_id):
 def timeseries_get(tdmq_id):
     with current_app.http_request_prom.labels(method='get', endpoint='timeseries').time():
         rargs = request.args
+        include_private = str_to_bool(rargs.get('include_private'))
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'fields', 'op'])
         if args['bucket'] is not None:
@@ -145,9 +150,9 @@ def timeseries_get(tdmq_id):
         if args['fields'] is not None:
             args['fields'] = args['fields'].split(',')
 
-        # Forces returning data only for private_sources
-        args['include_private'] = False
-
+        # Pass 'include_private' = True to the DB query or it will not return
+        # data from private sources.  We filter the data at this level.
+        args['include_private'] = True
         try:
             result = db.get_timeseries(tdmq_id, args)
         except tdmq.errors.RequestException:
@@ -157,13 +162,21 @@ def timeseries_get(tdmq_id):
         res = _restructure_timeseries(result['rows'], result['properties'])
 
         res["tdmq_id"] = tdmq_id
-        res["default_footprint"] = result['source_info']['default_footprint']
         res["shape"] = result['source_info']['shape']
         if args['bucket']:
             res["bucket"] = {
                 "interval": args['bucket'].total_seconds(), "op": args.get("op")}
         else:
             res['bucket'] = None
+
+        # If private data is to be returned, we leave location data in the result: i.e.,
+        # the default_footprint and the timestamped footprint.
+        # Otherwise, we erase the mobile footprint from the result by replacing it with nulls.
+        if _should_return_private_data(result['public'], include_private):
+            res["default_footprint"] = result['source_info']['default_footprint']
+        else:
+            res["coords"]["footprint"] = [ None ] * len(res["coords"]["footprint"])
+
         res = jsonify(res)
         current_app.http_response_prom.labels(method='get', endpoint='timeseries').observe(
             sys.getsizeof(res.data))

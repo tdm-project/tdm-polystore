@@ -317,6 +317,14 @@ paths:
       parameters:
         - $ref: '#/components/parameters/tdmq_source_id'
 
+        - name: "include_private"
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: >
+            If authorized, you can optionally request that personal
+            data be included in the result.
         - name: "after"
           in: query
           schema:
@@ -652,7 +660,6 @@ components:
 
       required:
         - tdmq_id
-        - default_footprint
         - shape
         - coords
         - data
