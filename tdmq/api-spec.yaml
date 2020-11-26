@@ -156,6 +156,7 @@ paths:
             ```
 
       parameters:
+        - $ref: '#/components/parameters/include_private'
         - $ref: '#/components/parameters/roi'
         - $ref: '#/components/parameters/after'
         - $ref: '#/components/parameters/before'
@@ -234,6 +235,7 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/tdmq_source_id'
+        - $ref: '#/components/parameters/include_private'
       responses:
         '200':
           description: Source retrieved
@@ -316,15 +318,7 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/tdmq_source_id'
-
-        - name: "include_private"
-          in: query
-          schema:
-            type: boolean
-            default: false
-          description: >
-            If authorized, you can optionally request that personal
-            data be included in the result.
+        - $ref: '#/components/parameters/include_private'
         - name: "after"
           in: query
           schema:
@@ -464,6 +458,18 @@ components:
         minimum: 0
         default: 0
       description: "Number of items skip before starting to retrieve from ordered collection"
+
+    include_private:
+      name: "include_private"
+      in: query
+      schema:
+        type: boolean
+        default: false
+      description: >
+        If authorized, you can optionally request that personal data of private
+        sources be included in the result.  The request must provide valid
+        credentials when this parameters is set to true or the response will be
+        HTTP 401.
 
   responses:
 

@@ -1,4 +1,5 @@
 
+import logging
 from datetime import datetime, timedelta
 from urllib.error import HTTPError
 
