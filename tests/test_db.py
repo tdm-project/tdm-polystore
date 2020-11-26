@@ -145,7 +145,8 @@ def test_get_timeseries_simple(app, db_data, source_data):
 
     result = db_query.get_timeseries(src_from_db['tdmq_id'])
 
-    assert set(result.keys()) >= {'source_info', 'properties', 'rows'}
+    assert set(result.keys()) >= {'source_info', 'public', 'properties', 'rows'}
+    assert result['public'] is True
     assert set(result['properties']) == set(all_src_recs[0]['data'].keys())
     assert len(result['rows']) == len(all_src_recs)
     assert len(result['rows'][0]) == 2 + len(result['properties'])
@@ -229,6 +230,7 @@ def test_get_private_timeseries(app, db_data, source_data):
 
     result = db_query.get_timeseries(tdmq_id, {'include_private': True})
     assert len(result['rows']) == 2
+    assert result['public'] is not True
 
 
 def test_get_shaped_timeseries(app, db_data, source_data):
