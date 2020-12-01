@@ -1,5 +1,4 @@
 
-tiledb-py==0.6.6
 cython
 psycopg2 #=2.8
 wget #=1.20
@@ -18,3 +17,4 @@ xarray
 ipyleaflet
 altair
 vega_datasets
+shapely==1.7.*

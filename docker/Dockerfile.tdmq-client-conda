@@ -1,0 +1,33 @@
+
+ARG BASE_IMAGE=continuumio/miniconda3:4.8.2
+FROM $BASE_IMAGE AS tdmq-client-conda
+
+RUN apt-get update -q \
+ && DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+        libnss-wrapper \
+ && apt-get clean -y
+
+ENV TDMQ_DIST=/tdmq-dist
+ENV DATA_DIR="${TDMQ_DIST}/data"
+
+COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
+COPY --chown=root ./requirements-conda-client-addons.txt "${TDMQ_DIST}/"
+COPY --chown=root install_conda_requirements.sh /usr/local/bin/
+RUN chmod a+rx /usr/local/bin/install_conda_requirements.sh
+RUN /usr/local/bin/install_conda_requirements.sh "${TDMQ_DIST}/tdmq/requirements-client.txt"
+RUN /usr/local/bin/install_conda_requirements.sh "${TDMQ_DIST}/requirements-conda-client-addons.txt"
+
+COPY --chown=root tdmq_scripts.sh /usr/local/lib/
+COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
+RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
+ && chmod 755 /usr/local/bin/*
+
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
+RUN cd "${TDMQ_DIST}" \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx
+
+RUN cd "${TDMQ_DIST}" && pip install .
+
+# vim: filetype=dockerfile

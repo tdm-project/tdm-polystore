@@ -5,16 +5,25 @@ ENV TDMQ_DIST=/opt/tdmq-dist
 
 #ARG PROJ_VERSION=7.2.0
 
-COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
-
 ## Install packages to the docker-stacks image as documented here:
 ##     https://jupyter-docker-stacks.readthedocs.io/en/latest/using/recipes.html#using-pip-install-or-conda-install-in-a-child-docker-image
 #
+COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
+COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
+COPY --chown=root install_conda_requirements.sh /usr/local/bin/
+USER root
+RUN chmod 755 /usr/local/bin/install_conda_requirements.sh \
+ && chmod 644 "${TDMQ_DIST}/tdmq/requirements-client.txt"
+
+USER $NB_USER
+RUN /usr/local/bin/install_conda_requirements.sh "${TDMQ_DIST}/tdmq/requirements-client.txt" \
+ && /usr/local/bin/install_conda_requirements.sh "${TDMQ_DIST}/requirements-tdmqj.txt" \
+ && fix-permissions $CONDA_DIR \
+ && fix-permissions /home/$NB_USER
+
 # The JupyterLab extension is installed as per the suggestion found in this issue on github;
 # https://github.com/jupyterlab/jupyterlab/issues/4930
-
-RUN conda install -v --yes --file "${TDMQ_DIST}/requirements-tdmqj.txt" \
- && jupyter labextension install --clean -y jupyter-leaflet \
+RUN jupyter labextension install --clean -y jupyter-leaflet \
  && jupyter lab clean \
  && jlpm cache clean \
  && npm cache clean --force \
@@ -43,11 +52,6 @@ RUN cd "${TDMQ_DIST}" \
  && find . -type f -print0 | xargs -0 chmod a+r \
  && find . -type d -print0 | xargs -0 chmod a+rx
 USER $NB_USER
-
-RUN conda install -v --yes --file "${TDMQ_DIST}/tdmq/requirements-client.txt" \
- && fix-permissions $CONDA_DIR \
- && fix-permissions /home/$NB_USER \
- && conda clean --all -f -y
 
 # FIXME:  this should be installed with conda
 RUN cd "${TDMQ_DIST}" && pip3 install .

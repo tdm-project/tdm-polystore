@@ -1,28 +1,23 @@
-ARG BASE_IMAGE=tdmproject/tiledb:0.6.6-3.6
-FROM $BASE_IMAGE AS deps
 
-ARG PIP_BIN=pip3
-ENV PIP=$PIP_BIN
+# This dockerfile performs a pip-based installation of the tdmq client
+# and its requirements.  By default, it uses the crs4/hadoopclient image
+# and builds an HDFS-capable client.  You can also specify an alternative
+# Debian-derived image to use as a base image.
 
-ARG HADOOP_HOME=/opt/hadoop
 
-USER root
+# You can build an image without the hadoop client by providing a
+# different base image.
+ARG BASE_IMAGE=hadoop-base
 
-ENV TDMQ_DIST=/tdmq-dist
+# This stage creates a base image for the tdmq client that includes the
+# Hadoop client libraries.  It basically performs minimal customization
+# of the crs4/hadoopclient image.
+ARG HADOOP_BASE_IMAGE=crs4/hadoopclient:3.2.0
+FROM $HADOOP_BASE_IMAGE AS hadoop-base
 
-RUN apt-get update -q \
- && DEBIAN_FRONTEND=noninteractive \
-    apt-get install -y --no-install-recommends \
-        libnss-wrapper \
-        python3-sqlalchemy-ext \
- && apt-get clean -y
-
-# setuptools must be installed before some of the other client requirements
-RUN $PIP install --no-cache-dir setuptools
-COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
-RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-client.txt"
-
-ENV DATA_DIR="${TDMQ_DIST}/data" \
+ARG HADOOP_CLASSPATH
+ENV CLASSPATH="$HADOOP_CLASSPATH" \
+    HADOOP_HOME="/opt/hadoop" \
     HADOOP_LOG_DIR="/tmp/hadoop_logs" \
     LANG=C.UTF-8
 
@@ -37,27 +32,44 @@ RUN echo "export HADOOP_HOME=${HADOOP_HOME}" >> /etc/profile.d/hadoop.sh \
  && sed -i -e 's|^ *log4j.appender.FSLOGGER.File=.*fairscheduler-statedump.log|#&|' "${HADOOP_HOME}/etc/hadoop/log4j.properties" \
  && echo  /usr/lib/jvm/jre/lib/amd64/server > /etc/ld.so.conf.d/jvm.conf \
  && chmod a+r /etc/profile.d/hadoop.sh /etc/ld.so.conf.d/jvm.conf \
- && ldconfig
+ && ldconfig \
+ && chmod a+w -R /opt/hadoop/etc/hadoop/
 
+
+FROM $BASE_IMAGE AS tdmq-client
+
+USER root
+ARG PIP_BIN=pip3
+ENV PIP=$PIP_BIN
+
+ENV TDMQ_DIST=/tdmq-dist
+ENV DATA_DIR="${TDMQ_DIST}/data"
+
+RUN apt-get update -q \
+ && DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+        libnss-wrapper \
+        python3-pip \
+ && apt-get clean -y
+
+COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
+# The Python tiledb package is called tiledb-py in conda and tiledb on pypi.
+# We fix the name on-the-fly with sed with a quick process substitution (which
+# requires bash).
+RUN /bin/bash -c "$PIP install --no-cache-dir -r <(sed -e 's/tiledb-py/tiledb/' "${TDMQ_DIST}/tdmq/requirements-client.txt")"
 
 COPY --chown=root tdmq_scripts.sh /usr/local/lib/
 COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
 RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
- && chmod 755 /usr/local/bin/* \
- && chmod a+w -R /opt/hadoop/etc/hadoop/
+ && chmod 755 /usr/local/bin/*
 
-
-#################################################
-FROM deps AS tdmq-client
 
 COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
-WORKDIR "${TDMQ_DIST}"
 RUN cd "${TDMQ_DIST}" \
  && find . -type f -print0 | xargs -0 chmod a+r \
- && find . -type d -print0 | xargs -0 chmod a+rx \
- && $PIP install --no-cache-dir -r tdmq/requirements-client.txt \
- && $PIP install .
+ && find . -type d -print0 | xargs -0 chmod a+rx
 
+RUN cd "${TDMQ_DIST}" && $PIP install .
 
 #################################################
 FROM tdmq-client AS tdmqc
@@ -72,3 +84,7 @@ ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
 
 COPY --chown=root tdmqc-entrypoint.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/tdmqc-entrypoint.sh
+
+RUN useradd -m -s /bin/bash -d /home/tdm tdm
+USER tdm
+WORKDIR "${TDMQ_DIST}"

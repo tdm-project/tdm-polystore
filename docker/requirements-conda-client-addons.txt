@@ -1,0 +1,11 @@
+wget==1.*
+ckanapi==4.5.*
+pyproj
+tifffile
+rasterio==1.*
+GDAL==3.* # nopip
+xarray
+shapely==1.7.*
+s3cmd==2.*
+pytest==6.1.*
+pytest-flask==1.1.*
