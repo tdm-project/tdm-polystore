@@ -115,3 +115,4 @@ services:
     env_file: *env_file
     environment:
       - NAMENODE_HOSTNAME=namenode
+      - TDMQ_AUTH_TOKEN=
