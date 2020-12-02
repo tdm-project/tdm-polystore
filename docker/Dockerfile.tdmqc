@@ -36,7 +36,7 @@ RUN echo "export HADOOP_HOME=${HADOOP_HOME}" >> /etc/profile.d/hadoop.sh \
  && chmod a+w -R /opt/hadoop/etc/hadoop/
 
 
-FROM $BASE_IMAGE AS tdmq-client
+FROM $BASE_IMAGE AS tdmq-client-deps
 
 USER root
 ARG PIP_BIN=pip3
@@ -58,11 +58,13 @@ COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
 # requires bash).
 RUN /bin/bash -c "$PIP install --no-cache-dir -r <(sed -e 's/tiledb-py/tiledb/' "${TDMQ_DIST}/tdmq/requirements-client.txt")"
 
+#################################################
+FROM tdmq-client-deps AS tdmq-client
+
 COPY --chown=root tdmq_scripts.sh /usr/local/lib/
 COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
 RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
  && chmod 755 /usr/local/bin/*
-
 
 COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
 RUN cd "${TDMQ_DIST}" \
@@ -72,13 +74,28 @@ RUN cd "${TDMQ_DIST}" \
 RUN cd "${TDMQ_DIST}" && $PIP install .
 
 #################################################
-FROM tdmq-client AS tdmqc
+FROM tdmq-client-deps AS tdmqc
 
+COPY --chown=root ./tdmq-dist/tdmq/requirements-server.txt "${TDMQ_DIST}/tdmq/"
 RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
 RUN $PIP install --no-cache-dir \
         pytest==6.1 \
         pytest-flask==1.1 \
         s3cmd==2.1
+
+# FIXME: This section is copied and pasted from the image build process for
+# tdmq-client.
+COPY --chown=root tdmq_scripts.sh /usr/local/lib/
+COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
+RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
+ && chmod 755 /usr/local/bin/*
+
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
+RUN cd "${TDMQ_DIST}" \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx
+
+RUN cd "${TDMQ_DIST}" && $PIP install .
 
 ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
 
@@ -88,3 +105,6 @@ RUN chmod 755 /usr/local/bin/tdmqc-entrypoint.sh
 RUN useradd -m -s /bin/bash -d /home/tdm tdm
 USER tdm
 WORKDIR "${TDMQ_DIST}"
+
+
+# vim: filetype=dockerfile

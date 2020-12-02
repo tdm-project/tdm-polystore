@@ -10,7 +10,7 @@ all: images
 
 images: base-images
 
-base-images: tdmqc jupyter web tdmq-db tdmq-client-conda
+base-images: tdmqc jupyter web tdmq-db tdmq-client-conda tdmqc-conda
 
 # FIXME copying tests/data twice...
 docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests examples
@@ -18,7 +18,10 @@ docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests examples
 	cp -rf apidocs setup.py tdmq tests examples docker/tdmq-dist
 
 tdmq-client-conda: docker/tdmq-dist docker/Dockerfile.tdmq-client-conda
-	docker build $(DOCKER_BUILD_EXTRA_ARGS) -f docker/Dockerfile.tdmq-client-conda -t tdmproject/tdmq-client-conda docker
+	docker build $(DOCKER_BUILD_EXTRA_ARGS) -f docker/Dockerfile.tdmq-client-conda --target tdmq-client-conda -t tdmproject/tdmq-client-conda docker
+
+tdmqc-conda: docker/tdmq-dist docker/Dockerfile.tdmq-client-conda
+	docker build $(DOCKER_BUILD_EXTRA_ARGS) -f docker/Dockerfile.tdmq-client-conda --target tdmqc-conda -t tdmproject/tdmqc-conda docker
 
 tdmq-client: docker/tdmq-dist docker/Dockerfile.tdmqc
 	docker build $(DOCKER_BUILD_EXTRA_ARGS) \
@@ -84,7 +87,7 @@ run-tests: start
 	docker-compose -f ./docker/docker-compose.yml exec tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
 	docker-compose -f ./docker/docker-compose.yml exec tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
 	docker-compose -f ./docker/docker-compose.yml exec namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
-	docker run --rm --net docker_default --user $$(id -u) --env-file docker/settings.conf --env STORAGE_BUCKET= tdmproject/tdmq-client-conda /usr/local/bin/tdmqc_run_tests
+	docker run -it --rm --net docker_default --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
 
 
 clean: stop
@@ -92,4 +95,4 @@ clean: stop
 	rm -rf docker/tdmq-dist
 	rm -rf docker/notebooks
 
-.PHONY: all tdmqc-deps tdmqc jupyter web images base-images run start stop startdev stopdev clean
+.PHONY: all tdmq-client-conda tdmqc-conda tdmq-client tdmqc jupyter web images base-images run start stop startdev stopdev clean

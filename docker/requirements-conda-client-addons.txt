@@ -1,11 +1,11 @@
-wget==1.*
-ckanapi==4.5.*
+wget>=1,<2
+ckanapi>=4.5,<4.6
 pyproj
 tifffile
-rasterio==1.*
-GDAL==3.* # nopip
+rasterio>=1,<2
+GDAL>=3,<4
 xarray
-shapely==1.7.*
-s3cmd==2.*
-pytest==6.1.*
-pytest-flask==1.1.*
+shapely>=1.7,<1.8
+s3cmd>=2,<3
+pytest>=6.1,<7
+pytest-flask>=1.1,<1.2

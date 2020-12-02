@@ -8,16 +8,18 @@ ENV TDMQ_DIST=/opt/tdmq-dist
 ## Install packages to the docker-stacks image as documented here:
 ##     https://jupyter-docker-stacks.readthedocs.io/en/latest/using/recipes.html#using-pip-install-or-conda-install-in-a-child-docker-image
 #
-COPY --chown=root ./requirements-tdmqj.txt "${TDMQ_DIST}/"
+COPY --chown=root ./requirements-tdmqj.txt ./requirements-conda-client-addons.txt "${TDMQ_DIST}/"
 COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
-COPY --chown=root install_conda_requirements.sh /usr/local/bin/
 USER root
-RUN chmod 755 /usr/local/bin/install_conda_requirements.sh \
- && chmod 644 "${TDMQ_DIST}/tdmq/requirements-client.txt"
+RUN chmod 644 ${TDMQ_DIST}/*.txt "${TDMQ_DIST}/tdmq/requirements-client.txt"
 
 USER $NB_USER
-RUN /usr/local/bin/install_conda_requirements.sh "${TDMQ_DIST}/tdmq/requirements-client.txt" \
- && /usr/local/bin/install_conda_requirements.sh "${TDMQ_DIST}/requirements-tdmqj.txt" \
+RUN conda install mamba -c conda-forge && conda clean --all -y
+RUN mamba install -c conda-forge --yes \
+      --file "${TDMQ_DIST}/tdmq/requirements-client.txt" \
+      --file "${TDMQ_DIST}/requirements-conda-client-addons.txt" \
+      --file "${TDMQ_DIST}/requirements-tdmqj.txt" \
+ && mamba clean --all -y \
  && fix-permissions $CONDA_DIR \
  && fix-permissions /home/$NB_USER
 

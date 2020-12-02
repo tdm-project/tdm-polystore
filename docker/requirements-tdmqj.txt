@@ -1,20 +1,12 @@
 
-cython
-psycopg2 #=2.8
-wget #=1.20
-colormap #=1.0
-easydev #=0.10
+# Requirements for jupyter container beyond what's
+# already required by the tdmq conda client image.
+colormap
+easydev
 pyshp
 cartopy
-ckanapi
 folium
 matplotlib
-pyproj
-tifffile
-rasterio
-GDAL
-xarray
 ipyleaflet
 altair
 vega_datasets
-shapely==1.7.*
