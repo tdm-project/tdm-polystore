@@ -28,7 +28,7 @@ source_desc = {
 }
 
 
-def test_add_scalar_records_as_admin(clean_db, public_source_data, live_app):
+def test_add_scalar_records_as_admin(clean_storage, public_source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
@@ -42,7 +42,7 @@ def test_add_scalar_records_as_admin(clean_db, public_source_data, live_app):
         assert tid not in sources
 
 
-def test_add_scalar_records_as_user(clean_db, public_source_data, live_app):
+def test_add_scalar_records_as_user(clean_storage, public_source_data, live_app):
     # first create the resource with admin client
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
@@ -56,7 +56,7 @@ def test_add_scalar_records_as_user(clean_db, public_source_data, live_app):
             ve.code == 401
 
 
-def test_add_scalar_record_as_admin(clean_db, public_source_data, live_app):
+def test_add_scalar_record_as_admin(clean_storage, public_source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
@@ -71,7 +71,7 @@ def test_add_scalar_record_as_admin(clean_db, public_source_data, live_app):
         assert tid not in sources
 
 
-def test_add_scalar_record_as_user(clean_db, public_source_data, live_app):
+def test_add_scalar_record_as_user(clean_storage, public_source_data, live_app):
     # first create the resource with admin client
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
@@ -86,7 +86,7 @@ def test_add_scalar_record_as_user(clean_db, public_source_data, live_app):
             ve.code == 401
 
 
-def test_ingest_scalar_record_as_admin(clean_db, public_source_data, live_app):
+def test_ingest_scalar_record_as_admin(clean_storage, public_source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
@@ -106,7 +106,7 @@ def test_ingest_scalar_record_as_admin(clean_db, public_source_data, live_app):
         assert tid not in sources
 
 
-def test_ingest_scalar_record_as_user(clean_db, public_source_data, live_app):
+def test_ingest_scalar_record_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
@@ -126,7 +126,7 @@ def test_ingest_scalar_record_as_user(clean_db, public_source_data, live_app):
                 ve.code = 401
 
 
-def test_check_timeseries(clean_db, live_app):
+def test_check_timeseries(clean_storage, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     N = 10
