@@ -1,10 +1,10 @@
 
-flask==1.1.0
-click==7.0
-psycopg2-binary==2.8
-alembic==1.3.0
-prometheus_client==0.8.0
-gunicorn==20.0.4
+flask>=1.1,<1.2
+click>=7.0,<7.1
+psycopg2-binary>=2.8,<2.9
+alembic>=1.3,<1.4
+prometheus_client>=0.8,<0.9
+gunicorn>=20.0,<20.1
 sphinx
 sphinxcontrib-httpdomain
-pytest==6.1
+pytest>=6.1,<7

@@ -17,10 +17,13 @@ import tdmq.db_manager as db_manager
 from tdmq.app import create_app
 
 
-@pytest.fixture(scope="session")
-def auth_token():
-    return 'supersecret'
+def _rand_str(length=6):
+    if length < 1:
+        raise ValueError(f"Length must be >= 1 (got {length})")
+    return ''.join([random.choice(string.ascii_lowercase) for _ in range(length)])
 
+
+## Data fixtures
 
 @pytest.fixture(scope="session")
 def source_data():
@@ -37,6 +40,7 @@ def source_data():
     return dict(sources=sources, records=records,
                 records_by_source=records_by_source)
 
+
 @pytest.fixture(scope="session")
 def public_source_data(source_data):
     sources = [s for s in source_data['sources'] if s.get('public') is True ]
@@ -46,6 +50,8 @@ def public_source_data(source_data):
         records_by_source[r['source']].append(r)
 
     return dict(sources=sources, records=records, records_by_source=records_by_source)
+
+## DB fixtures
 
 @pytest.fixture(scope="session")
 def db_connection_config():
@@ -81,13 +87,24 @@ def clean_db(db):
         with db.cursor() as curs:
             curs.execute("DELETE FROM source;")
 
-    yield db
+    try:
+        yield db
+    finally:
+        with db:
+            with db.cursor() as curs:
+                logging.debug("Deleting sources from DB")
+                curs.execute("DELETE FROM source;")
 
-    with db:
-        with db.cursor() as curs:
-            logging.debug("Deleting sources from DB")
-            curs.execute("DELETE FROM source;")
 
+@pytest.fixture
+def db_data(clean_db, source_data):
+    tdmq.db.load_sources_conn(clean_db, source_data['sources'])
+    tdmq.db.load_records_conn(clean_db, source_data['records'])
+
+    return clean_db  # return the DB connection
+
+
+## Flask app fixtures
 
 @pytest.fixture
 def app(db_connection_config, auth_token):
@@ -128,37 +145,46 @@ def runner(app):
     return app.test_cli_runner()
 
 
-@pytest.fixture
-def db_data(clean_db, source_data):
-    tdmq.db.load_sources_conn(clean_db, source_data['sources'])
-    tdmq.db.load_records_conn(clean_db, source_data['records'])
 
-    return clean_db  # return the DB connection
+## Storage fixtures
 
-
-def _rand_str(length=6):
-    if length < 1:
-        raise ValueError(f"Length must be >= 1 (got {length})")
-    return ''.join([random.choice(string.ascii_lowercase) for _ in range(length)])
+@pytest.fixture(scope="session", params=['hdfs', 's3'])
+def storage_type(request):
+    return request.param
 
 
-#
-# Used by in testing tdmq.client
-#
 @pytest.fixture(scope="session")
-def tdmq_s3_credentials():
+def storage_credentials(storage_type):
+    if storage_type == "s3":
+        return s3_credentials()
+    elif storage_type == "hdfs":
+        return hdfs_credentials()
+    else:
+        raise ValueError(f"Unrecognized storage type {storage_type}")
+
+
+@pytest.fixture(scope="session")
+def service_info(storage_type):
+    if storage_type == "s3":
+        return s3_service_info()
+    elif storage_type == "hdfs":
+        return hdfs_service_info()
+    else:
+        raise ValueError(f"Unrecognized storage type {storage_type}")
+
+
+def s3_credentials():
     return {
         "vfs.s3.aws_access_key_id": "tdm-user",
         "vfs.s3.aws_secret_access_key": "tdm-user-s3",
     }
 
 
-@pytest.fixture(scope="session")
-def tdmq_s3_service_info():
+def s3_service_info():
     return {
         'version' : '0.1',
         'tiledb' : {
-            'storage.root' : 's3://firstbucket/',
+            'storage.root' : 's3://test-bucket-{}/'.format(_rand_str(6)),
             'config': {
                 "vfs.s3.endpoint_override": "minio:9000",
                 "vfs.s3.scheme": "http",
@@ -172,72 +198,90 @@ def tdmq_s3_service_info():
         }
 
 
-@pytest.fixture(scope="session")
-def tdmq_s3_service_info_with_creds(tdmq_s3_service_info, tdmq_s3_credentials):
-    conf = copy.deepcopy(tdmq_s3_service_info)
-    conf['tiledb']['config'].update(tdmq_s3_credentials)
-    return conf
-
-
-@pytest.fixture
-def clean_s3(tdmq_s3_service_info_with_creds):
-    import tiledb
-    bucket = tdmq_s3_service_info_with_creds['tiledb']['storage.root']
-    assert bucket.startswith('s3://')
-    config = tiledb.Config(params=tdmq_s3_service_info_with_creds['tiledb']['config'])
-    ctx = tiledb.Ctx(config=config)
-    vfs = tiledb.VFS(ctx=ctx)
-    if vfs.is_bucket(bucket):
-        vfs.empty_bucket(bucket)
-    else:
-        vfs.create_bucket(bucket)
-    return tdmq_s3_service_info_with_creds
-
-
-@pytest.fixture(scope="session")
-def tdmq_hdfs_credentials():
+def hdfs_credentials():
     return {'vfs.hdfs.username': 'root'}
 
 
-@pytest.fixture(scope="session")
-def tdmq_hdfs_service_info():
+def hdfs_service_info():
     return {
         'version' : '0.1',
         'tiledb' : {
-            'storage.root': 'hdfs://namenode:8020/arrays',
+            'storage.root': 'hdfs://namenode:8020/test-arrays-{}'.format(_rand_str(6)),
             'config': {},
             }
         }
 
 
 @pytest.fixture(scope="session")
-def tdmq_hdfs_service_info_with_creds(tdmq_hdfs_service_info, tdmq_hdfs_credentials):
-    conf = copy.deepcopy(tdmq_hdfs_service_info)
-    conf['tiledb']['config'].update(tdmq_hdfs_credentials)
+def service_info_with_creds(service_info, storage_credentials):
+    conf = copy.deepcopy(service_info)
+    conf['tiledb']['config'].update(storage_credentials)
     return conf
 
 
+def _wait_for(max_seconds, test_fn, error_msg="Timeout waiting"):
+    for _ in range(max_seconds):
+        if test_fn():
+            logging.debug("Wait succeeded!")
+            break
+        time.sleep(1)
+        logging.debug("Not yet.  Sleeping")
+    else:
+        raise RuntimeError(error_msg)
+
+
+def s3_fixture(vfs, storage_root):
+    assert storage_root.startswith("s3")
+    if vfs.is_bucket(storage_root):
+        vfs.empty_bucket(storage_root)
+    else:
+        vfs.create_bucket(storage_root)
+
+    _wait_for(5, lambda: vfs.is_bucket(storage_root), "Timeout waiting for bucket to be created")
+
+    try:
+        yield
+    finally:
+        vfs.empty_bucket(storage_root)
+        vfs.remove_bucket(storage_root)
+        _wait_for(5, lambda: not vfs.is_bucket(storage_root), "Timeout waiting for bucket to be deleted")
+
+
+def hdfs_fixture(vfs, storage_root):
+    assert storage_root.startswith("hdfs")
+    if vfs.is_dir(storage_root):
+        vfs.remove_dir(storage_root)
+
+    try:
+        yield
+    finally:
+        if vfs.is_dir(storage_root):
+            vfs.remove_dir(storage_root)
+
+
 @pytest.fixture
-def clean_hdfs(tdmq_hdfs_service_info_with_creds):
-    import tiledb
-    array_root = tdmq_hdfs_service_info_with_creds['tiledb']['storage.root']
-    assert array_root.startswith("hdfs://")
-    config = tiledb.Config(params=tdmq_hdfs_service_info_with_creds['tiledb']['config'])
-    ctx = tiledb.Ctx(config=config)
-    vfs = tiledb.VFS(ctx=ctx)
-    if vfs.is_dir(array_root):
-        vfs.remove_dir(array_root)
-
-    return tdmq_hdfs_service_info_with_creds
-
-
-@pytest.fixture
-def clean_storage(clean_db, clean_s3, clean_hdfs):
+def clean_storage(clean_db, service_info_with_creds):
     """
     Combines cleaning actions for all storage fixtures.
     """
-    pass
+    import tiledb
+    storage_root = service_info_with_creds['tiledb']['storage.root']
 
+    config = tiledb.Config(params=service_info_with_creds['tiledb']['config'])
+    ctx = tiledb.Ctx(config=config)
+    vfs = tiledb.VFS(ctx=ctx)
+
+    if storage_root.startswith("s3"):
+        print("Setting up s3 storage fixture")
+        yield from s3_fixture(vfs, storage_root)
+    elif storage_root.startswith("hdfs"):
+        print("Setting up hdfs storage fixture")
+        yield from hdfs_fixture(vfs, storage_root)
+    else:
+        raise ValueError(f"Unrecognized storage type {storage_root}")
+
+
+## Live app fixture
 
 ############################################################
 
@@ -266,6 +310,14 @@ class SubprocessLiveServer(object):
         self.prefix = prefix
         self._process = None
 
+    @staticmethod
+    def _find_exec(exec_name):
+        for p in os.environ.get('PATH', '').split(os.pathsep):
+            full_path = os.path.join(p, exec_name)
+            if os.path.exists(full_path) and os.access(full_path, os.X_OK):
+                return full_path
+        return None
+
     def start(self):
         """Start application in a separate process."""
         proc_env = os.environ.copy()
@@ -277,7 +329,10 @@ class SubprocessLiveServer(object):
             "TDMQ_FLASK_CONFIG": self.cfg_file
         })
 
-        self._process = subprocess.Popen(["/usr/local/bin/flask", "run"], env=proc_env)
+        flask_path = self._find_exec('flask')
+        if not flask_path:
+            raise RuntimeError("Couldn't find flask executable in PATH")
+        self._process = subprocess.Popen([flask_path, "run"], env=proc_env)
 
         # We must wait for the server to start listening with a maximum
         # timeout of 5 seconds.
@@ -352,26 +407,22 @@ class SubprocessLiveServer(object):
 
     def __repr__(self):
         return '<SubprocessLiveServer listening at %s>' % self.url()
+############################################################
 
 
-@pytest.fixture(scope="session", params=["s3", "hdfs"])
-def live_app(request, db, db_connection_config, pytestconfig, auth_token,
-             tdmq_s3_service_info, tdmq_s3_credentials,
-             tdmq_hdfs_service_info, tdmq_hdfs_credentials):
+@pytest.fixture(scope="session")
+def auth_token():
+    return 'supersecret'
+
+
+@pytest.fixture(scope="session")
+def live_app(db, db_connection_config, pytestconfig, auth_token, service_info, storage_credentials):
     """Run application in a separate process.
 
        Get the URL with live_app.url().
     """
     import tdmq.wsgi as wsgi
     port = pytestconfig.getvalue('live_server_port')
-    if request.param == 'hdfs':
-        service_info = tdmq_hdfs_service_info
-        credentials = tdmq_hdfs_credentials
-    elif request.param == 's3':
-        service_info = tdmq_s3_service_info
-        credentials = tdmq_s3_credentials
-    else:
-        raise RuntimeError(f"Unrecognized parameter {request.param}")
 
     if port == 0:
         # Bind to an open port
@@ -394,7 +445,7 @@ LOG_LEVEL = "DEBUG"
 PROMETHEUS_REGISTRY = True
 TILEDB_VFS_ROOT = "{service_info['tiledb']['storage.root']}"
 TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
-TILEDB_VFS_CREDENTIALS = {credentials}
+TILEDB_VFS_CREDENTIALS = {storage_credentials}
 APP_PREFIX = ''
 AUTH_TOKEN = '{auth_token}'
     """

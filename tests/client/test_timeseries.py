@@ -26,7 +26,7 @@ source_desc = {
 }
 
 
-def test_check_timeseries_range(clean_db, live_app):
+def test_check_timeseries_range(clean_storage, clean_db, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     N = 10
@@ -53,7 +53,7 @@ def test_check_timeseries_range(clean_db, live_app):
     assert tid not in sources
 
 
-def test_check_timeseries_bucket(clean_db, live_app):
+def test_check_timeseries_bucket(clean_storage, clean_db, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     bucket = 10
@@ -87,7 +87,7 @@ def test_check_timeseries_bucket(clean_db, live_app):
     assert tid not in sources
 
 
-def test_empty_timeseries(clean_db, live_app):
+def test_empty_timeseries(clean_storage, clean_db, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     # empty timeseries
@@ -97,7 +97,7 @@ def test_empty_timeseries(clean_db, live_app):
     c.deregister_source(s)
 
 
-def test_create_timeseries_range_as_user(clean_db, live_app):
+def test_create_timeseries_range_as_user(clean_storage, clean_db, live_app):
     # First create a source
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
@@ -120,7 +120,7 @@ def test_create_timeseries_range_as_user(clean_db, live_app):
             assert he.status_code == '401'
 
 
-def test_check_timeseries_range_as_user(clean_db, live_app):
+def test_check_timeseries_range_as_user(clean_storage, clean_db, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     bucket = 10

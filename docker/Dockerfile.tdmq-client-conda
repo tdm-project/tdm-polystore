@@ -1,0 +1,71 @@
+
+ARG BASE_IMAGE=continuumio/miniconda3:4.9.2
+FROM $BASE_IMAGE AS tdmq-client-conda-deps
+
+RUN apt-get update -q \
+ && DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+        libnss-wrapper \
+ && apt-get clean -y
+
+ENV TDMQ_DIST=/tdmq-dist
+ENV DATA_DIR="${TDMQ_DIST}/data"
+
+COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
+COPY --chown=root ./requirements-conda-client-addons.txt "${TDMQ_DIST}/"
+RUN conda install mamba -c conda-forge && conda clean --all -y
+RUN mamba install -c conda-forge --yes \
+      --file "${TDMQ_DIST}/tdmq/requirements-client.txt" \
+      --file "${TDMQ_DIST}/requirements-conda-client-addons.txt" \
+ && mamba clean --all -y
+
+#################################################
+FROM tdmq-client-conda-deps AS tdmq-client-conda
+
+COPY --chown=root tdmq_scripts.sh /usr/local/lib/
+COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
+RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
+ && chmod 755 /usr/local/bin/*
+
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
+RUN cd "${TDMQ_DIST}" \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx
+
+RUN cd "${TDMQ_DIST}" && pip install .
+
+#################################################
+FROM tdmq-client-conda-deps AS tdmqc-conda
+
+COPY --chown=root ./tdmq-dist/tdmq/requirements-server.txt "${TDMQ_DIST}/tdmq/"
+# In this image we're installing from conda-forge rather than pypi; we need to install
+# psycopg2 instead of psycopg2-binary.
+# We fix the name on-the-fly with sed with a quick process substitution (which
+# requires bash).
+RUN /bin/bash -c 'mamba install -c conda-forge --yes --file <(sed -e 's/psycopg2-binary/psycopg2/' "${TDMQ_DIST}/tdmq/requirements-server.txt")' \
+ && mamba clean --all -y
+
+# FIXME: This section is copied and pasted from the image build process for
+# tdmq-client-conda.
+COPY --chown=root tdmq_scripts.sh /usr/local/lib/
+COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
+RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
+ && chmod 755 /usr/local/bin/*
+
+COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
+RUN cd "${TDMQ_DIST}" \
+ && find . -type f -print0 | xargs -0 chmod a+r \
+ && find . -type d -print0 | xargs -0 chmod a+rx
+
+RUN cd "${TDMQ_DIST}" && pip install .
+## end copied part
+
+COPY --chown=root tdmqc-entrypoint.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/tdmqc-entrypoint.sh
+ENTRYPOINT [ "/usr/local/bin/tdmqc-entrypoint.sh" ]
+
+RUN useradd -m -s /bin/bash -d /home/tdm tdm
+USER tdm
+WORKDIR "${TDMQ_DIST}"
+
+# vim: filetype=dockerfile

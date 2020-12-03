@@ -58,10 +58,10 @@ def test_register_deregister_simple_source_as_admin(clean_storage, public_source
 
 def test_register_simple_source_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
-    
+
     with pytest.raises(HTTPError) as ve:
         srcs = register_scalar_sources(c, public_source_data)
-        ve.code = 401    
+        ve.code = 401
 
 
 def test_deregister_simple_source_as_user(clean_storage, public_source_data, live_app):
@@ -98,7 +98,7 @@ def test_select_sources_by_entity_type(clean_storage, public_source_data, live_a
         # FIXME: add assertions
 
 
-def test_find_source_by_roi(db_data, live_app):
+def test_find_source_by_roi(clean_storage, db_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     geom = 'circle((9.132, 39.248), 1000)'
     results = c.find_sources(args={ 'roi': geom })
@@ -106,7 +106,7 @@ def test_find_source_by_roi(db_data, live_app):
     assert external_ids == { 'tdm/sensor_3', 'tdm/tiledb_sensor_6' }
 
 
-def test_find_source_by_roi_as_user(db_data, live_app):
+def test_find_source_by_roi_as_user(clean_storage, db_data, live_app):
     c = Client(live_app.url())
     geom = 'circle((9.132, 39.248), 1000)'
     results = c.find_sources(args={ 'roi': geom })

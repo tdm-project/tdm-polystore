@@ -1,0 +1,4 @@
+
+tiledb-py==0.6.6
+requests>=2,<3
+setuptools

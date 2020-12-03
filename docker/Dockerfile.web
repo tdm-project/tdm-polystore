@@ -8,9 +8,11 @@ RUN $PIP install --upgrade pip
 ENV TDMQ_DIST=/tdmq-dist
 ENV DATA_DIR="${TDMQ_DIST}/data"
 
-
 EXPOSE 8000
 CMD /web-entrypoint.sh
+
+COPY --chown=root ./tdmq-dist/tdmq/requirements-server.txt "${TDMQ_DIST}/tdmq/"
+RUN $PIP install -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
 
 COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
 COPY --chown=root web-entrypoint.sh /
@@ -19,7 +21,6 @@ RUN chmod a+rx /web-entrypoint.sh \
  && cd "${TDMQ_DIST}" \
  && find . -type f -print0 | xargs -0 chmod a+r \
  && find . -type d -print0 | xargs -0 chmod a+rx \
- && $PIP install -r tdmq/requirements-server.txt \
  && $PIP install .
 
 WORKDIR "${TDMQ_DIST}/tdmq"

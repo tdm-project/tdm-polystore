@@ -73,10 +73,13 @@ def register_nonscalar_sources(c, source_data):
                             check_source=check_source)
 
 
-def test_basic_tiledb_s3_operativity(clean_s3):
+def test_basic_tiledb_s3_operativity(clean_storage, service_info_with_creds):
     import tiledb
 
-    storage_config = clean_s3['tiledb']
+    storage_config = service_info_with_creds['tiledb']
+    if not storage_config['storage.root'].startswith("s3"):
+        return
+
     array_name = os.path.join(storage_config['storage.root'], 'basic-tiledb-s3-operativity')
     logging.debug("tiledb config parameters: %s", storage_config['config'])
     logging.debug("Array uri: %s", array_name)
@@ -119,7 +122,7 @@ def test_nonscalar_source_register_as_user(clean_storage, source_data, live_app)
     with pytest.raises(HTTPError) as ve:
         register_nonscalar_sources(c, source_data)
         assert ve.code == 401
-        
+
 
 def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_app):
     # first it creates a source with an admin client
@@ -136,11 +139,10 @@ def test_nonscalar_source_access_as_user(clean_storage, source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_nonscalar_sources(c, source_data)
     logging.debug("Registered %s sources", len(srcs))
-    
+
     # then access the sources with the user client
     c = Client(live_app.url())
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    tdmq_ids = []
     for s in srcs:
         logging.debug("source: id %s, shape: %s; type: %s", s.id, s.shape, type(s))
         assert s.tdmq_id in sources

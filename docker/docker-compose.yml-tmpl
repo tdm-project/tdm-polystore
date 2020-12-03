@@ -116,3 +116,5 @@ services:
     environment:
       - NAMENODE_HOSTNAME=namenode
       - TDMQ_AUTH_TOKEN=
+
+# vim: filetype=yaml

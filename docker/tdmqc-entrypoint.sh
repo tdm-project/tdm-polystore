@@ -2,21 +2,28 @@
 
 export PYTHONPATH="${TDMQ_DIST}"
 
+function run_tests() {
+  tdmqc_run_tests
 
-# FIXME:  how can we wait for HDFS to be ready before starting the tests?
+  exit_code=$?
 
-tdmqc_run_tests
+  printf "======================================================================\n" >&2
 
-exit_code=$?
+  if [[ $exit_code != 0 ]]; then
+    printf "Tests FAILED!\n" >&2
+  else
+    printf "Tests ran successfully!\n" >&2
+  fi
 
-printf "======================================================================\n" >&2
+  printf "======================================================================\n" >&2
+  return $exit_code
+}
 
-if [[ $exit_code != 0 ]]; then
-	printf "Tests FAILED!\n" >&2
+if [[ $# -ge 1 ]]; then
+    printf "Executing command: ${@}\n" >&2
+    exec "${@}"
 else
-	printf "Tests ran successfully!\n" >&2
+    run_tests
+    printf "Hanging around to keep container alive.  Kill me to exit\n" >&2
+    tail -f /dev/null
 fi
-
-printf "======================================================================\n" >&2
-
-tail -f /dev/null

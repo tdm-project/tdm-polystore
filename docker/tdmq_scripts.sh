@@ -7,8 +7,10 @@ function fake_user() {
         printf "Missing argument:  username\n" >&2
         exit 2
     fi
-        
-    if ! getent passwd "$(id -u)" &> /dev/null && [ -e /usr/lib/libnss_wrapper.so ]; then
+
+    if getent passwd "$(id -u)" &> /dev/null; then
+        printf "A user exists. No need to fake it\n" >&2
+    elif [[ -e /usr/lib/libnss_wrapper.so ]]; then
         local uid=$(id -u)
         local gid=$(id -g)
         export LD_PRELOAD='/usr/lib/libnss_wrapper.so'

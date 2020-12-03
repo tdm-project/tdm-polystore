@@ -10,7 +10,7 @@ def test_strip_trailing_slash_from_url():
     assert c.base_url == some_url
 
 
-def test_connect(live_app):
+def test_connect(clean_storage, live_app):
     c = Client(live_app.url())
     assert not c.connected
     c.connect()
@@ -18,7 +18,7 @@ def test_connect(live_app):
     assert c.tiledb_ctx is not None
 
 
-def test_get_entity_categories_as_admin(live_app):
+def test_get_entity_categories_as_admin(clean_storage, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     r = c.get_entity_categories()
     assert 'entity_categories' in r
@@ -26,7 +26,7 @@ def test_get_entity_categories_as_admin(live_app):
     assert { 'entity_category': 'Station' } in r['entity_categories']
 
 
-def test_get_entity_categories_as_user(live_app):
+def test_get_entity_categories_as_user(clean_storage, live_app):
     c = Client(live_app.url())
     r = c.get_entity_categories()
     assert 'entity_categories' in r
@@ -34,7 +34,7 @@ def test_get_entity_categories_as_user(live_app):
     assert { 'entity_category': 'Station' } in r['entity_categories']
 
 
-def test_get_entity_types_as_admin(live_app):
+def test_get_entity_types_as_admin(clean_storage, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     r = c.get_entity_types()
     assert 'entity_types' in r
@@ -50,7 +50,7 @@ def test_get_entity_types_as_admin(live_app):
     # if the item is missing we should get a StopIteration exception
 
 
-def test_get_entity_types_as_user(live_app):
+def test_get_entity_types_as_user(clean_storage, live_app):
     c = Client(live_app.url())
     r = c.get_entity_types()
     assert 'entity_types' in r
