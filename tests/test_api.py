@@ -312,6 +312,7 @@ def test_private_source_query_by_tdmq_id_unauthenticated(flask_client, db_data, 
     struct = response.get_json()
     assert private_source_tdmq_id == struct['tdmq_id']
     assert set(struct.keys()) <= set(('description',
+                                      'default_footprint',
                                       'entity_category',
                                       'entity_type',
                                       'public',
@@ -323,6 +324,11 @@ def test_private_source_query_by_tdmq_id_unauthenticated(flask_client, db_data, 
                                                      'entity_type',
                                                      'shape',
                                                      'stationary'))
+    point = struct['default_footprint']
+    assert point['type'] == 'Point'
+    # should be rounded
+    assert point['coordinates'] == [ 10.75, 31.50 ]
+
 
 @pytest.mark.sources
 def test_private_source_query_by_tdmq_id_unauthenticated_include_private(flask_client, db_data, source_data):
@@ -346,6 +352,7 @@ def test_private_source_query_by_tdmq_id_authenticated(flask_client, db_data, so
     struct = response.get_json()
     assert private_source_tdmq_id == struct['tdmq_id']
     assert set(struct.keys()) <= set(('description',
+                                      'default_footprint',
                                       'entity_category',
                                       'entity_type',
                                       'public',
@@ -357,6 +364,10 @@ def test_private_source_query_by_tdmq_id_authenticated(flask_client, db_data, so
                                                      'entity_type',
                                                      'shape',
                                                      'stationary'))
+    point = struct['default_footprint']
+    assert point['type'] == 'Point'
+    # should be rounded
+    assert point['coordinates'] == [ 10.75, 31.50 ]
 
 
 @pytest.mark.sources
@@ -371,6 +382,9 @@ def test_private_source_query_by_tdmq_id_authenticated_include_private(flask_cli
     struct = response.get_json()
     assert private_source_tdmq_id == struct['tdmq_id']
     assert private_source['id'] == struct.get('external_id')
+    point = struct['default_footprint']
+    assert point['type'] == 'Point'
+    assert all(pytest.approx(c, d) for c, d in zip(point['coordinates'], [ 10.762179, 31.486511 ]))
 
 
 @pytest.mark.timeseries

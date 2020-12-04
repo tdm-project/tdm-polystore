@@ -5,6 +5,7 @@ from datetime import timedelta
 from functools import wraps
 
 from flask import Blueprint, current_app, jsonify, request, url_for
+import geojson
 import werkzeug.exceptions as wex
 
 import tdmq.db as db
@@ -59,6 +60,13 @@ def _anonymize_source(src_dict):
         if k in src_dict:
             sanitized[k] = src_dict[k]
 
+    # Round off default_footprint to nearest 0.05
+    # Around Italy this equates to placing the point on a grid with
+    # 5 km resolution.
+    geo = geojson.GeoJSON(src_dict['default_footprint'])
+    low_precision = geojson.utils.map_coords(lambda coord: round(coord * 20) / 20, geo)
+    sanitized['default_footprint'] = low_precision
+
     return sanitized
 
 
@@ -108,6 +116,7 @@ def entity_categories_get():
         current_app.http_response_prom.labels(method='get', endpoint='entity_categories').observe(
             sys.getsizeof(res.data))
         return res
+
 
 @tdmq_bp.route('/sources', methods=['GET'])
 def sources_get():
