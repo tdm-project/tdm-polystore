@@ -10,3 +10,4 @@ matplotlib
 ipyleaflet
 altair
 vega_datasets
+geojson>=2.5,<3
