@@ -466,8 +466,7 @@ components:
     Footprint:
       type: object
       description: >
-        GeoJSON specifying a geometry with  spatial referencing system
-        identifier (SRID) set to 4326 (Monte Mario).
+        GeoJSON with WGS84 coordinates.
 
     Shape:
       description: >
@@ -546,7 +545,7 @@ components:
           description: "Original source id"
           type: string
         default_footprint:
-          description: "GeoJSON of default position of the source"
+          description: "GeoJSON of default position of the source.  WGS84 coordinates."
           $ref: '#/components/schemas/Footprint'
         entity_category:
           description: "One of the entity categories returned by /entity_categories"
@@ -583,7 +582,7 @@ components:
           description: "Original source id"
           type: string
         default_footprint:
-          description: "GeoJSON of default position of the source"
+          description: "GeoJSON of default position of the source.  WGS84 coordinates."
           $ref: '#/components/schemas/Footprint'
         entity_category:
           description: "One of the entity categories returned by /entity_categories"
@@ -665,7 +664,7 @@ components:
         default_footprint:
           description: >
              Default footprint of the source.  If the source is stationary,
-             its footprint will be constant.
+             its footprint will be constant.  WGS84 coordinates.
           $ref: '#/components/schemas/Footprint'
 
         shape:
