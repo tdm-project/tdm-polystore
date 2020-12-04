@@ -15,7 +15,7 @@ base-images: tdmqc jupyter web tdmq-db tdmq-client-conda tdmqc-conda
 # FIXME copying tests/data twice...
 docker/tdmq-dist: apidocs setup.py ${TDMQ_FILES} tests examples
 	rm -rf docker/tdmq-dist ; mkdir docker/tdmq-dist
-	cp -rf apidocs setup.py tdmq tests examples docker/tdmq-dist
+	cp -rf apidocs setup.py tdmq tests examples notebooks docker/tdmq-dist
 
 tdmq-client-conda: docker/tdmq-dist docker/Dockerfile.tdmq-client-conda
 	docker build $(DOCKER_BUILD_EXTRA_ARGS) -f docker/Dockerfile.tdmq-client-conda --target tdmq-client-conda -t tdmproject/tdmq-client-conda docker
@@ -36,7 +36,7 @@ tdmqc: docker/tdmq-dist tdmq-client docker/Dockerfile.tdmqc
 		-f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
 
 jupyter: docker/tdmq-dist docker/Dockerfile.jupyter notebooks
-	rm -rf docker/notebooks; cp -rf notebooks docker/notebooks
+	# rm -rf docker/notebooks; cp -rf notebooks docker/notebooks
 	docker build $(DOCKER_BUILD_EXTRA_ARGS) -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
