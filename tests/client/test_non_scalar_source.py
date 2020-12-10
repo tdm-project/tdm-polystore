@@ -178,3 +178,16 @@ def test_nonscalar_source_add_records(clean_storage, source_data, live_app):
         c.deregister_source(s)
         tdmq_ids.append(tdmq_id)
     check_deallocation(c, tdmq_ids)
+
+
+def test_nonscalar_source_array_context(clean_storage, source_data, live_app):
+    N = 3
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    srcs = register_nonscalar_sources(c, source_data)
+    logging.debug("Registered %s sources", len(srcs))
+    for s in srcs:
+        logging.debug("source: id %s, shape: %s; type: %s", s.id, s.shape, type(s))
+        assert len(s.shape) > 0
+        with s.array_context('w'):
+            create_and_ingest_records(s, N)
+        c.deregister_source(s)
