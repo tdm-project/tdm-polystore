@@ -1,10 +1,11 @@
 
 import logging
 import os
-import psycopg2 as psy
-import psycopg2.sql as sql
 
 from contextlib import contextmanager
+
+import psycopg2 as psy
+import psycopg2.sql as sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 import tdmq.utils

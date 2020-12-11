@@ -1,5 +1,6 @@
 
 
+import atexit
 import logging
 import os
 import secrets
@@ -13,6 +14,9 @@ from prometheus_client.utils import INF
 
 from tdmq.api import tdmq_bp
 from tdmq.db import add_db_cli, close_db
+
+## This is the best way I've found to close the DB connect when the application exits.
+atexit.register(close_db)
 
 DEFAULT_PREFIX = '/api/v0.0'
 
@@ -144,9 +148,5 @@ def create_app(test_config=None):
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):
         return jsonify({"error": ERROR_CODES.get(e.code)}), e.code
-
-    @app.teardown_appcontext
-    def teardown_db(arg):
-        close_db()
 
     return app

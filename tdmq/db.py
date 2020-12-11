@@ -6,7 +6,6 @@ import uuid
 import psycopg2.extras
 import psycopg2.sql as sql
 from psycopg2.sql import SQL
-from pyparsing import Literal
 
 import tdmq.db_manager
 import tdmq.errors
@@ -20,6 +19,10 @@ psycopg2.extras.register_uuid()
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
 
+# Module-level variable to cache the DB connection
+_db_connection = None
+
+
 def get_db():
     """
     Requires active application context.
@@ -28,28 +31,29 @@ def get_db():
     is unique for each request and will be reused if this is called
     again.
     """
-    import flask
-    if 'db' not in flask.g:
+    global _db_connection
+    if not _db_connection:
+        import flask
         db_settings = {
             'user': flask.current_app.config['DB_USER'],
             'password': flask.current_app.config['DB_PASSWORD'],
             'host': flask.current_app.config['DB_HOST'],
             'dbname': flask.current_app.config['DB_NAME'],
         }
-        flask.g.db = tdmq.db_manager.db_connect(db_settings)
-    return flask.g.db
+        logger.info("Creating DB connection")
+        _db_connection = tdmq.db_manager.db_connect(db_settings)
+    return _db_connection
 
 
 def close_db():
     """
-    If this request is connected to the database, close the
-    connection.
+    If a connection to the database exists, close it.
     """
-    import flask
-    db = flask.g.pop('db', None)
-
-    if db is not None:
-        db.close()
+    global _db_connection
+    if _db_connection is not None:
+        logger.info("Destroying DB connection")
+        _db_connection.close()
+        _db_connection = None
 
 
 def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
