@@ -36,7 +36,7 @@ tdmqc: docker/tdmq-dist tdmq-client docker/Dockerfile.tdmqc
 		-f docker/Dockerfile.tdmqc -t tdmproject/tdmqc docker
 
 jupyter: docker/tdmq-dist docker/Dockerfile.jupyter notebooks
-	# rm -rf docker/notebooks; cp -rf notebooks docker/notebooks
+	rm -rf docker/notebooks; cp -rf notebooks docker/notebooks
 	docker build $(DOCKER_BUILD_EXTRA_ARGS) -f docker/Dockerfile.jupyter -t tdmproject/tdmqj docker
 
 web: docker/tdmq-dist docker/Dockerfile.web
