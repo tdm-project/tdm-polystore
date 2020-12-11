@@ -123,8 +123,10 @@ def app(db_connection_config, auth_token):
     })
 
     app.testing = True
-    with app.app_context():
-        yield app
+    try:
+        with app.app_context():
+            yield app
+    finally:
         tdmq.db.close_db()
 
 
