@@ -44,7 +44,7 @@ class Client:
         self.tiledb_ctx = None
         self.tiledb_vfs = None
         self.headers = {'Authorization': f'Bearer {auth_token}'} if auth_token is not None else {}
-        
+
 
     def requires_connection(func):
         """
@@ -98,6 +98,10 @@ class Client:
     @requires_connection
     def deregister_source(self, s):
         _logger.debug('deregistering %s %s', s.tdmq_id, s)
+        # FIXME: this is kind of ugly.  Should we add the concept of Array
+        # to the top-most Source class?
+        if hasattr(s, 'close_array'):
+            s.close_array()
         self._destroy_source(s.tdmq_id)
 
     @requires_connection
@@ -160,19 +164,26 @@ class Client:
         _logger.debug('get_timeseries(%s, %s)', code, args)
         return self._do_get(f'sources/{code}/timeseries', params=args)
 
-    @requires_connection
-    def save_tiledb_frame(self, tdmq_id, slot, data):
+
+    def open_array(self, tdmq_id, mode='r'):
         aname = self._source_data_path(tdmq_id)
-        with tiledb.DenseArray(aname, mode='w', ctx=self.tiledb_ctx) as A:
-            A[slot:slot + 1] = data
+        return tiledb.open(aname, mode=mode, ctx=self.tiledb_ctx)
+
+
+    def close_array(self, tiledb_array):
+        tiledb_array.close()
+
 
     @requires_connection
-    def fetch_non_scalar_slice(self, tdmq_id, tiledb_indices, args):
-        # FIXME hwired on tiledb
+    def save_tiledb_frame(self, tiledb_array, slot, data):
+        tiledb_array[slot:slot + 1] = data
+
+
+    @requires_connection
+    def fetch_non_scalar_slice(self, tiledb_array, tiledb_indices, args):
         block_of_indx = tiledb_indices[args[0]]
         block_of_indx = block_of_indx \
             if isinstance(args[0], slice) else [block_of_indx]
-        aname = self._source_data_path(tdmq_id)
         indices = np.array(block_of_indx, dtype=np.int32)
         assert len(indices) == 1 or np.all(indices[1:] - indices[:-1] == 1)
         if isinstance(args[0], slice):
@@ -181,9 +192,9 @@ class Client:
         else:
             assert len(indices) == 1
             tiledb_i = (int(indices[0]),) + args[1:]
-        with tiledb.DenseArray(aname, mode='r', ctx=self.tiledb_ctx) as A:
-            data = A[tiledb_i]
+        data = tiledb_array[tiledb_i]
         return data
+
 
     def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots):
         array_name = self._source_data_path(tdmq_id)

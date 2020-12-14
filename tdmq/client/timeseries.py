@@ -86,17 +86,20 @@ class NonScalarTimeSeries(TimeSeries):
     def __init__(self, source, after, before, bucket, op):
         if bucket:
             raise NotImplementedError("Bucketing is not yet implemented in the client for non-scalar timeseries")
-        super(NonScalarTimeSeries, self).__init__(source, after, before, bucket, op)
+        super().__init__(source, after, before, bucket, op)
+
 
     def fetch(self):
         raw_data = self._pre_fetch()
         self.tiledb_indices = raw_data['tiledb_index']
 
+
     def fetch_data_block(self, args):
         if self.bucket is None:
-            return self.source.client.fetch_non_scalar_slice(self.source.tdmq_id, self.tiledb_indices, args)
+            return self.source.client.fetch_non_scalar_slice(self.source.get_array(), self.tiledb_indices, args)
         else:
             raise ValueError('bucket not supported')
+
 
     def get_item(self, args):
         assert len(args) > 0
