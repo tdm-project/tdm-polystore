@@ -58,7 +58,7 @@ USER $NB_USER
 # FIXME:  this should be installed with conda
 RUN cd "${TDMQ_DIST}" && pip3 install .
 
-ENV DATA_DIR="${HOME}/examples"
+ENV DATA_DIR="${TDMQ_DIST}/notebooks/data"
 # COPY --chown=$NB_UID:$NB_GID notebooks/* "${HOME}/examples/"
 #  Work around issue on docker version in TravisCI:  COPY doesn't resolve
 #  uid and gid specified as environment variables.
