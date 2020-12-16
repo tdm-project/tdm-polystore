@@ -6,7 +6,6 @@ ENV PIP=$PIP_BIN
 RUN $PIP install --no-cache-dir --upgrade pip
 
 ENV TDMQ_DIST=/tdmq-dist
-ENV DATA_DIR="${TDMQ_DIST}/data"
 
 EXPOSE 8000
 CMD /web-entrypoint.sh
