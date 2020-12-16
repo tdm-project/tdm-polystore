@@ -9,3 +9,6 @@ geojson>=2.5,<3
 sphinx
 sphinxcontrib-httpdomain
 pytest>=6.1,<7
+shapely
+pyproj
+pyshp

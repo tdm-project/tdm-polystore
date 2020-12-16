@@ -14,11 +14,13 @@ from prometheus_client.utils import INF
 
 from tdmq.api import tdmq_bp
 from tdmq.db import add_db_cli, close_db
+from .loc_anonymizer import loc_anonymizer
 
 ## This is the best way I've found to close the DB connect when the application exits.
 atexit.register(close_db)
 
 DEFAULT_PREFIX = '/api/v0.0'
+
 
 ERROR_CODES = {
     400: "bad_request",
@@ -29,6 +31,7 @@ ERROR_CODES = {
     409: "duplicated_resource",
     500: "error_retrieving_data"
 }
+
 
 def configure_logging(app):
     level_str = app.config.get('LOG_LEVEL', 'INFO')
@@ -131,8 +134,6 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    add_db_cli(app)
-
     if 'TDMQ_AUTH_TOKEN' in os.environ:
         if os.environ['TDMQ_AUTH_TOKEN']:
             app.config['AUTH_TOKEN'] = os.environ['TDMQ_AUTH_TOKEN']
@@ -142,7 +143,10 @@ def create_app(test_config=None):
 
     app.logger.info("The access token is %s", app.config['AUTH_TOKEN'])
 
+    add_db_cli(app)
     configure_prometheus_registry(app)
+    loc_anonymizer.init_app(app)
+
     app.register_blueprint(tdmq_bp, url_prefix=app.config['APP_PREFIX'])
 
     @app.errorhandler(wex.HTTPException)

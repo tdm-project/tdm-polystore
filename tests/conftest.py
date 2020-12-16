@@ -11,6 +11,8 @@ import tempfile
 import time
 from collections import defaultdict
 
+import geojson
+import shapely.geometry as sg
 import pytest
 import tdmq.db
 import tdmq.db_manager as db_manager
@@ -24,6 +26,41 @@ def _rand_str(length=6):
 
 
 ## Data fixtures
+
+@pytest.fixture(scope="session")
+def local_zone_db():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "test_zone_db.tar.gz")
+
+
+@pytest.fixture()
+def a_geojson_feature():
+    return geojson.GeoJSON({
+        "type": "Feature",
+        "properties": {'name': 'CRS4, main offices'},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [ 8.934352397918701, 38.98895230694548 ],
+                    [ 8.937184810638428, 38.98895230694548 ],
+                    [ 8.937184810638428, 38.99110378097014 ],
+                    [ 8.934352397918701, 38.99110378097014 ],
+                    [ 8.934352397918701, 38.98895230694548 ]
+                    ]
+                ]
+            }
+        })
+
+
+@pytest.fixture
+def a_geojson_geometry(a_geojson_feature):
+    return a_geojson_feature.geometry
+
+
+@pytest.fixture
+def a_shapely_geometry(a_geojson_feature):
+    return sg.shape(a_geojson_feature.geometry)
+
 
 @pytest.fixture(scope="session")
 def source_data():
@@ -104,11 +141,20 @@ def db_data(clean_db, source_data):
     return clean_db  # return the DB connection
 
 
+@pytest.fixture
+def public_db_data(clean_db, public_source_data):
+    tdmq.db.load_sources_conn(clean_db, public_source_data['sources'])
+    tdmq.db.load_records_conn(clean_db, public_source_data['records'])
+
+    return clean_db  # return the DB connection
+
+
 ## Flask app fixtures
 
 @pytest.fixture
-def app(db_connection_config, auth_token):
+def app(db_connection_config, auth_token, local_zone_db, caplog):
     """Create and configure a new app instance for each test."""
+    caplog.set_level(logging.DEBUG)
     app = create_app({
         'TESTING': True,
         'DB_HOST': db_connection_config['host'],
@@ -119,7 +165,8 @@ def app(db_connection_config, auth_token):
         'LOG_LEVEL': 'DEBUG',
         'PROMETHEUS_REGISTRY': True,
         'APP_PREFIX': '',
-        'AUTH_TOKEN': auth_token
+        'AUTH_TOKEN': auth_token,
+        'LOC_ANONYMIZER_DB': local_zone_db
     })
 
     app.testing = True
@@ -418,7 +465,8 @@ def auth_token():
 
 
 @pytest.fixture(scope="session")
-def live_app(db, db_connection_config, pytestconfig, auth_token, service_info, storage_credentials):
+def live_app(db, db_connection_config, pytestconfig, auth_token, local_zone_db,
+             service_info, storage_credentials):
     """Run application in a separate process.
 
        Get the URL with live_app.url().
@@ -450,6 +498,7 @@ TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
 TILEDB_VFS_CREDENTIALS = {storage_credentials}
 APP_PREFIX = ''
 AUTH_TOKEN = '{auth_token}'
+LOC_ANONYMIZER_DB = '{local_zone_db}'
     """
 
     application_path = os.path.abspath(os.path.splitext(wsgi.__file__)[0])

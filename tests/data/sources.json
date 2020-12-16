@@ -220,15 +220,12 @@
         },
         {
             "id": "tdm/sensor_7",
-            "alias": "private home",
+            "alias": "private home outside of Cagliari",
             "entity_type": "PointWeatherObserver",
             "entity_category": "Station",
             "default_footprint": {
                 "type": "Point",
-                "coordinates": [
-                    10.762179,
-                    31.486511
-                ]
+                "coordinates": [ 8.991029, 39.159422 ]
             },
             "stationary": true,
             "controlledProperties": [

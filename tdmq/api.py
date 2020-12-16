@@ -4,16 +4,21 @@ import sys
 from datetime import timedelta
 from functools import wraps
 
-from flask import Blueprint, current_app, jsonify, request, url_for
-import geojson
+import pyproj
+import shapely.geometry as sg
 import werkzeug.exceptions as wex
+from flask import Blueprint, current_app, jsonify, request, url_for
+from shapely.ops import transform as shapely_transform
 
 import tdmq.db as db
 import tdmq.errors
-from tdmq.utils import convert_roi, str_to_bool
+from .loc_anonymizer import loc_anonymizer
+from .utils import convert_roi, str_to_bool
+
+ROI_CENTER_DIGITS = 3
+ROI_RADIUS_INCREMENT = 500
 
 logger = logging.getLogger(__name__)
-
 tdmq_bp = Blueprint('tdmq', __name__)
 
 
@@ -32,8 +37,20 @@ def _request_authorized():
     return f"Bearer {current_app.config['AUTH_TOKEN']}" == auth_header
 
 
-def _should_anonymize_private_data(source_is_public, private_data_requested=False):
-    return source_is_public or (_request_authorized() and private_data_requested)
+def _must_anonymize_private(private_data_requested=False):
+    return not (private_data_requested and _request_authorized())
+
+
+def _must_anonymize(source_is_public, private_data_requested=False):
+    return not source_is_public and not (private_data_requested and _request_authorized())
+
+
+def _anonymize_source_if_necessary_filter(sources, private_data_requested=False):
+    for s in sources:
+        if _must_anonymize(s.get('public', False), private_data_requested):
+            yield _anonymize_source(s)
+        else:
+            yield s
 
 
 def _anonymize_source(src_dict):
@@ -60,12 +77,9 @@ def _anonymize_source(src_dict):
         if k in src_dict:
             sanitized[k] = src_dict[k]
 
-    # Round off default_footprint to nearest 0.05
-    # Around Italy this equates to placing the point on a grid with
-    # 5 km resolution.
-    geo = geojson.GeoJSON(src_dict['default_footprint'])
-    low_precision = geojson.utils.map_coords(lambda coord: round(coord * 20) / 20, geo)
-    sanitized['default_footprint'] = low_precision
+    geo = sg.shape(src_dict['default_footprint'])
+    anon_zone = loc_anonymizer.anonymize_location(geo)
+    sanitized['default_footprint'] = anon_zone.centroid.__geo_interface__
 
     return sanitized
 
@@ -132,17 +146,60 @@ def sources_get():
         if private_requested and not _request_authorized():
             raise wex.Unauthorized("Unauthorized request for private data")
 
-        if 'roi' in args:
-            args['roi'] = convert_roi(args['roi'])
         if 'controlledProperties' in args:
             args['controlledProperties'] = \
                 args['controlledProperties'].split(',')
+
+        if 'roi' in args:
+            args['roi'] = convert_roi(args['roi'])
+            roi = args['roi']
+            if roi['radius'] <= 0:
+                raise wex.BadRequest("ROI radius must be > 0")
+            # Round the coordinates and radius of the ROI to limit precision
+            roi['center']['coordinates'] = [ round(c, ROI_CENTER_DIGITS) for c in roi['center']['coordinates'] ]
+            roi['radius'] = ROI_RADIUS_INCREMENT * round(roi['radius'] / ROI_RADIUS_INCREMENT)
+
+        # retrieve all matching sources (both public and private) from DB
         try:
-            args['include_private'] = 'false'
-            res = db.list_sources(args)
+            args['include_private'] = 'true'
+            resultset = db.list_sources(args)
         except tdmq.errors.DBOperationalError:
             raise wex.InternalServerError()
-        res = jsonify(res)
+
+        if 'roi' not in args:
+            def roi_intersects_filter(sources):
+                # no opt
+                for s in sources:
+                    yield s
+        else:
+            # filter sources that end up outside ROI because of anonymization
+            # Geom specify wgs84 coordinates.
+            roi = args['roi']
+            if roi['type'] != 'Circle':
+                raise NotImplementedError()
+            wgs84 = pyproj.CRS('EPSG:4326')
+            mm = pyproj.CRS('EPSG:3003') # Monte Mario
+            mm_projection = pyproj.Transformer.from_crs(wgs84, mm, always_xy=True).transform
+
+            # project both ROI and geometry to Monte Mario coordinates
+            # then we can use shapely's distance functions
+            mm_roi_center = shapely_transform(mm_projection, sg.Point(roi['center']['coordinates']))
+            mm_roi = mm_roi_center.buffer(roi['radius'])
+
+            def roi_intersects_filter(sources):
+                for s in sources:
+                    if s.get('public'):
+                        yield s
+                    else:
+                        mm_geom = shapely_transform(mm_projection, sg.shape(s['default_footprint']))
+                        if mm_geom.intersects(mm_roi):
+                            yield s
+
+        resultset = list(
+                        roi_intersects_filter(
+                            _anonymize_source_if_necessary_filter(resultset, private_requested)) )
+
+        res = jsonify(resultset)
         current_app.http_response_prom.labels(method='get', endpoint='sources').observe(
             sys.getsizeof(res.data))
         return res
@@ -168,8 +225,8 @@ def sources_get_one(tdmq_id):
     srcs = db.get_sources([tdmq_id], include_private=True)
     if len(srcs) == 1:
         source = srcs[0]
-        if not _should_anonymize_private_data(source_is_public=source.get('public', False),
-                                              private_data_requested=private_requested):
+        if _must_anonymize(source_is_public=source.get('public', False),
+                           private_data_requested=private_requested):
             source = _anonymize_source(source)
         return jsonify(source)
     elif len(srcs) == 0:
@@ -224,10 +281,10 @@ def timeseries_get(tdmq_id):
         # If private data is to be returned, we leave location data in the result: i.e.,
         # the default_footprint and the timestamped footprint.
         # Otherwise, we erase the mobile footprint from the result by replacing it with nulls.
-        if _should_anonymize_private_data(result['public'], private_requested):
-            res["default_footprint"] = result['source_info']['default_footprint']
-        else:
+        if _must_anonymize(result.get('public', False), private_requested):
             res["coords"]["footprint"] = [ None ] * len(res["coords"]["footprint"])
+        else:
+            res["default_footprint"] = result['source_info']['default_footprint']
 
         res = jsonify(res)
         current_app.http_response_prom.labels(method='get', endpoint='timeseries').observe(
