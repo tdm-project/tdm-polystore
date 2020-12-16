@@ -52,6 +52,8 @@ RUN apt-get update -q \
         python3-pip \
  && apt-get clean -y
 
+RUN $PIP install --no-cache-dir --upgrade pip
+
 COPY --chown=root ./tdmq-dist/tdmq/requirements-client.txt "${TDMQ_DIST}/tdmq/"
 # The Python tiledb package is called tiledb-py in conda and tiledb on pypi.
 # We fix the name on-the-fly with sed with a quick process substitution (which
