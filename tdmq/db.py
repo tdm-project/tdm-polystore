@@ -18,7 +18,6 @@ psycopg2.extras.register_uuid()
 
 NAMESPACE_TDMQ = uuid.UUID('6cb10168-c65b-48fa-af9b-a3ca6d03156d')
 
-
 # Module-level variable to cache the DB connection
 _db_connection = None
 

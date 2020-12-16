@@ -209,7 +209,7 @@ def test_sources_method_not_allowed(flask_client):
 
 
 @pytest.mark.sources
-def test_sources_get_no_args(flask_client, app, db_data, public_source_data):
+def test_sources_get_no_args(flask_client, public_db_data, public_source_data):
     response = flask_client.get('/sources')
     _checkresp(response)
     data = response.get_json()
@@ -219,7 +219,36 @@ def test_sources_get_no_args(flask_client, app, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_get_only_geom(flask_client, app, db_data, public_source_data):
+def test_sources_get_by_roi_private_shifted_out(flask_client, app, db_data, source_data):
+    # The anonymization process can bump a source outside of the roi by shifting
+    # its coordinates
+    geom = 'circle((8.99, 39.15), 1000)' # right over the private source_7
+    q = f'roi={geom}'
+    response = flask_client.get(f'/sources?{q}')
+    _checkresp(response)
+    data = response.get_json()
+    assert len(data) == 1
+    # Source 6 is the DPC radar
+    _validate_ids(data, { 'tdm/tiledb_sensor_6' })
+
+
+@pytest.mark.sources
+def test_sources_get_by_roi_radius_too_small(flask_client, app, db_data, source_data):
+    # The anonymization process can bump a source outside of the roi by shifting
+    # its coordinates
+    geom = 'circle((8.99, 39.15), 100)' # right over the private source_7.  Radius should be rounded to 0
+    q = f'roi={geom}'
+    response = flask_client.get(f'/sources?{q}')
+    _checkresp(response)
+    data = response.get_json()
+    assert len(data) == 1
+    # Source 6 is the DPC radar
+    _validate_ids(data, { 'tdm/tiledb_sensor_6' })
+
+
+
+@pytest.mark.sources
+def test_sources_get_only_geom(flask_client, app, public_db_data, public_source_data):
     geom = 'circle((9.132, 39.248), 1000)'
     q = f'roi={geom}'
     response = flask_client.get(f'/sources?{q}')
@@ -229,7 +258,7 @@ def test_sources_get_only_geom(flask_client, app, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_get_active_after_before(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after_before(flask_client, app, public_db_data, public_source_data):
     after, before = '2019-05-02T11:30:00Z', '2019-05-02T12:30:00Z'
     q = f'after={after}&before={before}'
     response = flask_client.get(f'/sources?{q}')
@@ -241,7 +270,7 @@ def test_sources_get_active_after_before(flask_client, app, db_data, public_sour
 
 
 @pytest.mark.sources
-def test_sources_get_active_after(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after(flask_client, app, public_db_data, public_source_data):
     after = '2019-05-02T11:00:22Z'
     q = f'after={after}'
     response = flask_client.get(f'/sources?{q}')
@@ -253,7 +282,7 @@ def test_sources_get_active_after(flask_client, app, db_data, public_source_data
 
 
 @pytest.mark.sources
-def test_sources_get_active_before(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_before(flask_client, app, public_db_data, public_source_data):
     before = '2019-05-02T11:00:00Z'
     q = f'before={before}'
     response = flask_client.get(f'/sources?{q}')
@@ -265,7 +294,7 @@ def test_sources_get_active_before(flask_client, app, db_data, public_source_dat
 
 
 @pytest.mark.sources
-def test_sources_get_active_after_geom(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after_geom(flask_client, app, public_db_data, public_source_data):
     geom = 'circle((8.93, 39.0), 10000)'  # point is near the town of Pula
     after = '2019-05-02T11:00:22Z'
     q = f'roi={geom}&after={after}'
@@ -290,7 +319,7 @@ def test_sources_get_fail(flask_client):
 
 
 @pytest.mark.sources
-def test_source_query_by_tdmq_id(flask_client, app, db_data, public_source_data):
+def test_source_query_by_tdmq_id(flask_client, app, public_db_data, public_source_data):
     external_source_id = public_source_data['sources'][0]['id']
     response_with_id = flask_client.get(f'/sources?id={external_source_id}')
     item_with_id = response_with_id.get_json()[0]
@@ -326,8 +355,8 @@ def test_private_source_query_by_tdmq_id_unauthenticated(flask_client, db_data, 
                                                      'stationary'))
     point = struct['default_footprint']
     assert point['type'] == 'Point'
-    # should be rounded
-    assert point['coordinates'] == [ 10.75, 31.50 ]
+    assert point['coordinates'] != [ 9.111872, 39.214212 ]
+    assert pytest.approx(point['coordinates'], [ 9.111872, 39.214212 ], abs=1e-3)
 
 
 @pytest.mark.sources
@@ -366,8 +395,8 @@ def test_private_source_query_by_tdmq_id_authenticated(flask_client, db_data, so
                                                      'stationary'))
     point = struct['default_footprint']
     assert point['type'] == 'Point'
-    # should be rounded
-    assert point['coordinates'] == [ 10.75, 31.50 ]
+    assert point['coordinates'] != [ 9.111872, 39.214212 ]
+    assert pytest.approx(point['coordinates'], [ 9.111872, 39.214212 ], abs=1e-3)
 
 
 @pytest.mark.sources
@@ -384,7 +413,7 @@ def test_private_source_query_by_tdmq_id_authenticated_include_private(flask_cli
     assert private_source['id'] == struct.get('external_id')
     point = struct['default_footprint']
     assert point['type'] == 'Point'
-    assert all(pytest.approx(c, d) for c, d in zip(point['coordinates'], [ 10.762179, 31.486511 ]))
+    assert pytest.approx(point['coordinates'], [ 9.111872, 39.214212 ], abs=1e-3)
 
 
 @pytest.mark.timeseries
@@ -604,13 +633,13 @@ def test_get_service_info_authenticated(flask_client):
 
 
 @pytest.mark.config
-def test_app_config_tiledb():
+def test_app_config_tiledb(local_zone_db):
     hdfs_root = 'hdfs://someserver:8020/'
     k, v = 'vfs.hdfs.property', 'pippo'
     config = {
         'TILEDB_VFS_ROOT': hdfs_root,
         'TILEDB_VFS_CONFIG': {k: v},
-        'APP_PREFIX': ''
+        'APP_PREFIX': '',
     }
 
     with _create_new_app_test_client(config) as client:
@@ -624,10 +653,10 @@ def test_app_config_tiledb():
 
 
 @pytest.mark.config
-def test_app_config_no_tiledb():
+def test_app_config_no_tiledb(local_zone_db):
     config = {
         'TILEDB_VFS_ROOT': None,
-        'APP_PREFIX': ''
+        'APP_PREFIX': '',
     }
 
     with _create_new_app_test_client(config) as client:
@@ -638,11 +667,11 @@ def test_app_config_no_tiledb():
 
 
 @pytest.mark.config
-def test_app_config_from_file(monkeypatch):
+def test_app_config_from_file(local_zone_db, monkeypatch):
     vfs_root = 's3://mybucket/'
     cfg = f"TILEDB_VFS_ROOT = '{vfs_root}'\n" \
         "TILEDB_VFS_CONFIG = { 'vfs.s3.property': 'bla' }\n" \
-        "APP_PREFIX = ''"
+        "APP_PREFIX = ''\n"
 
     with tempfile.NamedTemporaryFile(mode='w') as f:
         f.write(cfg)

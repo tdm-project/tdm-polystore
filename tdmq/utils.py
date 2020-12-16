@@ -11,7 +11,7 @@ def convert_roi(roi):
     circle_re = r'circle\(\(' + fnum + ', ' + fnum + r'\), ' + fnum + r'\)'
     m = re.match(circle_re, roi)
     if m:
-        return {'type': 'circle',
+        return {'type': 'Circle',
                 'center': {'type': 'Point',
                            'coordinates': [float(m.groups()[0]),
                                            float(m.groups()[2])]},
@@ -32,3 +32,11 @@ def chdir_context(new_dir):
 
 def str_to_bool(s):
     return s is not None and s.lower() in ('t', 'true', '1')
+
+
+def find_exec(name):
+    for p in os.environ.get('PATH', '').split(os.pathsep):
+        full_path = os.path.join(p, name)
+        if os.access(full_path, os.X_OK | os.R_OK):
+            return full_path
+    return None
