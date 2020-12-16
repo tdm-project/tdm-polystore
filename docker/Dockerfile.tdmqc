@@ -99,7 +99,8 @@ RUN cd "${TDMQ_DIST}" \
 
 RUN cd "${TDMQ_DIST}" && $PIP install .
 
-ENTRYPOINT [ "/entrypoint.sh", "/usr/local/bin/tdmqc-entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
+CMD [ "/usr/local/bin/tdmqc-entrypoint.sh" ]
 
 COPY --chown=root tdmqc-entrypoint.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/tdmqc-entrypoint.sh
