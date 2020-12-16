@@ -88,6 +88,7 @@ class DefaultConfig(object):
     }
 
     AUTH_TOKEN = secrets.token_urlsafe(32)
+    LOC_ANONYMIZER_DB = os.path.join(os.environ['TDMQ_DIST'], 'tests/data/test_zone_db.tar.gz')
 
     # TileDB has tons of client configuration properties.
     # See https://docs.tiledb.com/main/solutions/tiledb-embedded/examples/configuration-parameters
