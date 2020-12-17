@@ -12,7 +12,7 @@ ARG BASE_IMAGE=hadoop-base
 # This stage creates a base image for the tdmq client that includes the
 # Hadoop client libraries.  It basically performs minimal customization
 # of the crs4/hadoopclient image.
-ARG HADOOP_BASE_IMAGE=crs4/hadoopclient:3.2.0
+ARG HADOOP_BASE_IMAGE=crs4/hadoopclient:3.2.1
 FROM $HADOOP_BASE_IMAGE AS hadoop-base
 
 ARG HADOOP_CLASSPATH
@@ -49,8 +49,9 @@ RUN apt-get update -q \
  && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
         libnss-wrapper \
+        python3 \
         python3-pip \
- && apt-get clean -y
+ && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN $PIP install --no-cache-dir --upgrade pip
 

@@ -3,7 +3,7 @@ SHELL := /bin/bash
 # Set DOCKER_BUILD_EXTRA_ARGS argument to pass extra build arguments to Docker
 # (e.g., --no-cache)
 
-HADOOP_BASE_IMAGE=crs4/hadoopclient:3.2.0
+HADOOP_BASE_IMAGE=crs4/hadoopclient:3.2.1
 TDMQ_FILES=$(wildcard tdmq/*.txt tdmq/*.py tdmq/client/*.py)
 
 all: images
