@@ -51,57 +51,45 @@ def test_get_two_sources(app, db_data, source_data):
 
 
 def test_get_private_sources(app, db_data, source_data):
-    private_source = next(s for s in source_data['sources'] if s.get("public") is not True)
-    results = db_query.list_sources({
-        'id': private_source['id'],
-        'include_private': 'True'})
+    private_sources = list(s for s in source_data['sources'] if s.get("public") is not True)
+    results = db_query.list_sources({'id': private_sources[0]['id'] })
     assert len(results) == 1
 
     tdmq_id = results[0]['tdmq_id']
     resultset = db_query.get_sources([tdmq_id])
-    assert len(resultset) == 0
-
-    resultset = db_query.get_sources([tdmq_id], include_private=True)
     assert len(resultset) == 1
-    assert resultset[0]['tdmq_id'] == tdmq_id
 
+    results = db_query.list_sources({'public': False })
+    assert len(results) == len(private_sources)
 
-def test_get_public_and_private_sources(app, db_data, source_data):
-    source_ids = [s['id'] for s in source_data['sources']]
-    private_sources = [s['id'] for s in source_data['sources'] if s.get('public') is not True]
-    tdmq_ids = [db_query.list_sources({'id': source_id, 'include_private': 'True' })[0]['tdmq_id'] for source_id in source_ids ]
-
-    resultset = db_query.get_sources(tdmq_ids)
-    assert len(resultset) == len(tdmq_ids) - len(private_sources)
-
-    resultset = db_query.get_sources(tdmq_ids, include_private=True)
-    assert len(resultset) == len(tdmq_ids)
+    results = db_query.list_sources({'public': True })
+    assert len(results) == len(source_data['sources']) - len(private_sources)
 
 
 def test_query_source_offset_limit(app, db_data):
     src = db_query.list_sources({})
     assert len(src) > 2
 
-    two_set = db_query.list_sources({'limit': 2})
+    two_set = db_query.list_sources(limit=2)
     assert len(two_set) == 2
 
-    first = db_query.list_sources({'limit': 1})
+    first = db_query.list_sources(limit=1)
     assert len(first) == 1
     assert first[0]['tdmq_id'] == two_set[0]['tdmq_id']
 
-    second = db_query.list_sources({'limit': 1, 'offset': 1})
+    second = db_query.list_sources(limit=1, offset=1)
     assert len(second) == 1
     assert second[0]['tdmq_id'] == two_set[1]['tdmq_id']
 
 
 def test_query_source_only_public(app, db_data):
-    only_public_sources = db_query.list_sources({})
+    only_public_sources = db_query.list_sources({'public': True})
     for s in only_public_sources:
         assert s['public'] is True
 
 
 def test_delete_source(app, db_data):
-    src = db_query.list_sources({'limit': 1})
+    src = db_query.list_sources(limit=1)
 
     db_query.delete_sources([src[0]['tdmq_id']])
 
@@ -216,19 +204,13 @@ def test_get_timeseries_tdmq_id_not_found(app, db_data):
 
 
 def test_get_private_timeseries(app, db_data, source_data):
-    assert len(db_query.list_sources({'id': 'tdm/sensor_7'})) == 0
-    private_source = db_query.list_sources({'id': 'tdm/sensor_7', 'include_private': 'true'})[0]
+    sources = db_query.list_sources({'id': 'tdm/sensor_7'})
+    assert len(sources) == 1
+    private_source = sources[0]
     assert private_source['public'] is not True
     tdmq_id = private_source['tdmq_id']
 
-    # If we don't specify include_private it should only retrieve public records
-    with pytest.raises(ItemNotFoundException):
-        result = db_query.get_timeseries(tdmq_id)
-
-    with pytest.raises(ItemNotFoundException):
-        result = db_query.get_timeseries(tdmq_id, {'include_private': False})
-
-    result = db_query.get_timeseries(tdmq_id, {'include_private': True})
+    result = db_query.get_timeseries(tdmq_id)
     assert len(result['rows']) == 2
     assert result['public'] is not True
 
@@ -296,7 +278,7 @@ def test_load_source_missing_public_attr(app, clean_db, source_data):
 
     # If `public` isn't specified, the system should default to 'false'
     tdmq_ids = db_query.load_sources([one_src])
-    retrieved = db_query.get_sources(tdmq_ids, include_private=True)
+    retrieved = db_query.get_sources(tdmq_ids)
     assert len(retrieved) == 1
     item = retrieved[0]
     assert item['external_id'] == one_src['id']
@@ -327,9 +309,9 @@ def test_load_records_multiple_src(app, clean_db, source_data):
 
     records_by_source = source_data['records_by_source']
     for i in tdmq_ids:
-        results = db_query.get_sources([i], include_private=True)
+        results = db_query.get_sources([i])
         assert len(results) == 1
         src = results[0]
-        ts = db_query.get_timeseries(i, {'include_private': True})
+        ts = db_query.get_timeseries(i)
         assert len(ts['rows']) == len(records_by_source[src['external_id']])
         assert ts['source_info']['id'] == src['external_id']

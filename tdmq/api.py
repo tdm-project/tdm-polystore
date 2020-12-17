@@ -3,85 +3,22 @@ import logging
 import sys
 from datetime import timedelta
 from functools import wraps
+from http import HTTPStatus
 
-import pyproj
-import shapely.geometry as sg
 import werkzeug.exceptions as wex
 from flask import Blueprint, current_app, jsonify, request, url_for
-from shapely.ops import transform as shapely_transform
 
-import tdmq.db as db
 import tdmq.errors
-from .loc_anonymizer import loc_anonymizer
+from .model import EntityType, EntityCategory, Source, Timeseries
 from .utils import convert_roi, str_to_bool
-
-ROI_CENTER_DIGITS = 3
-ROI_RADIUS_INCREMENT = 500
 
 logger = logging.getLogger(__name__)
 tdmq_bp = Blueprint('tdmq', __name__)
 
 
-def _restructure_timeseries(res, properties):
-    # The arrays time and footprint define the scaffolding on which
-    # the actual data (properties) are defined.
-    result = {'coords': None, 'data': None}
-    t = zip(*res) if len(res) > 0 else iter([[]] * (2 + len(properties)))
-    result['coords'] = dict((p, next(t)) for p in ['time', 'footprint'])
-    result['data'] = dict((p, next(t)) for p in properties)
-    return result
-
-
 def _request_authorized():
     auth_header = request.headers.get('Authorization')
     return f"Bearer {current_app.config['AUTH_TOKEN']}" == auth_header
-
-
-def _must_anonymize_private(private_data_requested=False):
-    return not (private_data_requested and _request_authorized())
-
-
-def _must_anonymize(source_is_public, private_data_requested=False):
-    return not source_is_public and not (private_data_requested and _request_authorized())
-
-
-def _anonymize_source_if_necessary_filter(sources, private_data_requested=False):
-    for s in sources:
-        if _must_anonymize(s.get('public', False), private_data_requested):
-            yield _anonymize_source(s)
-        else:
-            yield s
-
-
-def _anonymize_source(src_dict):
-    safe_keys = (
-        'entity_category',
-        'entity_type',
-        'public',
-        'stationary',
-        'tdmq_id')
-    safe_description_keys = (
-        'controlledProperties',
-        'description',
-        'entity_category',
-        'entity_type',
-        'shape',
-        'stationary')
-    sanitized = dict()
-    for k in safe_description_keys:
-        if k in src_dict['description']:
-            sanitized[k] = src_dict['description'][k]
-
-    sanitized = dict(description=sanitized)
-    for k in safe_keys:
-        if k in src_dict:
-            sanitized[k] = src_dict[k]
-
-    geo = sg.shape(src_dict['default_footprint'])
-    anon_zone = loc_anonymizer.anonymize_location(geo)
-    sanitized['default_footprint'] = anon_zone.centroid.__geo_interface__
-
-    return sanitized
 
 
 def auth_required(f):
@@ -115,7 +52,7 @@ def index():
 @tdmq_bp.route('/entity_types')
 def entity_types_get():
     with current_app.http_request_prom.labels(method='get', endpoint='entity_types').time():
-        types = db.list_entity_types()
+        types = EntityType.get_entity_types()
         res = jsonify({'entity_types': types})
         current_app.http_response_prom.labels(method='get', endpoint='entity_types').observe(
             sys.getsizeof(res.data))
@@ -125,7 +62,7 @@ def entity_types_get():
 @tdmq_bp.route('/entity_categories')
 def entity_categories_get():
     with current_app.http_request_prom.labels(method='get', endpoint='entity_categories').time():
-        categories = db.list_entity_categories()
+        categories = EntityCategory.get_entity_categories()
         res = jsonify({'entity_categories': categories})
         current_app.http_response_prom.labels(method='get', endpoint='entity_categories').observe(
             sys.getsizeof(res.data))
@@ -139,67 +76,46 @@ def sources_get():
     See spec for documentation.
     """
     with current_app.http_request_prom.labels(method='get', endpoint='sources').time():
-        args = {k: v for k, v in request.args.items()}
-        logger.debug("source: args is %s", args)
+        rargs = {k: v for k, v in request.args.items()}
+        logger.debug("source: args is %s", rargs)
 
-        private_requested = str_to_bool(request.args.get('include_private'))
+        private_requested = str_to_bool(rargs.pop('include_private', None))
         if private_requested and not _request_authorized():
             raise wex.Unauthorized("Unauthorized request for private data")
+        anonymize_private = not private_requested
 
-        if 'controlledProperties' in args:
-            args['controlledProperties'] = \
-                args['controlledProperties'].split(',')
-
-        if 'roi' in args:
-            args['roi'] = convert_roi(args['roi'])
-            roi = args['roi']
-            if roi['radius'] <= 0:
+        # preprocess controlledProperties and roi arguments
+        if 'controlledProperties' in rargs:
+            rargs['controlledProperties'] = \
+                rargs['controlledProperties'].split(',')
+        if 'public' in rargs:
+            rargs['public'] = str_to_bool(rargs['public'])
+        if 'roi' in rargs:
+            rargs['roi'] = convert_roi(rargs['roi'])
+            if rargs['roi']['type'] != 'Circle':
+                raise NotImplementedError()
+            if rargs['roi']['radius'] <= 0:
                 raise wex.BadRequest("ROI radius must be > 0")
-            # Round the coordinates and radius of the ROI to limit precision
-            roi['center']['coordinates'] = [ round(c, ROI_CENTER_DIGITS) for c in roi['center']['coordinates'] ]
-            roi['radius'] = ROI_RADIUS_INCREMENT * round(roi['radius'] / ROI_RADIUS_INCREMENT)
+        if 'stationary' in rargs:
+            rargs['stationary'] = str_to_bool(rargs['stationary'])
 
-        # retrieve all matching sources (both public and private) from DB
+        search_args = dict((k, rargs.pop(k)) for k in Source.AcceptedSearchKeys if k in rargs)
+
+        limit = rargs.pop('limit', None)
+        if limit:
+            limit = int(limit)
+        offset = rargs.pop('offset', None)
+        if offset:
+            offset = int(offset)
+
+        match_attr = rargs # everything that hasn't been popped
+
         try:
-            args['include_private'] = 'true'
-            resultset = db.list_sources(args)
+            items = Source.search(search_args, match_attr, anonymize_private, limit, offset)
         except tdmq.errors.DBOperationalError:
             raise wex.InternalServerError()
 
-        if 'roi' not in args:
-            def roi_intersects_filter(sources):
-                # no opt
-                for s in sources:
-                    yield s
-        else:
-            # filter sources that end up outside ROI because of anonymization
-            # Geom specify wgs84 coordinates.
-            roi = args['roi']
-            if roi['type'] != 'Circle':
-                raise NotImplementedError()
-            wgs84 = pyproj.CRS('EPSG:4326')
-            mm = pyproj.CRS('EPSG:3003') # Monte Mario
-            mm_projection = pyproj.Transformer.from_crs(wgs84, mm, always_xy=True).transform
-
-            # project both ROI and geometry to Monte Mario coordinates
-            # then we can use shapely's distance functions
-            mm_roi_center = shapely_transform(mm_projection, sg.Point(roi['center']['coordinates']))
-            mm_roi = mm_roi_center.buffer(roi['radius'])
-
-            def roi_intersects_filter(sources):
-                for s in sources:
-                    if s.get('public'):
-                        yield s
-                    else:
-                        mm_geom = shapely_transform(mm_projection, sg.shape(s['default_footprint']))
-                        if mm_geom.intersects(mm_roi):
-                            yield s
-
-        resultset = list(
-                        roi_intersects_filter(
-                            _anonymize_source_if_necessary_filter(resultset, private_requested)) )
-
-        res = jsonify(resultset)
+        res = jsonify(items)
         current_app.http_response_prom.labels(method='get', endpoint='sources').observe(
             sys.getsizeof(res.data))
         return res
@@ -210,7 +126,7 @@ def sources_get():
 def sources_post():
     data = request.json
     try:
-        tdmq_ids = db.load_sources(data)
+        tdmq_ids = Source.store_new(data)
     except tdmq.errors.DuplicateItemException:
         raise wex.Conflict()
     return jsonify(tdmq_ids)
@@ -218,29 +134,22 @@ def sources_post():
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>')
 def sources_get_one(tdmq_id):
-    private_requested = str_to_bool(request.args.get('include_private'))
-    if private_requested and not _request_authorized():
+    include_private = str_to_bool(request.args.get('include_private'))
+    if include_private and not _request_authorized():
         raise wex.Unauthorized("Unauthorized request for private data")
+    anonymize_private = not include_private
 
-    srcs = db.get_sources([tdmq_id], include_private=True)
-    if len(srcs) == 1:
-        source = srcs[0]
-        if _must_anonymize(source_is_public=source.get('public', False),
-                           private_data_requested=private_requested):
-            source = _anonymize_source(source)
-        return jsonify(source)
-    elif len(srcs) == 0:
+    source = Source.get_one(tdmq_id, anonymize_private)
+    if source is None:
         raise wex.NotFound()
-    else:
-        raise RuntimeError(
-            f"Got more than one source for tdmq_id {tdmq_id}")
+    return jsonify(source)
 
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>', methods=['DELETE'])
 @auth_required
 def sources_delete(tdmq_id):
-    result = db.delete_sources([tdmq_id])
-    return jsonify(result)
+    Source.delete_one(tdmq_id)
+    return ('', HTTPStatus.NO_CONTENT)
 
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
@@ -252,6 +161,8 @@ def timeseries_get(tdmq_id):
         if private_requested and not _request_authorized():
             raise wex.Unauthorized("Unauthorized request for private data")
 
+        anonymize_private = not private_requested
+
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'fields', 'op'])
         if args['bucket'] is not None:
@@ -259,44 +170,18 @@ def timeseries_get(tdmq_id):
         if args['fields'] is not None:
             args['fields'] = args['fields'].split(',')
 
-        # Pass 'include_private' = True to the DB query or it will not return
-        # data from private sources.  We filter the data at this level.
-        args['include_private'] = True
-        try:
-            result = db.get_timeseries(tdmq_id, args)
-        except tdmq.errors.RequestException:
-            logger.error("Bad request getting timeseries")
-            raise wex.BadRequest()
-
-        res = _restructure_timeseries(result['rows'], result['properties'])
-
-        res["tdmq_id"] = tdmq_id
-        res["shape"] = result['source_info']['shape']
-        if args['bucket']:
-            res["bucket"] = {
-                "interval": args['bucket'].total_seconds(), "op": args.get("op")}
-        else:
-            res['bucket'] = None
-
-        # If private data is to be returned, we leave location data in the result: i.e.,
-        # the default_footprint and the timestamped footprint.
-        # Otherwise, we erase the mobile footprint from the result by replacing it with nulls.
-        if _must_anonymize(result.get('public', False), private_requested):
-            res["coords"]["footprint"] = [ None ] * len(res["coords"]["footprint"])
-        else:
-            res["default_footprint"] = result['source_info']['default_footprint']
-
-        res = jsonify(res)
+        result = Timeseries.get_one(tdmq_id, anonymize_private, args)
+        jres = jsonify(result)
         current_app.http_response_prom.labels(method='get', endpoint='timeseries').observe(
-            sys.getsizeof(res.data))
-        return res
+            sys.getsizeof(jres.data))
+        return jres
 
 
 @tdmq_bp.route('/records', methods=["POST"])
 @auth_required
 def records_post():
     data = request.json
-    n = db.load_records(data)
+    n = Timeseries.store_new_records(data)
     return jsonify({"loaded": n})
 
 
