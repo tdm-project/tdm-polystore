@@ -12,7 +12,6 @@ from shapely.ops import transform as shapely_transform
 
 import tdmq.db as db
 from .loc_anonymizer import loc_anonymizer
-from .utils import str_to_bool
 
 logger = logging.getLogger(__name__)
 
@@ -153,19 +152,19 @@ class Source:
         if match_attr:
             search_args.update(match_attr)
 
-        resultset = list()
-        if public is None or public is True:
+        if not (cls.SafeKeys >= search_args.keys() and \
+                cls.SafeDescriptionKeys >= match_attr.keys()):
+            # can't do query on private sources because it uses unsafe attributes
             search_args['public'] = True
-            resultset.extend(db.list_sources(search_args))
 
-        if (public is None or public is False) and \
-               cls.SafeKeys >= search_args.keys() and \
-               cls.SafeDescriptionKeys >= match_attr.keys():
-            search_args['public'] = False
-            it = cls._anonymizing_iter(db.list_sources(search_args))
-            if 'roi' in search_args:
-                it = cls._roi_intersection_filter(search_args['roi'], it)
-            resultset.extend(it)
+        raw = db.list_sources(search_args)
+        resultset = [ r for r in raw if r['public'] ]
+        private_it = (r for r in raw if not r['public'])
+        if anonymize_private:
+            private_it = cls._anonymizing_iter(private_it)
+        if 'roi' in search_args:
+            private_it = cls._roi_intersection_filter(search_args['roi'], private_it)
+        resultset.extend(private_it)
 
         return resultset
 
@@ -208,7 +207,7 @@ class Timeseries:
         # location data in the result: i.e., # the default_footprint and the
         # timestamped footprint.
         if anonymize_private and not db_result.get('public'):
-            # pylint: disable=unsupported-assignment-operation
+            # pylint: disable=unsubscriptable-object,unsupported-assignment-operation
             struct["coords"]["footprint"] = [ None ] * len(struct["coords"]["footprint"])
         else:
             struct["default_footprint"] = db_result['source_info']['default_footprint']
