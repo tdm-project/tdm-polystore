@@ -77,6 +77,14 @@ def _create_auth_header(token):
     return {'Authorization': f'Bearer {token}'} if token is not None else {}
 
 
+def _walk_dict(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            yield from _walk_dict(v)
+        else:
+            yield k, v
+
+
 @pytest.mark.sources
 def test_sources_db_error(flask_client):
     """
@@ -90,16 +98,18 @@ def test_sources_db_error(flask_client):
 
 @pytest.mark.sources
 def test_source_types(flask_client, db_data):
-    in_args = {"type": "multisource", "controlledProperties": "temperature"}
+    in_args = {"type": "multisensor", "controlledProperties": "temperature"}
     q = "&".join(f"{k}={v}" for k, v in in_args.items())
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
     data = response.get_json()
+    assert data
 
     for s in data:
-        assert s.description['type'] == in_args['type']
-        assert s.controlledProperties == in_args['controlledProperties'].split(
-            ',')
+        key_value_pairs = tuple(_walk_dict(s))
+        assert ('type', in_args['type']) in key_value_pairs
+        assert any(in_args['controlledProperties'] in v
+                   for k, v in key_value_pairs if k == 'controlledProperties')
 
 
 def _create_source(flask_client):
@@ -136,7 +146,7 @@ def test_source_delete(flask_client, db_data):
     tdmq_id = response.get_json()[0]
     headers = _create_auth_header(flask_client.auth_token)
     response = flask_client.delete(f'/sources/{tdmq_id}', headers=headers)
-    assert response.status == '200 OK'
+    assert response.status_code == 204
 
 
 @pytest.mark.sources
@@ -319,7 +329,7 @@ def test_sources_get_fail(flask_client):
 
 
 @pytest.mark.sources
-def test_source_query_by_tdmq_id(flask_client, app, public_db_data, public_source_data):
+def test_source_query_by_external_id(flask_client, app, public_db_data, public_source_data):
     external_source_id = public_source_data['sources'][0]['id']
     response_with_id = flask_client.get(f'/sources?id={external_source_id}')
     item_with_id = response_with_id.get_json()[0]
@@ -329,6 +339,16 @@ def test_source_query_by_tdmq_id(flask_client, app, public_db_data, public_sourc
     response_with_tdmq_id = flask_client.get(f"/sources/{tdmq_id}")
 
     assert item_with_id['external_id'] == response_with_tdmq_id.get_json()['external_id']
+
+
+
+@pytest.mark.sources
+def test_source_query_private_by_external_id(flask_client, app, db_data, source_data):
+    external_source_id = "tdm/sensor_7"
+    response = flask_client.get(f'/sources?id={external_source_id}')
+    _checkresp(response)
+    array = response.get_json()
+    assert not array
 
 
 @pytest.mark.sources

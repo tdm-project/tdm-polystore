@@ -62,6 +62,7 @@ def close_db():
 def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
     with get_db() as db:
         with db.cursor(cursor_factory=cursor_factory) as cur:
+            #print("Query:", q.as_string(cur))
             cur.execute(q, tuple(args))
             result = cur.fetchall() if fetch else None
 
@@ -71,7 +72,7 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
         return result
 
 
-def list_sources(args):
+def list_sources(args=None, limit=None, offset=None):
     """
     Possible args:
         'id'
@@ -82,9 +83,7 @@ def list_sources(args):
         'after'
         'before'
         'roi'
-        'limit'
-        'offset'
-        'include_private'
+        'public'
 
     All applied conditions must match for an element to be returned.
 
@@ -99,6 +98,8 @@ def list_sources(args):
     """
     if args is None:
         args = {}
+    else:
+        args = args.copy()
 
     select = SQL("""
         SELECT
@@ -114,8 +115,6 @@ def list_sources(args):
         FROM source""")
 
     where = []
-    limit = None
-    offset = None
 
     # where clauses
     def add_where_lit(column, condition, literal):
@@ -130,9 +129,9 @@ def list_sources(args):
     if 'tdmq_id' in args:
         add_where_lit('source.tdmq_id', '=', args.pop('tdmq_id'))
     if 'stationary' in args:
-        add_where_lit('source.stationary', 'is', (args.pop('stationary').lower() in {'t', 'true'}))
-    if 'include_private' not in args or args.pop('include_private').lower() not in {'t', 'true'}:
-        where.append(SQL(" public is true "))
+        add_where_lit('source.stationary', 'is', args.pop('stationary'))
+    if 'public' in args:
+        add_where_lit('source.public', 'is', args.pop('public'))
     if 'controlledProperties' in args:
         # require that all these exist in the controlledProperties array
         # This is the PgSQL operator: ?&  text[]   Do all of these array strings exist as top-level keys?
@@ -167,11 +166,6 @@ def list_sources(args):
 
         where.append(in_subquery.format(SQL(" AND ").join(interval)))
 
-    if 'limit' in args:
-        limit = sql.Literal(args.pop('limit'))
-    if 'offset' in args:
-        offset = sql.Literal(args.pop('offset'))
-
     if args:  # not empty, so we have additional filtering attributes to apply to description
         logger.debug("Left over args for JSON query: %s", args)
         for k, v in args.items():
@@ -184,10 +178,10 @@ def list_sources(args):
 
     if limit or offset:
         query += SQL(' ORDER BY source.tdmq_id ')
-        if limit:
-            query += SQL(' LIMIT ') + limit
-        if offset:
-            query += SQL(' OFFSET ') + offset
+        if limit is not None:
+            query += SQL(' LIMIT ') + sql.Literal(limit)
+        if offset is not None:
+            query += SQL(' OFFSET ') + sql.Literal(offset)
 
     try:
         return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
@@ -195,11 +189,9 @@ def list_sources(args):
         raise tdmq.errors.DBOperationalError
 
 
-def get_sources(list_of_tdmq_ids, include_private=False):
+def get_sources(list_of_tdmq_ids):
     """
     Get the sources details for all the sources with tdmq_id in `list_of_tdmq_ids`.
-    If include_private is False (default) it returns only the details of public sources, otherwise
-    it includes also the details of private sources
     """
 
     q = sql.SQL("""
@@ -216,8 +208,6 @@ def get_sources(list_of_tdmq_ids, include_private=False):
         FROM source
         WHERE tdmq_id = ANY(%s)""")
 
-    if include_private is not True:
-        q += sql.SQL(" AND public IS true")
     args = (list_of_tdmq_ids,)
     return query_db_all(q, args=args, cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -502,10 +492,6 @@ def get_timeseries(tdmq_id, args=None):
      :query fields: list of controlledProperties from the source,
                     or nothing to select all of them.
 
-     :query include_private: if present and True, it retrieves records even if they belong
-                             to a private source.
-                             If absent function only retrieves from public sources.
-
      :returns: array of arrays: time, footprint, field+
                Fields are in the same order as specified in args.
     """
@@ -514,14 +500,6 @@ def get_timeseries(tdmq_id, args=None):
     description = info['description']
     source_is_private = not info.get('public', False)
     logger.debug("get_timeseries for private source %s", tdmq_id)
-
-    if source_is_private and (not args or args.get('include_private') is not True):
-        # The source is private, but private data has not been requested.
-        # We replicate the same behaviour that would be seen if the item didn't
-        # exist.
-        # TODO:  It would be better to raise/communicate the privilege problem to
-        # the application layer and let it decide how to respon.
-        raise tdmq.errors.ItemNotFoundException(f"tdmq_id {tdmq_id} either not in DB or is not public")
 
     if description.get('shape'):
         properties = ['tiledb_index']
