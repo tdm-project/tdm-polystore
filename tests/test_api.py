@@ -359,14 +359,15 @@ def test_private_source_query_by_tdmq_id_unauthenticated(flask_client, db_data, 
 
     response = flask_client.get(f'/sources/{private_source_tdmq_id}')
     struct = response.get_json()
+    valued_keys = [ k for k in struct.keys() if struct[k] is not None ]
     assert private_source_tdmq_id == struct['tdmq_id']
-    assert set(struct.keys()) <= set(('description',
-                                      'default_footprint',
-                                      'entity_category',
-                                      'entity_type',
-                                      'public',
-                                      'stationary',
-                                      'tdmq_id'))
+    assert set(valued_keys) <= set(('description',
+                                    'default_footprint',
+                                    'entity_category',
+                                    'entity_type',
+                                    'public',
+                                    'stationary',
+                                    'tdmq_id'))
     assert set(struct['description'].keys()) <= set(('controlledProperties',
                                                      'description',
                                                      'entity_category',
@@ -399,14 +400,15 @@ def test_private_source_query_by_tdmq_id_authenticated(flask_client, db_data, so
     response = flask_client.get(f'/sources/{private_source_tdmq_id}', headers=headers)
     _checkresp(response)
     struct = response.get_json()
+    valued_keys = [ k for k in struct.keys() if struct[k] is not None ]
     assert private_source_tdmq_id == struct['tdmq_id']
-    assert set(struct.keys()) <= set(('description',
-                                      'default_footprint',
-                                      'entity_category',
-                                      'entity_type',
-                                      'public',
-                                      'stationary',
-                                      'tdmq_id'))
+    assert set(valued_keys) <= set(('description',
+                                    'default_footprint',
+                                    'entity_category',
+                                    'entity_type',
+                                    'public',
+                                    'stationary',
+                                    'tdmq_id'))
     assert set(struct['description'].keys()) <= set(('controlledProperties',
                                                      'description',
                                                      'entity_category',
