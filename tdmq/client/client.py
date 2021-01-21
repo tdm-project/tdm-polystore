@@ -149,8 +149,8 @@ class Client:
         return [self.get_source(r['tdmq_id']) for r in res]
 
     @requires_connection
-    def get_source(self, tdmq_id):
-        res = self._do_get(f'sources/{tdmq_id}')
+    def get_source(self, tdmq_id, anonymized=True):
+        res = self._do_get(f'sources/{tdmq_id}', params={'anonymized': anonymized})
         assert res['tdmq_id'] == tdmq_id
 
         if res['description'].get('shape'):
