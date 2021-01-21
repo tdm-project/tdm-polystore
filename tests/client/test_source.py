@@ -59,9 +59,9 @@ def test_register_deregister_simple_source_as_admin(clean_storage, public_source
 def test_register_simple_source_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
 
-    with pytest.raises(HTTPError) as ve:
-        srcs = register_scalar_sources(c, public_source_data)
-        ve.code = 401
+    with pytest.raises(HTTPError) as exc_info:
+        _ = register_scalar_sources(c, public_source_data)
+    assert exc_info.value.response.status_code == 401
 
 
 def test_deregister_simple_source_as_user(clean_storage, public_source_data, live_app):
@@ -71,9 +71,9 @@ def test_deregister_simple_source_as_user(clean_storage, public_source_data, liv
 
     # then tries to deregister it with user client
     c = Client(live_app.url())
-    with pytest.raises(HTTPError) as ve:
+    with pytest.raises(HTTPError) as exc_info:
         c.deregister_source(srcs[0])
-        assert ve.code == 401
+    assert exc_info.value.response.status_code == 401
 
 
 def test_select_source_by_id(clean_storage, public_source_data, live_app):
