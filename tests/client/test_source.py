@@ -114,9 +114,7 @@ def test_find_source_by_roi_as_user(clean_storage, db_data, live_app):
     assert external_ids == { 'tdm/sensor_3', 'tdm/tiledb_sensor_6' }
 
 
-def test_find_anonymized_and_not_anonymized(clean_storage, db_data, source_data, live_app, caplog):
-    import logging
-    caplog.set_level(logging.DEBUG)
+def test_find_anonymized_and_not_anonymized(clean_storage, db_data, source_data, live_app):
     c = Client(live_app.url())
     sources = c.find_sources(args={'only_public': 'false'})
     assert len(sources) == len(source_data['sources'])
