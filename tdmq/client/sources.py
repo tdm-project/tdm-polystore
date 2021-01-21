@@ -25,6 +25,23 @@ class Source(abc.ABC):
         self.shape = tuple(self.description.get('shape', ()))
         self.controlled_properties = self.description['controlledProperties']
 
+
+    @property
+    def public(self):
+        return self.description.get('public', False)
+
+    def __repr__(self):
+        return repr({
+            'self.tdmq_id ': self.tdmq_id,
+            'self.id ': self.id,
+            'self.entity_category ': self.entity_category,
+            'self.entity_type ': self.entity_type,
+            'self.default_footprint ': self.default_footprint,
+            'self.is_stationary ': self.is_stationary,
+            'self.shape ': self.shape,
+            'self.controlled_properties ': self.controlled_properties,
+            'self.description ': self.description })
+
     def get_timeseries(self, args):
         return self.client.get_timeseries(self.tdmq_id, args)
 
