@@ -32,6 +32,16 @@ class Source:
     ROI_CENTER_DIGITS = 3
     ROI_RADIUS_INCREMENT = 500
 
+    RequiredKeys = {
+        'tdmq_id',
+        'external_id',
+        'default_footprint',
+        'entity_category',
+        'entity_type',
+        'stationary',
+        'description',
+        }
+
     SafeKeys = {
         'entity_category',
         'entity_type',
@@ -89,12 +99,13 @@ class Source:
 
     @classmethod
     def _anonymize_source(cls, src_dict: dict) -> dict:
-        sanitized = dict()
+        sanitized_desc = dict()
         for k in cls.SafeDescriptionKeys:
             if k in src_dict['description']:
-                sanitized[k] = src_dict['description'][k]
+                sanitized_desc[k] = src_dict['description'][k]
 
-        sanitized = dict(description=sanitized)
+        sanitized = dict.fromkeys(cls.RequiredKeys)
+        sanitized['description'] = sanitized_desc
         for k in cls.SafeKeys:
             if k in src_dict:
                 sanitized[k] = src_dict[k]

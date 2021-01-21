@@ -79,10 +79,9 @@ def sources_get():
         rargs = {k: v for k, v in request.args.items()}
         logger.debug("source: args is %s", rargs)
 
-        private_requested = str_to_bool(rargs.pop('include_private', None))
-        if private_requested and not _request_authorized():
-            raise wex.Unauthorized("Unauthorized request for private data")
-        anonymize_private = not private_requested
+        anonymize_private = str_to_bool(rargs.pop('anonymized', 'true'))
+        if not anonymize_private and not _request_authorized():
+            raise wex.Unauthorized("Unauthorized request for unanonymized private data")
 
         # preprocess controlledProperties and roi arguments
         if 'controlledProperties' in rargs:
@@ -90,6 +89,16 @@ def sources_get():
                 rargs['controlledProperties'].split(',')
         if 'public' in rargs:
             rargs['public'] = str_to_bool(rargs['public'])
+
+        if 'only_public' in rargs:
+            if 'public' in rargs:
+                raise wex.BadRequest("Cannot specify both 'only_public' and 'public' query attributes")
+            only_public = str_to_bool(rargs.pop('only_public'))
+            if only_public:
+                rargs['public'] = True
+        else:
+            rargs['public'] = rargs.get('public', True)
+
         if 'roi' in rargs:
             rargs['roi'] = convert_roi(rargs['roi'])
             if rargs['roi']['type'] != 'Circle':
@@ -134,10 +143,9 @@ def sources_post():
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>')
 def sources_get_one(tdmq_id):
-    include_private = str_to_bool(request.args.get('include_private'))
-    if include_private and not _request_authorized():
-        raise wex.Unauthorized("Unauthorized request for private data")
-    anonymize_private = not include_private
+    anonymize_private = str_to_bool(request.args.get('anonymized', 'true'))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized("Unauthorized request for unanonymized private data")
 
     source = Source.get_one(tdmq_id, anonymize_private)
     if source is None:
@@ -157,11 +165,9 @@ def timeseries_get(tdmq_id):
     with current_app.http_request_prom.labels(method='get', endpoint='timeseries').time():
         rargs = request.args
 
-        private_requested = str_to_bool(rargs.get('include_private'))
-        if private_requested and not _request_authorized():
-            raise wex.Unauthorized("Unauthorized request for private data")
-
-        anonymize_private = not private_requested
+        anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))
+        if not anonymize_private and not _request_authorized():
+            raise wex.Unauthorized("Unauthorized request for unanonymized private data")
 
         args = dict((k, rargs.get(k, None))
                     for k in ['after', 'before', 'bucket', 'fields', 'op'])
