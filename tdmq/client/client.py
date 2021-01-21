@@ -143,20 +143,21 @@ class Client:
     def get_entity_types(self):
         return self._do_get('entity_types')
 
+    def __source_factory(self, api_struct):
+        if api_struct['description'].get('shape'):
+            return NonScalarSource(self, api_struct['tdmq_id'], api_struct)
+        else:
+            return ScalarSource(self, api_struct['tdmq_id'], api_struct)
+
     @requires_connection
     def find_sources(self, args=None):
-        res = self._do_get('sources', params=args)
-        return [self.get_source(r['tdmq_id']) for r in res]
+        return [ self.__source_factory(s) for s in self._do_get('sources', params=args) ]
 
     @requires_connection
     def get_source(self, tdmq_id, anonymized=True):
         res = self._do_get(f'sources/{tdmq_id}', params={'anonymized': anonymized})
         assert res['tdmq_id'] == tdmq_id
-
-        if res['description'].get('shape'):
-            return NonScalarSource(self, tdmq_id, res)
-        else:
-            return ScalarSource(self, tdmq_id, res)
+        return self.__source_factory(res)
 
     @requires_connection
     def get_timeseries(self, code, args):
