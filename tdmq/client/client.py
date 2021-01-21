@@ -156,7 +156,7 @@ class Client:
     @requires_connection
     def get_source(self, tdmq_id, anonymized=True):
         res = self._do_get(f'sources/{tdmq_id}', params={'anonymized': anonymized})
-        assert res['tdmq_id'] == tdmq_id
+        assert res['tdmq_id'] == str(tdmq_id)
         return self.__source_factory(res)
 
     @requires_connection
