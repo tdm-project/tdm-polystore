@@ -195,7 +195,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SourceBrief'
+                $ref: '#/components/schemas/SourceGet'
 
     post:
       description: >
@@ -568,7 +568,7 @@ components:
         - "var_pop"
         - "var_samp"
 
-    SourceBrief:
+    SourceGet:
       description: "Short source representation"
       type: object
       properties:
@@ -587,27 +587,20 @@ components:
         entity_type:
           description: "One of the entity types returned by /entity_types"
           type: string
+        stationary:
+          description: "Whether the source moves or is stationary"
+          type: boolean
+        description:
+          description: "Free-form object describing the source"
+          type: object
       required:
         - tdmq_id
         - external_id
         - default_footprint
         - entity_category
         - entity_type
-
-    SourceGet:
-      allOf:
-        - $ref: '#/components/schemas/SourceBrief'
-        - type: object
-          required:
-            - stationary
-            - description
-          properties:
-            stationary:
-              description: "Whether the source moves or is stationary"
-              type: boolean
-            description:
-              description: "Free-form object describing the source"
-              type: object
+        - stationary
+        - description
 
     SourcePost:
       type: object
