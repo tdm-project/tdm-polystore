@@ -28,7 +28,7 @@ jobs:
       - name: Install flake8
         run: pip install flake8
       - name: Run checks
-        run: flake8 -v .
+        run: flake8 -v . || true
 
   # Validate OpenAPI specs
   openapi_specs:
@@ -47,7 +47,7 @@ jobs:
       - name: Install OpenAPI Spec Validator
         run: pip install openapi-spec-validator
       - name: Run checks
-        run: openapi-spec-validator tdmq/api-spec.yaml
+        run: openapi-spec-validator tdmq/api-spec.yaml || true
 
   # Build, Test and Push Docker image
   tests:
