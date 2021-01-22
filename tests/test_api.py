@@ -7,6 +7,7 @@ from datetime import datetime
 
 import pytest
 from tdmq.app import create_app
+from tdmq.model import Source
 
 logger = logging.getLogger('test_api')
 
@@ -368,19 +369,8 @@ def test_private_source_query_by_tdmq_id_unauthenticated(flask_client, db_data, 
     struct = response.get_json()
     valued_keys = [ k for k in struct.keys() if struct[k] is not None ]
     assert private_source_tdmq_id == struct['tdmq_id']
-    assert set(valued_keys) <= set(('description',
-                                    'default_footprint',
-                                    'entity_category',
-                                    'entity_type',
-                                    'public',
-                                    'stationary',
-                                    'tdmq_id'))
-    assert set(struct['description'].keys()) <= set(('controlledProperties',
-                                                     'description',
-                                                     'entity_category',
-                                                     'entity_type',
-                                                     'shape',
-                                                     'stationary'))
+    assert set(valued_keys) <= (Source.SafeKeys | { 'description', 'default_footprint' })
+    assert set(struct['description'].keys()) <= Source.SafeDescriptionKeys
     point = struct['default_footprint']
     assert point['type'] == 'Point'
     assert point['coordinates'] != [ 9.111872, 39.214212 ]
@@ -409,19 +399,8 @@ def test_private_source_query_by_tdmq_id_authenticated(flask_client, db_data, so
     struct = response.get_json()
     valued_keys = [ k for k in struct.keys() if struct[k] is not None ]
     assert private_source_tdmq_id == struct['tdmq_id']
-    assert set(valued_keys) <= set(('description',
-                                    'default_footprint',
-                                    'entity_category',
-                                    'entity_type',
-                                    'public',
-                                    'stationary',
-                                    'tdmq_id'))
-    assert set(struct['description'].keys()) <= set(('controlledProperties',
-                                                     'description',
-                                                     'entity_category',
-                                                     'entity_type',
-                                                     'shape',
-                                                     'stationary'))
+    assert set(valued_keys) <= (Source.SafeKeys | { 'description', 'default_footprint' })
+    assert set(struct['description'].keys()) <= Source.SafeDescriptionKeys
     point = struct['default_footprint']
     assert point['type'] == 'Point'
     assert point['coordinates'] != [ 9.111872, 39.214212 ]

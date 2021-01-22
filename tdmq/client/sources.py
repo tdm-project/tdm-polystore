@@ -26,6 +26,10 @@ class Source(abc.ABC):
         return self._full_body.get('external_id')
 
     @property
+    def external_id(self):
+        return self.id
+
+    @property
     def default_footprint(self):
         return self._full_body['default_footprint']
 
