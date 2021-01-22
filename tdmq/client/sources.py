@@ -25,6 +25,13 @@ class Source(abc.ABC):
         self.shape = tuple(self.description.get('shape', ()))
         self.controlled_properties = self.description['controlledProperties']
 
+    @property
+    def external_id(self):
+        return self.id
+
+    @external_id.setter
+    def external_id(self, v):
+        self.id = v
 
     @property
     def public(self):

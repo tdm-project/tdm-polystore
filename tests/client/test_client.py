@@ -92,7 +92,7 @@ def test_get_anonymized_source(clean_storage, db_data, source_data, live_app):
     tdmq_id = _compute_tdmq_id(a_private_source['id'])
 
     src = c.get_source(tdmq_id)
-    assert src.id is None
+    assert src.description.get('alias') is None
 
     with pytest.raises(HTTPError) as exc_info:
         c.get_source(tdmq_id, anonymized=False)

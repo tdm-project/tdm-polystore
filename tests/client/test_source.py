@@ -47,6 +47,8 @@ def test_register_deregister_simple_source_as_admin(clean_storage, public_source
     for s in srcs:
         assert s.tdmq_id in sources
         assert s.id == sources[s.tdmq_id].id
+        assert s.external_id == sources[s.tdmq_id].id
+        assert s.external_id == s.id
         assert s.tdmq_id == sources[s.tdmq_id].tdmq_id
         tdmq_id = s.tdmq_id
         c.deregister_source(s)
@@ -81,6 +83,8 @@ def test_select_source_by_id(clean_storage, public_source_data, live_app):
     srcs = register_scalar_sources(c, public_source_data)
     for s in srcs:
         s2 = c.find_sources({'id': s.id})
+        assert len(s2) == 1
+        s2 = c.find_sources({'external_id': s.id})
         assert len(s2) == 1
     for s in srcs:
         c.deregister_source(s)

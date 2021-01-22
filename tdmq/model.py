@@ -32,24 +32,26 @@ class Source:
     ROI_CENTER_DIGITS = 3
     ROI_RADIUS_INCREMENT = 500
 
-    RequiredKeys = {
-        'tdmq_id',
-        'external_id',
+    RequiredKeys = frozenset({
         'default_footprint',
-        'entity_category',
-        'entity_type',
-        'stationary',
         'description',
-        }
-
-    SafeKeys = {
         'entity_category',
         'entity_type',
+        'external_id',
         'public',
         'stationary',
-        'tdmq_id'}
+        'tdmq_id',
+        })
 
-    SafeDescriptionKeys = {
+    SafeKeys = frozenset({
+        'entity_category',
+        'entity_type',
+        'external_id',
+        'public',
+        'stationary',
+        'tdmq_id'})
+
+    SafeDescriptionKeys = frozenset({
         'brandName',
         'controlledProperties',
         'description',
@@ -60,7 +62,7 @@ class Source:
         'shape',
         'stationary',
         'type',
-        }
+        })
 
     @staticmethod
     def store_new(data: Iterable[dict]) -> List[str]:
@@ -86,16 +88,17 @@ class Source:
     def delete_one(tdmq_id: str) -> None:
         db.delete_sources([tdmq_id])
 
-    AcceptedSearchKeys = {
+    AcceptedSearchKeys = frozenset({
         'after',
         'before',
         'entity_category',
         'entity_type',
+        'external_id',
         'id',
         'public',
         'roi',
         'stationary',
-        }
+        })
 
     @classmethod
     def _anonymize_source(cls, src_dict: dict) -> dict:
@@ -152,29 +155,39 @@ class Source:
     @classmethod
     def search(cls, search_args: Dict[str, Any], match_attr: Dict[str, Any]=None, anonymize_private: bool=True,
                limit: int=None, offset: int=None) -> list:
+        """
+        search_args: any from AcceptedSearchKeys
+        match_attr:  general attribute matching
+        """
         if limit or offset:
             raise NotImplementedError("Limit and offset are not implemented")
 
-        public = search_args.get('public', None)
+        query_args = search_args.copy() # copy so we can modify the dictionary
+
+        e_id = query_args.pop('external_id', None)
+        if e_id:
+            query_args['id'] = e_id
+
+        public = query_args.get('public', None)
         # unless the request is exclusively for public sources, tweak the ROI to limit precision
-        if not public and 'roi' in search_args:
-            cls._quantize_roi(search_args['roi'])
+        if not public and 'roi' in query_args:
+            cls._quantize_roi(query_args['roi'])
 
         if match_attr:
-            search_args.update(match_attr)
+            query_args.update(match_attr)
 
-        if not (cls.SafeKeys >= search_args.keys() and \
+        if not (cls.SafeKeys >= query_args.keys() and \
                 cls.SafeDescriptionKeys >= match_attr.keys()):
             # can't do query on private sources because it uses unsafe attributes
-            search_args['public'] = True
+            query_args['public'] = True
 
-        raw = db.list_sources(search_args)
+        raw = db.list_sources(query_args)
         resultset = [ r for r in raw if r['public'] ]
         private_it = (r for r in raw if not r['public'])
         if anonymize_private:
             private_it = cls._anonymizing_iter(private_it)
-        if 'roi' in search_args:
-            private_it = cls._roi_intersection_filter(search_args['roi'], private_it)
+        if 'roi' in query_args:
+            private_it = cls._roi_intersection_filter(query_args['roi'], private_it)
         resultset.extend(private_it)
 
         return resultset
