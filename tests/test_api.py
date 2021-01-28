@@ -714,3 +714,14 @@ def test_app_config_from_file(local_zone_db, monkeypatch):
             assert 'tiledb' in info
             assert info['tiledb']['storage.root'] == vfs_root
             assert info['tiledb']['config']['vfs.s3.property'] == 'bla'
+
+
+def test_convert_roi():
+    from tdmq.utils import convert_roi
+
+    rv = convert_roi("circle((9.14, 39.25), 4000)")
+    assert rv == { 'type': 'Circle',
+                   'center': { 'type': 'Point', 'coordinates': [9.14, 39.25] },
+                   'radius': 4000.0 }
+    rv = convert_roi("circle( (9.14, 39.25), 4000)")
+    assert rv['center']['coordinates'] == [9.14, 39.25]
