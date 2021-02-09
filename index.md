@@ -1,6 +1,6 @@
 # Welcome to the TDM polystore
 
+* Metadata documentation: [metadata.md](./metadata.md)
 * API specs: <https://tdm-project.github.io/tdm-polystore/openapi-rapidoc.html>
-
-Of course, you should be using the Python client, not the bare API :-)
-
+* Python client:
+  <https://github.com/tdm-project/tdm-polystore/tree/develop/tdmq/client>
