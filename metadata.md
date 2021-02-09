@@ -24,7 +24,7 @@ are not explicitly represented in the query interface:  instead, the relevant
 attributes are returned directly as part of the Source.
 
 
-![Polystore data model](images/API_model.png)
+<img alt="Polystore data model" src="images/API_model.png" width="500" />
 
 
 ## The Source
