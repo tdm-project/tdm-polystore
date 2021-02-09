@@ -1,0 +1,18 @@
+@import "{{ site.theme }}";
+
+section {
+  width: 600px;
+}
+
+div.wrapper {
+  width: 960px;
+}
+/*
+header {
+  width: 270px;
+}
+
+footer {
+  width: 270px;
+}
+*/
