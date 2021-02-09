@@ -16,31 +16,61 @@ class Source(abc.ABC):
     def __init__(self, client, tdmq_id, desc):
         self.client = client
         self.tdmq_id = tdmq_id
-        self.id = desc['external_id']
-        self.entity_category = desc['entity_category']
-        self.entity_type = desc['entity_type']
-        self.is_stationary = desc['stationary']
-        self.default_footprint = desc['default_footprint']
-        self.description = desc['description']
-        self.shape = tuple(self.description.get('shape', ()))
-        self.controlled_properties = self.description['controlledProperties']
+        self._full_body = desc
 
+    def _get_info(self):
+        return self._full_body['description']['description']
+
+    @property
+    def id(self):
+        return self._full_body.get('external_id')
+
+    @property
+    def default_footprint(self):
+        return self._full_body['default_footprint']
+
+    @property
+    def is_stationary(self):
+        return self._full_body['stationary']
+
+    @property
+    def entity_category(self):
+        return self._full_body['entity_category']
+
+    @property
+    def entity_type(self):
+        return self._full_body['entity_type']
+
+    @property
+    def registration_time(self):
+        return self._full_body['registration_time']
 
     @property
     def public(self):
-        return self.description.get('public', False)
+        return self._full_body.get('public', False)
+
+    @property
+    def alias(self):
+        return self._full_body['description'].get('alias')
+
+    @property
+    def shape(self):
+        return tuple(self._full_body['description'].get('shape', ()))
+
+    @property
+    def controlled_properties(self):
+        return self._full_body['description']['controlledProperties']
 
     def __repr__(self):
         return repr({
-            'self.tdmq_id ': self.tdmq_id,
-            'self.id ': self.id,
-            'self.entity_category ': self.entity_category,
-            'self.entity_type ': self.entity_type,
-            'self.default_footprint ': self.default_footprint,
-            'self.is_stationary ': self.is_stationary,
-            'self.shape ': self.shape,
-            'self.controlled_properties ': self.controlled_properties,
-            'self.description ': self.description })
+            'tdmq_id ': self.tdmq_id,
+            'id ': self.id,
+            'entity_category ': self.entity_category,
+            'entity_type ': self.entity_type,
+            'default_footprint ': self.default_footprint,
+            'is_stationary ': self.is_stationary,
+            'shape ': self.shape,
+            'controlled_properties ': self.controlled_properties })
 
     def get_timeseries(self, args):
         return self.client.get_timeseries(self.tdmq_id, args)
@@ -66,6 +96,39 @@ class Source(abc.ABC):
 
 
 class ScalarSource(Source):
+
+    @property
+    def sensor_id(self):
+        return self._get_info().get('sensor_id')
+
+    @property
+    def station_id(self):
+        return self._get_info().get('station_id')
+
+    @property
+    def station_model(self):
+        return self._get_info().get('station_model')
+
+    @property
+    def edge_id(self):
+        return self._get_info().get('edge_id')
+
+    def __repr__(self):
+        return repr({
+            'tdmq_id ':               self.tdmq_id,
+            'id ':                    self.id,
+            'entity_category ':       self.entity_category,
+            'entity_type ':           self.entity_type,
+            'default_footprint ':     self.default_footprint,
+            'is_stationary ':         self.is_stationary,
+            'shape ':                 self.shape,
+            'controlled_properties ': self.controlled_properties,
+            'edge_id':                self.edge_id,
+            'station_id':             self.station_id,
+            'station_model':          self.station_model,
+            'sensor_id':              self.sensor_id,
+            })
+
     def timeseries(self, after=None, before=None, bucket=None, op=None):
         return ScalarTimeSeries(self, after, before, bucket, op)
 

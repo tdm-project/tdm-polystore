@@ -60,6 +60,10 @@ class Source:
         'shape',
         'stationary',
         'type',
+        'edge_id',
+        'station_model',
+        'station_id',
+        'sensor_id',
         }
 
     @staticmethod
@@ -95,6 +99,10 @@ class Source:
         'public',
         'roi',
         'stationary',
+        'edge_id',
+        'station_id',
+        'station_model',
+        'sensor_id',
         }
 
     @classmethod

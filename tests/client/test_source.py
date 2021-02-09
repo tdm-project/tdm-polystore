@@ -98,6 +98,28 @@ def test_select_sources_by_entity_type(clean_storage, public_source_data, live_a
         # FIXME: add assertions
 
 
+def test_access_attributes_scalar_source(clean_storage, db_data, public_source_data, live_app):
+    c = Client(live_app.url())
+    src_id = 'tdm/sensor_3'
+    sources = c.find_sources(args={'id': src_id})
+    assert len(sources) == 1
+    s = sources[0]
+    original = next(s for s in public_source_data['sources'] if s['id'] == src_id)
+    assert s.id                         == original['id']
+    assert s.is_stationary              == original.get('stationary', True)
+    assert s.entity_category            == original['entity_category']
+    assert s.entity_type                == original['entity_type']
+    assert s.public                     == original['public']
+    assert s.alias                      == original['alias']
+    assert len(s.shape)                 == 0
+    assert set(s.controlled_properties) == set(original['controlledProperties'])
+    assert s.edge_id                    == original['description']['edge_id']
+    assert s.station_id                 == original['description']['station_id']
+    assert s.station_model              == original['description']['station_model']
+    assert s.sensor_id                  == original['description']['sensor_id']
+    assert s.registration_time          is not None
+
+
 def test_find_source_by_roi(clean_storage, db_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     geom = 'circle((9.132, 39.248), 1000)'
