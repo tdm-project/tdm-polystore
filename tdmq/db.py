@@ -111,6 +111,7 @@ def list_sources(args=None, limit=None, offset=None):
             entity_category,
             entity_type,
             description,
+            registration_time,
             public
         FROM source""")
 
@@ -204,6 +205,7 @@ def get_sources(list_of_tdmq_ids):
             entity_category,
             entity_type,
             description,
+            registration_time,
             public
         FROM source
         WHERE tdmq_id = ANY(%s)""")

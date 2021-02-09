@@ -65,14 +65,21 @@
                 ]
             },
             "controlledProperties": [
-                "power"
+                "apparentPower",
+                "consumedEnergy",
+                "current",
+                "frequency",
+                "meterPulses",
+                "powerFactor",
+                "realPower",
+                "voltage"
             ],
             "shape": [],
             "description": {
-                "type": "power sensor",
-                "brandName": "ProSensor",
-                "modelName": "C3PO",
-                "manufacturerName": "CRS4"
+                "edge_id": "edge-12d45e",
+                "station_model": "IoTaWatt",
+                "station_id": "IOTAWATT",
+                "sensor_id": "L"
             },
             "public": true
         },
