@@ -25,16 +25,9 @@ def _create_new_app_test_client(config=None):
         yield app.test_client()
 
 
-def _checkresp(response, table=None):
+def _checkresp(response):
     assert response.status == '200 OK'
     assert response.is_json
-    if table:
-        result = response.get_json()
-        assert len(result) == len(table)
-        for r in result:
-            assert "tdmq_id" in r
-            tdmq_id = r.pop("tdmq_id")
-            assert r == table[tdmq_id]
 
 
 def _parse_datetime(s):
@@ -583,8 +576,33 @@ def test_get_private_timeseries_authenticated_unanonymized(flask_client, clean_d
 def test_search_for_private_sources(flask_client, app, db_data):
     source_id = 'tdm/sensor_7'
     response = flask_client.get(f'/sources?id={source_id}')
-    assert response.status == '200 OK'
-    _checkresp(response, [])
+    _checkresp(response)
+    assert response.get_json() == []
+
+
+@pytest.mark.sources
+def test_search_sources_by_attr(flask_client, app, db_data, public_source_data):
+    external_id = "tdm/sensor_3"
+    source = next(s for s in public_source_data['sources']
+                  if s.get('id') == external_id)
+
+    response = flask_client.get('/sources', query_string={
+        'edge_id': source['description']['edge_id'],
+        'station_id': source['description']['station_id'],
+        'sensor_id': source['description']['sensor_id']})
+    assert external_id == response.get_json()[0]['external_id']
+    response = flask_client.get('/sources',
+                                query_string={'edge_id': source['description']['edge_id']})
+    assert external_id == response.get_json()[0]['external_id']
+    response = flask_client.get('/sources',
+                                query_string={'station_id': source['description']['station_id']})
+    assert external_id == response.get_json()[0]['external_id']
+    response = flask_client.get('/sources',
+                                query_string={'station_model': source['description']['station_model']})
+    assert external_id == response.get_json()[0]['external_id']
+    response = flask_client.get('/sources',
+                                query_string={'sensor_id': source['description']['sensor_id']})
+    assert external_id == response.get_json()[0]['external_id']
 
 
 @pytest.mark.sources

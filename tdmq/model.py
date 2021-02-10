@@ -32,6 +32,7 @@ class Source:
     ROI_CENTER_DIGITS = 3
     ROI_RADIUS_INCREMENT = 500
 
+    # Property required by Source structure, as specified in the API spec.
     RequiredKeys = frozenset({
         'default_footprint',
         'description',
@@ -43,24 +44,21 @@ class Source:
         'tdmq_id',
         })
 
+    # Keys in Source structure that do not require anonymization
     SafeKeys = frozenset({
         'entity_category',
         'entity_type',
-        'external_id',
         'public',
         'stationary',
         'tdmq_id'})
 
+    # Keys in Source.description structure that do not require anonymization
     SafeDescriptionKeys = frozenset({
         'brandName',
         'controlledProperties',
-        'description',
-        'entity_category',
-        'entity_type',
         'manufacturerName',
         'modelName',
         'shape',
-        'stationary',
         'type',
         'edge_id',
         'station_model',
@@ -92,6 +90,7 @@ class Source:
     def delete_one(tdmq_id: str) -> None:
         db.delete_sources([tdmq_id])
 
+    # AcceptedSearchKeys: set of search parameters accepted for source search.
     AcceptedSearchKeys = frozenset({
         'after',
         'before',
@@ -102,10 +101,6 @@ class Source:
         'public',
         'roi',
         'stationary',
-        'edge_id',
-        'station_id',
-        'station_model',
-        'sensor_id',
         })
 
     @classmethod
@@ -165,7 +160,8 @@ class Source:
                limit: int=None, offset: int=None) -> list:
         """
         search_args: any from AcceptedSearchKeys
-        match_attr:  general attribute matching
+        match_attr:  general attribute matching in the
+        Source.description.description structure.
         """
         if limit or offset:
             raise NotImplementedError("Limit and offset are not implemented")
