@@ -8,8 +8,8 @@ from contextlib import contextmanager
 def convert_roi(roi):
     # Circle
     fnum = r'([-+]?\d+(\.\d*)?)'
-    circle_re = r'circle\(\(' + fnum + ', ' + fnum + r'\), ' + fnum + r'\)'
-    m = re.match(circle_re, roi)
+    circle_re = r'circle\(\(' + fnum + ',' + fnum + r'\),' + fnum + r'\)'
+    m = re.match(circle_re, roi.replace(' ', ''))
     if m:
         return {'type': 'Circle',
                 'center': {'type': 'Point',
