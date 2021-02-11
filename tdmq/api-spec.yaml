@@ -176,6 +176,16 @@ paths:
           description: >
              Comma-separated list of property names required of source.
           type: string
+        - name: "id"
+          in: query
+          type: string
+          description: >
+            External id of source.
+        - name: "external_id"
+          in: query
+          type: string
+          description: >
+            Alias for `id`.  The `external_id` parameter takes precedence over `id`.
         - name: "attribute"
           in: query
           schema:
@@ -587,6 +597,11 @@ components:
         entity_type:
           description: "One of the entity types returned by /entity_types"
           type: string
+        public:
+          description: >
+            Whether this is a public source -- i.e., whether its attributes and
+            the data it produces are anonymous and public.
+          type: boolean
         stationary:
           description: "Whether the source moves or is stationary"
           type: boolean
@@ -599,6 +614,7 @@ components:
         - default_footprint
         - entity_category
         - entity_type
+        - public
         - stationary
         - description
 
