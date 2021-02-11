@@ -35,6 +35,10 @@ def get_db():
     again.
     """
     global _db_connection
+    if _db_connection and _db_connection.closed != 0:
+        logger.warning("DB connection found unexpectedly closed.  Recreating it")
+        _db_connection = None
+
     if not _db_connection:
         import flask
         db_settings = {
