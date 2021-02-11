@@ -42,7 +42,10 @@ COPY --chown=root ./tdmq-dist/tdmq/requirements-server.txt "${TDMQ_DIST}/tdmq/"
 # psycopg2 instead of psycopg2-binary.
 # We fix the name on-the-fly with sed with a quick process substitution (which
 # requires bash).
-RUN /bin/bash -c 'mamba install -c conda-forge --yes --file <(sed -e 's/psycopg2-binary/psycopg2/' "${TDMQ_DIST}/tdmq/requirements-server.txt")' \
+# We also remove the logging_tree package, which is not available on conda.
+RUN /bin/bash -c \
+    'mamba install -c conda-forge --yes --file <(\
+        sed -e 's/psycopg2-binary/psycopg2/' -e '/logging_tree/d' "${TDMQ_DIST}/tdmq/requirements-server.txt")' \
  && mamba clean --all -y
 
 # FIXME: This section is copied and pasted from the image build process for

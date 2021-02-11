@@ -12,3 +12,4 @@ pytest>=6.1,<7
 shapely
 pyproj
 pyshp
+logging_tree
