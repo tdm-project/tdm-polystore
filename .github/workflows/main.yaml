@@ -75,15 +75,19 @@ jobs:
         env:
           TAGS: ${{ steps.docker_meta.outputs.tags }}
           LABELS: ${{ steps.docker_meta.outputs.labels }}
+          COMPOSE_INTERACTIVE_NO_CLI: 1
       # Run tests
       - name: Run tests
         run: make run-tests
         env:
           TAGS: ${{ steps.docker_meta.outputs.tags }}
           LABELS: ${{ steps.docker_meta.outputs.labels }}
+          COMPOSE_INTERACTIVE_NO_CLI: 1
       # Teardown testing environment
       - name: Teardown testing environment
         run: make stop
+        env:
+          COMPOSE_INTERACTIVE_NO_CLI: 1
       ## DockerHub Login
       #- name: Login to DockerHub
       #  uses: docker/login-action@v1
