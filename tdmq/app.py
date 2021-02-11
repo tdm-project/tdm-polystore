@@ -4,13 +4,21 @@ import atexit
 import logging
 import os
 import secrets
+import time
+from logging.config import dictConfig
 
 import flask
-from flask.json import jsonify
 import werkzeug.exceptions as wex
+
+from flask import request
+from flask.json import jsonify
 from prometheus_client.registry import REGISTRY, CollectorRegistry
 from prometheus_client.metrics import Histogram
 from prometheus_client.utils import INF
+try:
+    from logging_tree.format import build_description
+except ImportError:
+    pass
 
 from tdmq.api import tdmq_bp
 from tdmq.db import add_db_cli, close_db
@@ -34,19 +42,59 @@ ERROR_CODES = {
 
 
 def configure_logging(app):
+    # Log configuration
+    # We set up three loggers:
+    # 1. `response` and `request` loggers, with handler `access`: these are
+    #    used to log the requests that the service processes.
+    # 2. `root`, with handler `basic`: used for everything else.
+    log_config = {
+        'version': 1,
+        'formatters': {
+            'default': {
+                'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+                },
+            },
+        'handlers': {
+            'basic': {
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stderr',
+                'formatter': 'default',
+                },
+            'access': {
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stderr',
+                'formatter': 'default',
+                },
+            },
+        'request': {
+            'level': 'INFO',
+            'handlers': ['access'],
+            },
+        'response': {
+            'level': 'INFO',
+            'handlers': ['access'],
+            },
+        'root': {
+            'level': 'INFO',
+            'handlers': ['basic'],
+            },
+        }
+    # Get log level from LOG_LEVEL configuration variable.  We have one level
+    # setting for all logging.
     level_str = app.config.get('LOG_LEVEL', 'INFO')
     error = False
-    try:
-        level_value = getattr(logging, level_str)
-    except AttributeError:
-        level_value = logging.INFO
+    if hasattr(logging, level_str):
+        log_config['root']['level'] = level_str
+    else:
         error = True
 
-    logging.basicConfig(level=level_value)
+    dictConfig(log_config)
     if error:
-        app.logger.error("LOG_LEVEL value %s is invalid. Defaulting to INFO", level_str)
+        app.logger.error("LOG_LEVEL value %s is invalid. Defaulting to %s", level_str, log_config['root']['level'])
 
     app.logger.info('Logging is active. Log level: %s', logging.getLevelName(app.logger.getEffectiveLevel()))
+    if app.logger.isEnabledFor(logging.DEBUG) and 'build_description' in globals():
+        app.logger.debug("\n" + build_description())
 
 
 def configure_prometheus_registry(app):
@@ -153,5 +201,36 @@ def create_app(test_config=None):
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):
         return jsonify({"error": ERROR_CODES.get(e.code)}), e.code
+
+    @app.before_request
+    def log_request():
+        logger = logging.getLogger("request")
+        logger.info(
+            "req:  %s %s %s %s",
+            request.remote_addr,
+            request.method,
+            request.path,
+            request.scheme,
+        )
+        logger.debug("request.args: %s", request.args)
+        request.start_time = time.time()
+
+    @app.after_request
+    def log_response(response):
+        logger = logging.getLogger("response")
+        processing_time = (time.time() - request.start_time) / 1000.0
+        logger.info(
+            "resp: %s %s %s %s %s %s %s %s %0.3fms",
+            request.remote_addr,
+            request.method,
+            request.path,
+            request.scheme,
+            response.status,
+            response.content_length,
+            request.referrer,
+            request.user_agent,
+            processing_time
+        )
+        return response
 
     return app

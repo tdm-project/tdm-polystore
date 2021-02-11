@@ -39,11 +39,6 @@ def auth_required(f):
     return decorated_function
 
 
-@tdmq_bp.before_request
-def print_args():
-    logger.debug("request.args: %s", request.args)
-
-
 @tdmq_bp.route('/')
 def index():
     return 'The URL for this page is {}'.format(url_for('tdmq.index'))
