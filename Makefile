@@ -73,20 +73,20 @@ start: base-images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up -d
 	# Try to wait for timescaleDB and HDFS
 	docker-compose -f ./docker/docker-compose.yml exec -T timescaledb bash -c 'for i in {{1..8}}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'
-	docker-compose -f ./docker/docker-compose.yml exec -T namenode hdfs dfsadmin -safemode wait
-	docker-compose -f ./docker/docker-compose.yml exec -T datanode bash -c 'for i in {{1..8}}; do sleep 5; datanode_cid && break; done || { echo ">> Timed out waiting for datanode to join HDFS" >&2; exit 3; }'
+	#docker-compose -f ./docker/docker-compose.yml exec -T namenode hdfs dfsadmin -safemode wait
+	#docker-compose -f ./docker/docker-compose.yml exec -T datanode bash -c 'for i in {{1..8}}; do sleep 5; datanode_cid && break; done || { echo ">> Timed out waiting for datanode to join HDFS" >&2; exit 3; }'
 
 stop:
 	docker-compose -f ./docker/docker-compose.yml down
 
 run-tests: start
-	docker-compose -f ./docker/docker-compose.yml exec -T --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
-	docker-compose -f ./docker/docker-compose.yml exec -T namenode bash -c "hdfs dfs -mkdir -p /tiledb"
-	docker-compose -f ./docker/docker-compose.yml exec -T namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
+	docker-compose -f ./docker/docker-compose.yml exec -T --user $$(id -u) tdmqc /usr/local/bin/tdmqc_run_tests -k "not hdfs"
+	#docker-compose -f ./docker/docker-compose.yml exec -T namenode bash -c "hdfs dfs -mkdir -p /tiledb"
+	#docker-compose -f ./docker/docker-compose.yml exec -T namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
 	docker-compose -f ./docker/docker-compose.yml logs tdmqj
 	docker-compose -f ./docker/docker-compose.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
 	docker-compose -f ./docker/docker-compose.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
-	docker-compose -f ./docker/docker-compose.yml exec -T namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
+	#docker-compose -f ./docker/docker-compose.yml exec -T namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
 	docker run --rm --net docker_default --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
 
 
