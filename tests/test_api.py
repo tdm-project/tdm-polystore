@@ -722,3 +722,9 @@ def test_convert_roi():
                    'radius': 4000.0 }
     rv = convert_roi("circle( (9.14, 39.25), 4000)")
     assert rv['center']['coordinates'] == [9.14, 39.25]
+
+
+def test_metrics_get(flask_client):
+    response = flask_client.get('/metrics')
+    assert response.status_code == 200
+    assert response.content_length > 0

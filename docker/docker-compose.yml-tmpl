@@ -3,7 +3,7 @@ version: "3"
 services:
 
   prometheus:
-    image: prom/prometheus:v2.18.1
+    image: prom/prometheus:v2.24.1
     ports:
       - "9090:9090"
     volumes:
@@ -39,6 +39,7 @@ services:
     environment:
       - "CREATE_DB=false"
       - "DEV=false"
+    #DEV   - "DEBUG_METRICS=true"
     #DEV volumes:
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
     healthcheck:
