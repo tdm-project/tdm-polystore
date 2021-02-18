@@ -41,6 +41,12 @@ services:
       - "DEV=false"
     #DEV volumes:
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
+    healthcheck:
+      test: [ "CMD", "/usr/bin/curl", "http://web:8000/api/v0.0/entity_types" ]
+      interval: "30s"
+      timeout: "5s"
+      retries: "3"
+      start_period: "15s"
 
   namenode:
     image: crs4/namenode:3.2.0
