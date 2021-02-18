@@ -3,7 +3,7 @@ version: "3"
 services:
 
   prometheus:
-    image: prom/prometheus:v2.18.1
+    image: prom/prometheus:v2.24.1
     ports:
       - "9090:9090"
     volumes:
@@ -39,8 +39,14 @@ services:
     environment:
       - "CREATE_DB=false"
       - "DEV=false"
+    #DEV   - "DEBUG_METRICS=true"
     #DEV volumes:
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
+    healthcheck:
+      test: [ "CMD", "/usr/bin/curl", "http://web:8000/api/v0.0/entity_types" ]
+      interval: "30s"
+      timeout: "5s"
+      retries: "3"
 
   namenode:
     image: crs4/namenode:3.2.0

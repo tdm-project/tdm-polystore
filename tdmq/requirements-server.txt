@@ -13,3 +13,4 @@ shapely
 pyproj
 pyshp
 logging_tree
+prometheus-flask-exporter>=0.18,<0.19

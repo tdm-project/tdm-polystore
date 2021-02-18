@@ -64,12 +64,14 @@ run: base-images docker/docker-compose.yml
 	docker-compose -f ./docker/docker-compose.yml up
 
 startdev: base-images docker/docker-compose-dev.yml
+	chmod a+r ./docker/prometheus.yml
 	docker-compose -f ./docker/docker-compose-dev.yml up -d
 
 stopdev:
 	docker-compose -f ./docker/docker-compose-dev.yml down
 
 start: base-images docker/docker-compose.yml
+	chmod a+r ./docker/prometheus.yml
 	docker-compose -f ./docker/docker-compose.yml up -d
 	# Try to wait for timescaleDB and HDFS
 	docker-compose -f ./docker/docker-compose.yml exec timescaledb bash -c 'for i in {{1..8}}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'

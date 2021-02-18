@@ -1,6 +1,5 @@
 import copy
 import logging
-import sys
 from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
@@ -46,22 +45,16 @@ def index():
 
 @tdmq_bp.route('/entity_types')
 def entity_types_get():
-    with current_app.http_request_prom.labels(method='get', endpoint='entity_types').time():
-        types = EntityType.get_entity_types()
-        res = jsonify({'entity_types': types})
-        current_app.http_response_prom.labels(method='get', endpoint='entity_types').observe(
-            sys.getsizeof(res.data))
-        return res
+    types = EntityType.get_entity_types()
+    res = jsonify({'entity_types': types})
+    return res
 
 
 @tdmq_bp.route('/entity_categories')
 def entity_categories_get():
-    with current_app.http_request_prom.labels(method='get', endpoint='entity_categories').time():
-        categories = EntityCategory.get_entity_categories()
-        res = jsonify({'entity_categories': categories})
-        current_app.http_response_prom.labels(method='get', endpoint='entity_categories').observe(
-            sys.getsizeof(res.data))
-        return res
+    categories = EntityCategory.get_entity_categories()
+    res = jsonify({'entity_categories': categories})
+    return res
 
 
 @tdmq_bp.route('/sources', methods=['GET'])
@@ -70,59 +63,56 @@ def sources_get():
     Return a list of sources.
     See spec for documentation.
     """
-    with current_app.http_request_prom.labels(method='get', endpoint='sources').time():
-        rargs = {k: v for k, v in request.args.items()}
-        logger.debug("source: args is %s", rargs)
+    rargs = {k: v for k, v in request.args.items()}
+    logger.debug("source: args is %s", rargs)
 
-        anonymize_private = str_to_bool(rargs.pop('anonymized', 'true'))
-        if not anonymize_private and not _request_authorized():
-            raise wex.Unauthorized("Unauthorized request for unanonymized private data")
+    anonymize_private = str_to_bool(rargs.pop('anonymized', 'true'))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized("Unauthorized request for unanonymized private data")
 
-        # preprocess controlledProperties and roi arguments
-        if 'controlledProperties' in rargs:
-            rargs['controlledProperties'] = \
-                rargs['controlledProperties'].split(',')
+    # preprocess controlledProperties and roi arguments
+    if 'controlledProperties' in rargs:
+        rargs['controlledProperties'] = \
+            rargs['controlledProperties'].split(',')
+    if 'public' in rargs:
+        rargs['public'] = str_to_bool(rargs['public'])
+
+    if 'only_public' in rargs:
         if 'public' in rargs:
-            rargs['public'] = str_to_bool(rargs['public'])
+            raise wex.BadRequest("Cannot specify both 'only_public' and 'public' query attributes")
+        only_public = str_to_bool(rargs.pop('only_public'))
+        if only_public:
+            rargs['public'] = True
+    else:
+        rargs['public'] = rargs.get('public', True)
 
-        if 'only_public' in rargs:
-            if 'public' in rargs:
-                raise wex.BadRequest("Cannot specify both 'only_public' and 'public' query attributes")
-            only_public = str_to_bool(rargs.pop('only_public'))
-            if only_public:
-                rargs['public'] = True
-        else:
-            rargs['public'] = rargs.get('public', True)
+    if 'roi' in rargs:
+        rargs['roi'] = convert_roi(rargs['roi'])
+        if rargs['roi']['type'] != 'Circle':
+            raise NotImplementedError()
+        if rargs['roi']['radius'] <= 0:
+            raise wex.BadRequest("ROI radius must be > 0")
+    if 'stationary' in rargs:
+        rargs['stationary'] = str_to_bool(rargs['stationary'])
 
-        if 'roi' in rargs:
-            rargs['roi'] = convert_roi(rargs['roi'])
-            if rargs['roi']['type'] != 'Circle':
-                raise NotImplementedError()
-            if rargs['roi']['radius'] <= 0:
-                raise wex.BadRequest("ROI radius must be > 0")
-        if 'stationary' in rargs:
-            rargs['stationary'] = str_to_bool(rargs['stationary'])
+    search_args = dict((k, rargs.pop(k)) for k in Source.AcceptedSearchKeys if k in rargs)
 
-        search_args = dict((k, rargs.pop(k)) for k in Source.AcceptedSearchKeys if k in rargs)
+    limit = rargs.pop('limit', None)
+    if limit:
+        limit = int(limit)
+    offset = rargs.pop('offset', None)
+    if offset:
+        offset = int(offset)
 
-        limit = rargs.pop('limit', None)
-        if limit:
-            limit = int(limit)
-        offset = rargs.pop('offset', None)
-        if offset:
-            offset = int(offset)
+    match_attr = rargs # everything that hasn't been popped
 
-        match_attr = rargs # everything that hasn't been popped
+    try:
+        items = Source.search(search_args, match_attr, anonymize_private, limit, offset)
+    except tdmq.errors.DBOperationalError:
+        raise wex.InternalServerError()
 
-        try:
-            items = Source.search(search_args, match_attr, anonymize_private, limit, offset)
-        except tdmq.errors.DBOperationalError:
-            raise wex.InternalServerError()
-
-        res = jsonify(items)
-        current_app.http_response_prom.labels(method='get', endpoint='sources').observe(
-            sys.getsizeof(res.data))
-        return res
+    res = jsonify(items)
+    return res
 
 
 @tdmq_bp.route('/sources', methods=['POST'])
@@ -157,25 +147,22 @@ def sources_delete(tdmq_id):
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
 def timeseries_get(tdmq_id):
-    with current_app.http_request_prom.labels(method='get', endpoint='timeseries').time():
-        rargs = request.args
+    rargs = request.args
 
-        anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))
-        if not anonymize_private and not _request_authorized():
-            raise wex.Unauthorized("Unauthorized request for unanonymized private data")
+    anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized("Unauthorized request for unanonymized private data")
 
-        args = dict((k, rargs.get(k, None))
-                    for k in ['after', 'before', 'bucket', 'fields', 'op'])
-        if args['bucket'] is not None:
-            args['bucket'] = timedelta(seconds=float(args['bucket']))
-        if args['fields'] is not None:
-            args['fields'] = args['fields'].split(',')
+    args = dict((k, rargs.get(k, None))
+                for k in ['after', 'before', 'bucket', 'fields', 'op'])
+    if args['bucket'] is not None:
+        args['bucket'] = timedelta(seconds=float(args['bucket']))
+    if args['fields'] is not None:
+        args['fields'] = args['fields'].split(',')
 
-        result = Timeseries.get_one(tdmq_id, anonymize_private, args)
-        jres = jsonify(result)
-        current_app.http_response_prom.labels(method='get', endpoint='timeseries').observe(
-            sys.getsizeof(jres.data))
-        return jres
+    result = Timeseries.get_one(tdmq_id, anonymize_private, args)
+    jres = jsonify(result)
+    return jres
 
 
 @tdmq_bp.route('/records', methods=["POST"])

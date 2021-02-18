@@ -12,9 +12,9 @@ import werkzeug.exceptions as wex
 
 from flask import request
 from flask.json import jsonify
-from prometheus_client.registry import REGISTRY, CollectorRegistry
-from prometheus_client.metrics import Histogram
+from prometheus_client import Histogram
 from prometheus_client.utils import INF
+from prometheus_flask_exporter import PrometheusMetrics
 try:
     from logging_tree.format import build_description
 except ImportError:
@@ -29,6 +29,15 @@ atexit.register(close_db)
 
 DEFAULT_PREFIX = '/api/v0.0'
 
+metrics = PrometheusMetrics.for_app_factory(defaults_prefix='tdmq')
+metrics.info('app_info', "TDMq service", version='not sure')
+
+metrics_response_size_bytes = Histogram(
+        'tdmq_response_size_bytes',
+        'Histogram of response sizes in bytes',
+        labelnames=('method', 'status', 'path'),
+        registry=metrics.registry,
+        buckets=(500, 1500, 3000, 6000, 12000, 24000, 48000, INF))
 
 ERROR_CODES = {
     400: "bad_request",
@@ -97,16 +106,9 @@ def configure_logging(app):
         app.logger.debug("\n" + build_description())
 
 
-def configure_prometheus_registry(app):
-    if app.config.get('PROMETHEUS_REGISTRY', False) is True:
-        registry = CollectorRegistry(auto_describe=True)
-    else:
-        registry = REGISTRY
-
-    app.http_request_prom = Histogram('tdmq_http_requests_seconds', 'Elapsed time to process http requests',
-                                      ['method', 'endpoint'], buckets=[.5, 1, 5, 10, 20, INF], registry=registry)
-    app.http_response_prom = Histogram('tdmq_http_response_bytes', 'Size in bytes of an http response',
-                                       ['method', 'endpoint'], buckets=[1, 2, 5, 10, 20, INF], registry=registry)
+def configure_prometheus_exporter(app):
+    metrics.init_app(app)
+    app.metrics = metrics
 
 
 class DefaultConfig(object):
@@ -193,10 +195,12 @@ def create_app(test_config=None):
     app.logger.info("The access token is %s", app.config['AUTH_TOKEN'])
 
     add_db_cli(app)
-    configure_prometheus_registry(app)
     loc_anonymizer.init_app(app)
 
     app.register_blueprint(tdmq_bp, url_prefix=app.config['APP_PREFIX'])
+
+    # prometheus exporter must be configured after the routes are registered
+    configure_prometheus_exporter(app)
 
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):
@@ -231,6 +235,13 @@ def create_app(test_config=None):
             request.user_agent,
             processing_time
         )
+        return response
+
+    @app.after_request
+    def record_response_metrics(response):
+        metrics_response_size_bytes.\
+            labels(method=request.method, status=response.status_code, path=request.path).\
+            observe(response.content_length)
         return response
 
     return app
