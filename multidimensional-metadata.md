@@ -82,94 +82,48 @@ Civile
 
 ```
 {
-            "id": "dpc/meteomosaic",
-            "alias": "Mosaic of dpc meteo radars",
-            "entity_category": "Radar",
-            "entity_type": "MeteoRadarMosaic",
-            "public": true,
-            "default_footprint": {
-                "coordinates": [
-                    [
-                        [
-                            4.537000517753033,
-                            47.856095810774605
-                        ],
-                        [
-                            4.537000517753033,
-                            35.07686201381699
-                        ],
-                        [
-                            20.436762466677894,
-                            35.07686201381699
-                        ],
-                        [
-                            20.436762466677894,
-                            47.856095810774605
-                        ],
-                        [
-                            4.537000517753033,
-                            47.856095810774605
-                        ]
-                    ]
-                ],
-                "type": "Polygon"
-            },
-            "stationary": true,
-            "controlledProperties": [
-                "VMI",
-                "SRI"
-            ],
-            "shape": [
-                1400,
-                1200
-            ],
-            "storage": "tiledb",
-            "geomapping": {
-                "SRID": "EPSG:4326",
-                "grid": {
-                    "xsize": 1200,
-                    "ysize": 1400
-                },
-                "ModelTransformation": [
-                    [
-                        0.013249801624104052,
-                        0.0,
-                        0.0,
-                        4.537000517753033
-                    ],
-                    [
-                        0.0,
-                        -0.009128024140684008,
-                        0.0,
-                        47.856095810774605
-                    ],
-                    [
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                ]
-            },
-            "storage": "tiledb",
-            "description": {
-                "type": "meteoRadar",
-                "brandName": "DPC",
-                "modelName": "dpc-radar-mosaic",
-                "manufacturerName": "Dipartimento Protezione Civile",
-                "category": [
-                    "sensor"
-                ],
-                "function": [
-                    "sensing"
-                ],
-                "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar"
-            }
-        }
+    "tdmq_id": "e56cadc0-784d-11eb-b15c-b3e425d12b70",
+    "id": "dpc/meteomosaic",
+    "alias": "Mosaic of dpc meteo radars",
+    "entity_category": "Radar",
+    "entity_type": "MeteoRadarMosaic",
+    "stationary": true,
+    "public": true,
+    "controlledProperties": [
+        "VMI",
+        "SRI"
+    ],
+    "shape": [
+        1400,
+        1200
+    ],
+    "default_footprint": {
+        "coordinates": [
+            [
+                [ 4.537000517753033, 47.856095810774605 ],
+                [ 4.537000517753033, 35.07686201381699 ],
+                [ 20.436762466677894, 35.07686201381699 ],
+                [ 20.436762466677894, 47.856095810774605 ],
+                [ 4.537000517753033, 47.856095810774605 ]
+            ]
+        ],
+        "type": "Polygon"
+    },
+    "geomapping": {
+        "SRID": "EPSG:4326",
+        "grid": { "xsize": 1200, "ysize": 1400 },
+        "ModelTransformation": [
+            [ 0.013249801624104052, 0.0,                   0.0, 4.537000517753033  ],
+            [ 0.0,                  -0.009128024140684008, 0.0, 47.856095810774605 ],
+            [ 0.0,                  0.0,                   0.0, 0.0                ],
+            [ 0.0,                  0.0,                   0.0, 1.0                ]
+        ]
+    },
+    "description": {
+        "brand_name": "DPC",
+        "model_name": "dpc-radar-mosaic-precipitation",
+        "operated_by": "Dipartimento Protezione Civile",
+        "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar"
+    }
+}
 ```

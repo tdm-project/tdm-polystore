@@ -93,7 +93,7 @@ These are the currently defined entity categories and types.
  | `id`                   | `tdm/sensor_6`                         | External id                                                                                     |
  | `alias`                | "Mosaic of weather radars"             | Optional user-friendly name                                                                     |
  | `entity_category`      | "Radar"                                | One of the platform-defined entity categories                                                   |
- | `entity_type`,         | MeteoRadarMosaic                       | One of the platform-defined entity types                                                        |
+ | `entity_type`          | MeteoRadarMosaic                       | One of the platform-defined entity types                                                        |
  | `default_footprint`    |                                        | GeoJSON-encoded Source location/area covered                                                    |
  | `stationary`           | `true`                                 | Boolean. Whether the source can move from its `default_footprint`.                              |
  | `geomapping`           |                                        |                                                                                                 |
