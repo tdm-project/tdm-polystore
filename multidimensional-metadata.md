@@ -10,7 +10,13 @@ series of 2D precipitation maps; another is a weather simulation, which could
 generate a time series of 3D snapshots of a weather model.
  
 
-## Key specific source metadata
+## Specific source metadata
+
+The general metadata [defined for all
+Sources](metadata.md#general-source-schema) defined for all sources is
+of course valid for non-scalar sources.  In addition, we define the following
+properties that are specific to non-scalar sources.
+
 
 ### Field name: `description.brand_name`
 
@@ -61,13 +67,109 @@ Civile
 
 * `entity_category`: Radar
 * `entity_type`: MeteoRadarMosaic
-* controlledProperties:
- - `TEMP`
- - `VMI`
- - `SRT`
- - `DPC-IR`
- - `LTG`
- - `WIND-AMV`
- - `DPC-HRD`
+* `controlledProperties`:
+  - `TEMP`
+  - `VMI`
+  - `SRT`
+  - `DPC-IR`
+  - `LTG`
+  - `WIND-AMV`
+  - `DPC-HRD`
 
 [radar mosaic service]: http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar
+
+## Example multidimensional source object
+
+```
+{
+            "id": "dpc/meteomosaic",
+            "alias": "Mosaic of dpc meteo radars",
+            "entity_category": "Radar",
+            "entity_type": "MeteoRadarMosaic",
+            "public": true,
+            "default_footprint": {
+                "coordinates": [
+                    [
+                        [
+                            4.537000517753033,
+                            47.856095810774605
+                        ],
+                        [
+                            4.537000517753033,
+                            35.07686201381699
+                        ],
+                        [
+                            20.436762466677894,
+                            35.07686201381699
+                        ],
+                        [
+                            20.436762466677894,
+                            47.856095810774605
+                        ],
+                        [
+                            4.537000517753033,
+                            47.856095810774605
+                        ]
+                    ]
+                ],
+                "type": "Polygon"
+            },
+            "stationary": true,
+            "controlledProperties": [
+                "VMI",
+                "SRI"
+            ],
+            "shape": [
+                1400,
+                1200
+            ],
+            "storage": "tiledb",
+            "geomapping": {
+                "SRID": "EPSG:4326",
+                "grid": {
+                    "xsize": 1200,
+                    "ysize": 1400
+                },
+                "ModelTransformation": [
+                    [
+                        0.013249801624104052,
+                        0.0,
+                        0.0,
+                        4.537000517753033
+                    ],
+                    [
+                        0.0,
+                        -0.009128024140684008,
+                        0.0,
+                        47.856095810774605
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ]
+                ]
+            },
+            "storage": "tiledb",
+            "description": {
+                "type": "meteoRadar",
+                "brandName": "DPC",
+                "modelName": "dpc-radar-mosaic",
+                "manufacturerName": "Dipartimento Protezione Civile",
+                "category": [
+                    "sensor"
+                ],
+                "function": [
+                    "sensing"
+                ],
+                "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar"
+            }
+        }
+```
