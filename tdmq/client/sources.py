@@ -83,6 +83,10 @@ class Source(abc.ABC):
     def timeseries(self, after, before, bucket=None, op=None):
         pass
 
+    def get_latest_activity(self):
+        s = self.client.get_latest_source_activity(self.tdmq_id)
+        return self.timeseries(after=s['time'], before=None)
+
     @abc.abstractmethod
     def ingest(self, t, data, slot=None):
         pass

@@ -9,19 +9,21 @@ import requests
 
 from tdmq.client import Client
 
+pytestmark = pytest.mark.timeseries
+
 source_desc = {
     "id": "tdm/sensor_1/test_barfoo",
     "alias": "B221",
-    "entity_type": "PointWeatherObserver",
+    "entity_type": "WeatherObserver",
     "entity_category": "Station",
     "default_footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
     "controlledProperties": ["humidity", "temperature"],
     "shape": [],
     "description": {
-        "type": "multisensor",
-        "brandName": "ProSensor",
-        "modelName": "R2D2",
-        "manufacturerName": "CRS4"
+        "brand_name": "ProSensor",
+        "model_name": "R2D2",
+        "operated_by": "CRS4",
+        "reference": None
     },
     "public": True
 }
@@ -96,6 +98,16 @@ def test_empty_timeseries(clean_storage, clean_db, live_app):
     assert len(ts.get_shape()) == 1
     assert len(ts) == 0
     c.deregister_source(s)
+
+
+def test_source_get_latest_activity(clean_storage, public_db_data, live_app):
+    c = Client(live_app.url())
+    s = c.find_sources(args={'id': 'tdm/sensor_1'})[0]
+    assert s
+    ts = s.get_latest_activity()
+    assert len(ts) == 1
+    timestamp = ts[-1][0]
+    assert timestamp == datetime.fromisoformat("2019-05-02T11:20:00")
 
 
 def test_create_timeseries_range_as_user(clean_storage, clean_db, live_app):

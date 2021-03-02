@@ -275,6 +275,34 @@ paths:
                 items:
                   type: string
 
+
+  /sources/{tdmq_source_id}/activity/latest:
+    get:
+      summary: Get latest activity.
+      description: >
+        Retrieve the most recent timestamp on the timeseries
+        associated with this source.
+
+      parameters:
+        - $ref: '#/components/parameters/tdmq_source_id'
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                - type: object
+                  required:
+                    - tdmq_id
+                    - time
+                  properties:
+                    tdmq_id:
+                      description: "Internal TDM-q id for the source"
+                      type: string
+                    time:
+                      $ref: '#/components/schemas/Timestamp'
+
+
   /sources/{tdmq_source_id}/timeseries:
     get:
       summary: Get timeseries for source `tdmq_source_id`.
@@ -758,8 +786,10 @@ components:
       properties:
         source:
           description: "External source id of emitting device."
+          type: string
         tdmq_id:
           description: "TDM source id of emitting device."
+          type: string
         time:
           $ref: '#/components/schemas/Timestamp'
         footprint:

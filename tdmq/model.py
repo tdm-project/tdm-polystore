@@ -86,6 +86,17 @@ class Source:
         raise RuntimeError(f"Got more than one source for tdmq_id {tdmq_id}")
 
 
+    @classmethod
+    def get_latest_activity(cls, tdmq_id: str) -> Dict[str, Any]:
+        time = db.get_latest_activity(tdmq_id)
+
+        struct = {
+            'tdmq_id': tdmq_id,
+            'time': time
+        }
+        return struct
+
+
     @staticmethod
     def delete_one(tdmq_id: str) -> None:
         db.delete_sources([tdmq_id])
@@ -241,3 +252,4 @@ class Timeseries:
             struct["default_footprint"] = db_result['source_info']['default_footprint']
 
         return struct
+
