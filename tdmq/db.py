@@ -518,8 +518,6 @@ def get_timeseries(tdmq_id, args=None):
             if fields != properties:
                 unknown_fields = ', '.join(set(fields).difference(properties))
                 raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
-            # Convert properties from a set to a list, since order is important
-            properties = list(properties)
 
     query_template = sql.SQL("""
         SELECT {select_list}

@@ -92,7 +92,7 @@ def test_sources_db_error(flask_client):
 
 @pytest.mark.sources
 def test_source_types(flask_client, db_data):
-    in_args = {"type": "multisensor", "controlledProperties": "temperature"}
+    in_args = {"controlledProperties": "temperature"}
     q = "&".join(f"{k}={v}" for k, v in in_args.items())
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
@@ -101,7 +101,6 @@ def test_source_types(flask_client, db_data):
 
     for s in data:
         key_value_pairs = tuple(_walk_dict(s))
-        assert ('type', in_args['type']) in key_value_pairs
         assert any(in_args['controlledProperties'] in v
                    for k, v in key_value_pairs if k == 'controlledProperties')
 
@@ -518,7 +517,7 @@ def test_get_timeseries(flask_client, app, db_data):
     assert d['bucket'] is not None
     assert d['bucket']['op'] == op
     assert d['bucket']['interval'] == bucket
-    assert 'temperature' in d['data'] and 'humidity' in d['data']
+    assert 'temperature' in d['data'] and 'relativeHumidity' in d['data']
 
 
 @pytest.mark.timeseries
