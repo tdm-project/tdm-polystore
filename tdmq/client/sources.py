@@ -19,7 +19,7 @@ class Source(abc.ABC):
         self._full_body = desc
 
     def _get_info(self):
-        return self._full_body['description']['description']
+        return self._full_body['description']
 
     @property
     def id(self):
@@ -55,15 +55,15 @@ class Source(abc.ABC):
 
     @property
     def alias(self):
-        return self._full_body['description'].get('alias')
+        return self._get_info().get('alias')
 
     @property
     def shape(self):
-        return tuple(self._full_body['description'].get('shape', ()))
+        return tuple(self._get_info().get('shape', ()))
 
     @property
     def controlled_properties(self):
-        return self._full_body['description']['controlledProperties']
+        return self._get_info()['controlledProperties']
 
     def __repr__(self):
         return repr({

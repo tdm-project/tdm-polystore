@@ -35,11 +35,12 @@ class Source:
     # Property required by Source structure, as specified in the API spec.
     RequiredKeys = frozenset({
         'default_footprint',
-        'description',
         'entity_category',
         'entity_type',
         'external_id',
+        'description',
         'public',
+        'registration_time',
         'stationary',
         'tdmq_id',
         })
@@ -49,26 +50,32 @@ class Source:
         'entity_category',
         'entity_type',
         'public',
+        'registration_time',
         'stationary',
         'tdmq_id'})
 
     # Keys in Source.description structure that do not require anonymization
     SafeDescriptionKeys = frozenset({
-        'brandName',
+        'brand_name',
         'controlledProperties',
-        'manufacturerName',
-        'modelName',
-        'shape',
-        'type',
         'edge_id',
-        'station_model',
-        'station_id',
+        'model_name',
+        'operated_by',
         'sensor_id',
+        'shape',
+        'station_id',
+        'station_model',
+        'type',
         })
 
     @staticmethod
     def store_new(data: Iterable[dict]) -> List[str]:
         return db.load_sources(data)
+
+    @classmethod
+    def _in_place_form_api_source(cls, db_source: dict) -> None:
+        # Take the `description.description` and move its contents to the top level dict
+        db_source['description'].update(db_source['description'].pop('description'))
 
 
     @classmethod
@@ -79,6 +86,7 @@ class Source:
 
         if len(srcs) == 1:
             source = srcs[0]
+            cls._in_place_form_api_source(source)
             if anonymize_private and not source.get('public'):
                 source = cls._anonymize_source(source)
             return source
@@ -197,6 +205,9 @@ class Source:
             query_args['public'] = True
 
         raw = db.list_sources(query_args)
+        for source in raw:
+            cls._in_place_form_api_source(source)
+
         resultset = [ r for r in raw if r['public'] ]
         private_it = (r for r in raw if not r['public'])
         if anonymize_private:
@@ -252,4 +263,3 @@ class Timeseries:
             struct["default_footprint"] = db_result['source_info']['default_footprint']
 
         return struct
-

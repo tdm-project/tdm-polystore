@@ -5,10 +5,6 @@ import pytest
 from requests.exceptions import HTTPError
 from tdmq.client import Client
 
-# use the `live_server` fixture from pytest-flask to fire up the application
-# so that we can send real HTTP requests
-# pytestmark = pytest.mark.usefixtures('live_server')
-
 
 def check_source(s, d):
     for k in ['entity_category', 'entity_type']:
@@ -124,6 +120,31 @@ def test_access_attributes_scalar_source(clean_storage, db_data, public_source_d
     assert s.registration_time          is not None
 
 
+def test_access_attributes_scalar_source_private_unauthenticated(clean_storage, db_data, source_data, live_app):
+    from tdmq.db import _compute_tdmq_id
+    c = Client(live_app.url())
+    src_id = 'tdm/sensor_7'
+    tdmq_id = _compute_tdmq_id(src_id)
+    s = c.get_source(tdmq_id)
+    print("----------------------------")
+    print("Source._full_body:\n", s._full_body)
+    original = next(t for t in source_data['sources'] if t['id'] == src_id)
+    assert s.id                         is None
+    assert s.is_stationary              == original.get('stationary', True)
+    assert s.entity_category            == original['entity_category']
+    assert s.entity_type                == original['entity_type']
+    assert s.public                     == original['public']
+    assert s.alias                      is None
+    assert len(s.shape)                 == 0
+    assert set(s.controlled_properties) == set(original['controlledProperties'])
+    assert s.edge_id                    == original['description']['edge_id']
+    assert s.station_id                 == original['description']['station_id']
+    assert s.station_model              == original['description']['station_model']
+    assert s.sensor_id                  == original['description']['sensor_id']
+    assert s.registration_time          is not None
+
+
+
 def test_find_source_by_roi(clean_storage, db_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     geom = 'circle((9.132, 39.248), 1000)'
@@ -144,3 +165,16 @@ def test_find_anonymized_and_not_anonymized(clean_storage, db_data, source_data,
     c = Client(live_app.url())
     sources = c.find_sources(args={'only_public': 'false'})
     assert len(sources) == len(source_data['sources'])
+
+
+def test_repr(clean_storage, db_data, live_app):
+    c = Client(live_app.url())
+    sources = c.find_sources(args={'only_public': 'false'})
+    for s in sources:
+        try:
+            assert repr(s)
+        except KeyError as e:
+            print("==============================")
+            print(e)
+            print("Source._full_body:\n", s._full_body)
+            raise
