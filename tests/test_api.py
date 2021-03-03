@@ -417,6 +417,19 @@ def test_private_source_query_by_tdmq_id_authenticated_unanonymized(flask_client
     assert pytest.approx(point['coordinates'], [ 9.111872, 39.214212 ], abs=1e-3)
 
 
+@pytest.mark.sources
+def test_source_get_latest_activity(flask_client, public_db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+
+    response = flask_client.get(f'/sources/{tdmq_id}/activity/latest')
+    struct = response.get_json()
+    assert set(struct.keys()) == { 'tdmq_id', 'time' }
+    assert struct['tdmq_id'] == tdmq_id
+    assert datetime.fromtimestamp(struct['time']) == datetime.fromisoformat("2019-05-02T11:20:00")
+
+
 @pytest.mark.timeseries
 def test_timeseries_method_not_allowed(flask_client):
     # Test the records endpoint
@@ -451,7 +464,7 @@ def test_create_timeseries(flask_client, app, db_data):
 
 @pytest.mark.timeseries
 def test_create_timeseries_unauthorized(flask_client, app, db_data):
-    _create_source(flask_client)    
+    _create_source(flask_client)
     timeseries_data = [{
         "source": "s1",
         "time": "2020-11-17T14:20:30Z",

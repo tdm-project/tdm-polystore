@@ -505,7 +505,7 @@ def get_timeseries(tdmq_id, args=None):
     info = _get_source_info(tdmq_id)
     description = info['description']
     source_is_private = not info.get('public', False)
-    logger.debug("get_timeseries for private source %s", tdmq_id)
+    logger.debug("get_timeseries for source %s", tdmq_id)
 
     if description.get('shape'):
         properties = ['tiledb_index']
@@ -523,7 +523,7 @@ def get_timeseries(tdmq_id, args=None):
 
     query_template = sql.SQL("""
         SELECT {select_list}
-        FROM {from_clause}
+        FROM record
         WHERE
         {where_clause}
         {grouping_clause}""")
@@ -543,8 +543,6 @@ def get_timeseries(tdmq_id, args=None):
         bucket_op = None
         clauses = _timeseries_select(properties)
 
-    clauses["from_clause"] = sql.SQL(" record ")  # by default we assume args['include_private'] is False
-
     where = [sql.SQL("source_id = {}").format(sql.Literal(tdmq_id))]
     if args and args.get('after'):
         where.append(sql.SQL("record.time >= {}").format(sql.Literal(args['after'])))
@@ -560,6 +558,22 @@ def get_timeseries(tdmq_id, args=None):
                 public=(not source_is_private),
                 properties=properties,
                 rows=rows)
+
+
+def get_latest_activity(tdmq_id):
+    query_template = sql.SQL("""
+        SELECT EXTRACT(epoch from MAX(record.time))
+        FROM record
+        WHERE
+        source_id = {source_id}
+        """)
+
+    query = query_template.format(source_id=sql.Literal(tdmq_id))
+    row = query_db_all(query, one=True)
+    if row is None:
+        raise tdmq.errors.ItemNotFoundException(f"No activity for source {tdmq_id}")
+
+    return row[0]
 
 
 def add_db_cli(app):

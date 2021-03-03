@@ -165,6 +165,14 @@ def timeseries_get(tdmq_id):
     return jres
 
 
+@tdmq_bp.route('/sources/<uuid:tdmq_id>/activity/latest')
+def source_activity_latest(tdmq_id):
+    result = Source.get_latest_activity(tdmq_id)
+    jres = jsonify(result)
+    return jres
+
+
+
 @tdmq_bp.route('/records', methods=["POST"])
 @auth_required
 def records_post():

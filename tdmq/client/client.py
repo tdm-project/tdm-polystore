@@ -2,6 +2,8 @@
 import logging
 import os
 
+from datetime import datetime
+
 import numpy as np
 import requests
 
@@ -164,6 +166,13 @@ class Client:
         args = dict((k, v) for k, v in args.items() if v is not None)
         _logger.debug('get_timeseries(%s, %s)', code, args)
         return self._do_get(f'sources/{code}/timeseries', params=args)
+
+    @requires_connection
+    def get_latest_source_activity(self, tdmq_id):
+        _logger.debug("get_latest_source_activity(%s)", tdmq_id)
+        r = self._do_get(f'sources/{tdmq_id}/activity/latest')
+        r['time'] = datetime.utcfromtimestamp(r['time'])
+        return r
 
 
     def open_array(self, tdmq_id, mode='r'):
