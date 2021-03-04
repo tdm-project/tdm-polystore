@@ -634,8 +634,10 @@ components:
           description: "Whether the source moves or is stationary"
           type: boolean
         description:
-          description: "Free-form object describing the source"
+          description: "Full source registration description"
           type: object
+        registration_time:
+          $ref: '#/components/schemas/Timestamp'
       required:
         - tdmq_id
         - external_id
@@ -645,6 +647,7 @@ components:
         - public
         - stationary
         - description
+        - registration_time
 
     SourcePost:
       type: object

@@ -3,7 +3,7 @@
         {
             "id": "tdm/sensor_0",
             "alias": "my desk",
-            "entity_type": "PointWeatherObserver",
+            "entity_type": "WeatherObserver",
             "entity_category": "Station",
             "default_footprint": {
                 "type": "Point",
@@ -14,22 +14,31 @@
             },
             "stationary": true,
             "controlledProperties": [
-                "temperature",
-                "humidity"
+               "CO",
+               "NO",
+               "NO2",
+               "NOx",
+               "PM10",
+               "PM2.5",
+               "SO2",
+               "altitude",
+               "barometricPressure",
+               "illuminance",
+               "infraredLight",
+               "precipitation",
+               "relativeHumidity",
+               "temperature",
+               "windDirection",
+               "windSpeed"
             ],
             "shape": [],
-            "description": {
-                "type": "multisensor",
-                "brandName": "ProSensor",
-                "modelName": "R2D2",
-                "manufacturerName": "CRS4"
-            },
+            "description": {},
             "public": true
         },
         {
             "id": "tdm/sensor_1",
             "alias": "porto conte",
-            "entity_type": "PointWeatherObserver",
+            "entity_type": "WeatherObserver",
             "entity_category": "Station",
             "default_footprint": {
                 "type": "Point",
@@ -39,16 +48,26 @@
                 ]
             },
             "controlledProperties": [
-                "humidity",
-                "temperature"
+               "CO",
+               "NO",
+               "NO2",
+               "NOx",
+               "PM10",
+               "PM2.5",
+               "SO2",
+               "altitude",
+               "barometricPressure",
+               "illuminance",
+               "infraredLight",
+               "precipitation",
+               "relativeHumidity",
+               "temperature",
+               "windDirection",
+               "windSpeed"
             ],
             "shape": [],
             "storage": null,
             "description": {
-                "type": "multisensor",
-                "brandName": "ProSensor",
-                "modelName": "R2D2",
-                "manufacturerName": "CRS4"
             },
             "public": true
         },
@@ -86,7 +105,7 @@
         {
             "id": "tdm/sensor_4",
             "alias": "Piazza d'Armi",
-            "entity_type": "PointWeatherObserver",
+            "entity_type": "WeatherObserver",
             "entity_category": "Station",
             "default_footprint": {
                 "type": "Point",
@@ -96,22 +115,36 @@
                 ]
             },
             "controlledProperties": [
-                "temperature"
+               "CO",
+               "NO",
+               "NO2",
+               "NOx",
+               "PM10",
+               "PM2.5",
+               "SO2",
+               "altitude",
+               "barometricPressure",
+               "illuminance",
+               "infraredLight",
+               "precipitation",
+               "relativeHumidity",
+               "temperature",
+               "windDirection",
+               "windSpeed"
             ],
             "shape": [],
-            "storage": "timescaledb",
             "description": {
-                "type": "TemperatureSensorDTH11",
-                "brandName": "Acme",
-                "modelName": "Acme multisensor DHT11",
-                "manufacturerName": "Acme Inc."
+               "edge_id": "Edge-28DC5A97",
+               "sensor_id": "BME280",
+               "station_id": "Edge-28DC5A97.esp8266-5220255",
+               "station_model": "airRohr"
             },
             "public": true
         },
         {
             "id": "tdm/sensor_5",
             "alias": "Mobile sensor",
-            "entity_type": "PointWeatherObserver",
+            "entity_type": "WeatherObserver",
             "entity_category": "Station",
             "default_footprint": {
                 "type": "Point",
@@ -122,15 +155,30 @@
             },
             "stationary": false,
             "controlledProperties": [
-                "humidity"
-            ],
+               "CO",
+               "NO",
+               "NO2",
+               "NOx",
+               "PM10",
+               "PM2.5",
+               "SO2",
+               "altitude",
+               "barometricPressure",
+               "illuminance",
+               "infraredLight",
+               "precipitation",
+               "relativeHumidity",
+               "temperature",
+               "windDirection",
+               "windSpeed"
+            ] ,
             "shape": [],
             "storage": null,
             "description": {
-                "type": "HumiditySensorDHT11",
-                "brandName": "Acme",
-                "modelName": "Acme multisensor DHT11",
-                "manufacturerName": "Acme Inc."
+               "edge_id": "Edge-41ED7B77",
+               "sensor_id": "BME280",
+               "station_id": "Edge-41ED7B77.esp8266-5220255",
+               "station_model": "airRohr"
             },
             "public": true
         },
@@ -211,24 +259,18 @@
             },
             "storage": "tiledb",
             "description": {
-                "type": "meteoRadar",
-                "brandName": "DPC",
-                "modelName": "dpc-radar-mosaic",
-                "manufacturerName": "Dipartimento Protezione Civile",
-                "category": [
-                    "sensor"
-                ],
-                "function": [
-                    "sensing"
-                ],
-                "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar"
+                "brand_name": "DPC",
+                "model_name": "dpc-radar-mosaic",
+                "operated_by": "Dipartimento Protezione Civile",
+                "reference": "http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/monitoraggio-sorveglianza/mappa-radar",
+                "comments": null
             },
             "public": true
         },
         {
             "id": "tdm/sensor_7",
             "alias": "private home outside of Cagliari",
-            "entity_type": "PointWeatherObserver",
+            "entity_type": "WeatherObserver",
             "entity_category": "Station",
             "default_footprint": {
                 "type": "Point",
@@ -236,15 +278,29 @@
             },
             "stationary": true,
             "controlledProperties": [
-                "temperature",
-                "humidity"
+               "CO",
+               "NO",
+               "NO2",
+               "NOx",
+               "PM10",
+               "PM2.5",
+               "SO2",
+               "altitude",
+               "barometricPressure",
+               "illuminance",
+               "infraredLight",
+               "precipitation",
+               "relativeHumidity",
+               "temperature",
+               "windDirection",
+               "windSpeed"
             ],
             "shape": [],
             "description": {
-                "type": "multisensor",
-                "brandName": "ProSensor",
-                "modelName": "R2D2",
-                "manufacturerName": "CRS4"
+               "edge_id": "Edge-99DC5A99",
+               "sensor_id": "BME280",
+               "station_id": "Edge-99DC5A99.esp8266-5220255",
+               "station_model": "airRohr"
             },
             "public": false
         }

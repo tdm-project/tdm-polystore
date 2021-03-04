@@ -135,7 +135,7 @@ def test_get_timeseries_simple(app, db_data, source_data):
 
     assert set(result.keys()) >= {'source_info', 'public', 'properties', 'rows'}
     assert result['public'] is True
-    assert set(result['properties']) == set(all_src_recs[0]['data'].keys())
+    assert set(result['properties']) >= set(all_src_recs[0]['data'].keys())
     assert len(result['rows']) == len(all_src_recs)
     assert len(result['rows'][0]) == 2 + len(result['properties'])
 
@@ -149,7 +149,8 @@ def test_get_timeseries_after(app, db_data, source_data):
 
     result = db_query.get_timeseries(tdmq_id, {'after': after})
 
-    assert len(result['properties']) == 2
+    assert len(result['properties']) == \
+            len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
     assert len(result['rows']) == len(records)
 
 
@@ -162,7 +163,8 @@ def test_get_timeseries_before(app, db_data, source_data):
 
     result = db_query.get_timeseries(tdmq_id, {'before': before})
 
-    assert len(result['properties']) == 2
+    assert len(result['properties']) == \
+            len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
     assert len(result['rows']) == len(records)
 
 
@@ -175,27 +177,30 @@ def test_get_timeseries_before_after(app, db_data, source_data):
     tdmq_id = db_query.list_sources({'id': source_id})[0]['tdmq_id']
     result = db_query.get_timeseries(tdmq_id, {'after': after, 'before': before})
 
-    assert len(result['properties']) == 2
+    assert len(result['properties']) == \
+            len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
     assert len(result['rows']) == len(records)
 
 
 def test_get_timeseries_fields(app, db_data, source_data):
-    tdmq_id = db_query.list_sources({'id': 'tdm/sensor_0'})[0]['tdmq_id']
+    source_id = 'tdm/sensor_0'
+    tdmq_id = db_query.list_sources({'id': source_id})[0]['tdmq_id']
+    original_source = next(s for s in source_data['sources'] if s['id'] == source_id)
 
     result = db_query.get_timeseries(tdmq_id)
-    assert set(result['properties']) == {'temperature', 'humidity'}
+    assert set(result['properties']) == set(original_source['controlledProperties'])
 
     result = db_query.get_timeseries(tdmq_id, {'fields': ['temperature']})
     assert result['properties'] == ['temperature']
 
-    result = db_query.get_timeseries(tdmq_id, {'fields': ['humidity']})
-    assert result['properties'] == ['humidity']
+    result = db_query.get_timeseries(tdmq_id, {'fields': ['relativeHumidity']})
+    assert result['properties'] == ['relativeHumidity']
 
-    result = db_query.get_timeseries(tdmq_id, {'fields': ['temperature', 'humidity']})
-    assert result['properties'] == ['temperature', 'humidity']
+    result = db_query.get_timeseries(tdmq_id, {'fields': ['temperature', 'relativeHumidity']})
+    assert result['properties'] == ['temperature', 'relativeHumidity']
 
-    result = db_query.get_timeseries(tdmq_id, {'fields': ['humidity', 'temperature']})
-    assert result['properties'] == ['humidity', 'temperature']
+    result = db_query.get_timeseries(tdmq_id, {'fields': ['relativeHumidity', 'temperature']})
+    assert result['properties'] == ['relativeHumidity', 'temperature']
 
 
 def test_get_timeseries_tdmq_id_not_found(app, db_data):
