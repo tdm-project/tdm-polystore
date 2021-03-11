@@ -89,13 +89,11 @@ def test_basic_tiledb_s3_operativity(clean_storage, service_info_with_creds):
 
     a = np.arange(5)
     logging.debug("trying to write array to s3: %s", array_name)
-    schema = tiledb.schema_like(a, ctx=ctx)
-    tiledb.DenseArray.create(array_name, schema)
-    with tiledb.DenseArray(array_name, 'w', ctx=ctx) as T:
+    with tiledb.empty_like(array_name, a, ctx=ctx) as T:
         T[:] = a
 
     logging.debug("reading back s3-backed array %s ", array_name)
-    with tiledb.DenseArray(array_name, ctx=ctx) as t:
+    with tiledb.open(array_name, ctx=ctx) as t:
         assert (t[0:5] == a).all()
 
 
