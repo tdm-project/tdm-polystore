@@ -1,6 +1,7 @@
 
 import os
 import re
+import time
 
 from contextlib import contextmanager
 
@@ -40,3 +41,13 @@ def find_exec(name):
         if os.access(full_path, os.X_OK | os.R_OK):
             return full_path
     return None
+
+
+@contextmanager
+def timeit(log_fn, template_msg="Duration: %0.5f"):
+    start = time.time()
+    try:
+        yield
+    finally:
+        duration = time.time() - start
+        log_fn(template_msg, duration)
