@@ -1,4 +1,5 @@
 
+import math
 import logging
 import os
 
@@ -107,26 +108,66 @@ class Client:
         self._destroy_source(s.tdmq_id)
 
     @requires_connection
-    def register_source(self, definition, nslots=10*24*3600*365):
+    def register_source(self, definition, nslots=3600*24*365*10, **kwargs):
         """Register a new data source
         .. :quickref: Register a new data source
 
         :nslots: is the maximum expected number of slots that will be
         needed. Actual storage allocation will be done at
         ingestion. The default value is 10*24*3600*365
+
+        :tiledb_extents: (optional) list of tile extent sizes.
+                         First is for time dimension; successive ones apply to
+                         each respective shape dimension.  E.g.,
+                            shape = (576, 631); tiledb_extents = [ 100, 576, 631 ]
+
+
+        :properties: (optional) Mapping of `property name` -> { storage attributes }.
+                     The following storage attributes can be specified:
+                       * `dtype` -> numpy.dtype
+                       * `filters` -> tiledb.FilterList
+                     A property may map to None if you don't want to customize settings.
+                     E.g., properties={'temperature': None }
+
         """
         assert isinstance(definition, dict)
-        _logger.debug('registering source id=%s', definition['id'])
+        # Try to validate arguments before registering the Source with tdmq
+        unknown_args = set(kwargs.keys()) - {'tiledb_extents', 'properties'}
+        if unknown_args:
+            raise ValueError(f"Unknown kwargs {', '.join(unknown_args)}")
+
+        if 'tiledb_extents' in kwargs:
+            extents = kwargs['tiledb_extents']
+            if len(extents) != len(definition.get('shape', [])) + 1:
+                raise ValueError("Number of tile extents specified is incompatible with array shape "
+                                 "(expected len(shape) + 1 == len(tiledb_extents))")
+        if 'properties' in kwargs:
+            unknown_properties = [ p for p in kwargs['properties'].keys() if p not in definition['controlledProperties'] ]
+            if unknown_properties:
+                raise ValueError(f"kwargs['properties'] references the following properties that are not "
+                                 "in the source's controlledProperties: {', '.join(unknown_properties)}")
+            for k, v in kwargs['properties'].items():
+                known_configs = ('dtype', 'filters')
+                if any(k not in known_configs for k in v.keys()):
+                    raise ValueError(f"Property configuration '{k}' contains invalid keys. "
+                                     "Valid keys are {' and '.join(known_configs)}")
+
+        _logger.debug("POSTing request to create new source with id '%s'", definition['id'])
         r = requests.post(f'{self.base_url}/sources', json=[definition], headers=self.headers)
         r.raise_for_status()
         tdmq_id = r.json()[0]
-        if 'shape' in definition and len(definition['shape']) > 0:
+        _logger.debug("POST successful. Registered source with tdmq_id %s", tdmq_id)
+        if len(definition.get('shape', [])) > 0:
             try:
-                # FIXME add storage drivers
-                if definition['storage'] != 'tiledb':
-                    raise UnsupportedFunctionality(f'storage type {definition["storage"]} not supported.')
-                self._create_tiledb_array(tdmq_id, definition['shape'], definition['controlledProperties'], nslots)
+                _logger.debug("Source is NonScalar.  Creating tiledb array")
+                extents = kwargs.get('tiledb_extents')
+                properties = dict.fromkeys(definition['controlledProperties'])
+                if kwargs.get('properties'):
+                    properties.update(kwargs['properties'])
+
+                self._create_tiledb_array(tdmq_id, definition['shape'], properties, nslots, extents)
             except Exception as e:
+                _logger.exception(e)
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
                 self._destroy_source(tdmq_id)
                 raise TdmqError(f"Internal failure in registering {definition.get('id', '(id unavailable)')}.")
@@ -206,29 +247,39 @@ class Client:
         return data
 
 
-    def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots):
+    def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots, extent_sizes=None):
         array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
         if tiledb.object_type(array_name, self.tiledb_ctx) is not None:
             raise DuplicateItemException(f'duplicate object with path {array_name}')
         assert len(shape) > 0 and n_slots > 0
+
+        attr_defaults = dict(dtype=np.float32, filters=tiledb.FilterList([tiledb.ZstdFilter()]))
+        def _attr_params(attr_name, attr_config=None):
+            if not attr_config:
+                attr_config = attr_defaults
+            return dict(name=attr_name,
+                        dtype=attr_config.get('dtype', attr_defaults['dtype']),
+                        filters=attr_config.get('filters', attr_defaults['filters']))
+
+        _logger.debug('Creating attributes for array %s', array_name)
+        attrs = [tiledb.Attr(**_attr_params(aname, cfg)) for aname, cfg in properties.items()]
+
+        if not extent_sizes:
+            extent_sizes = [ min(n_slots, 100) ] + [ math.ceil(s / 3) for s in shape ]
+        _logger.debug("Using extent sizes %s for shape %s", extent_sizes, shape)
+
         dims = [tiledb.Dim(name="slot",
                            domain=(0, n_slots),
-                           tile=1, dtype=np.int32)]
+                           tile=extent_sizes[0], dtype=np.int32)]
         dims = dims + [tiledb.Dim(name=f"dim{i}", domain=(0, n - 1),
-                                  tile=n, dtype=np.int32)
+                                  tile=extent_sizes[i+1], dtype=np.int32)
                        for i, n in enumerate(shape)]
-        _logger.debug('trying domain creation for %s', array_name)
         dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
-        _logger.debug('trying attribute creation for %s', array_name)
-        attrs = [tiledb.Attr(name=aname,
-                             dtype=np.float32,
-                             filters=tiledb.FilterList(
-                             [tiledb.ZstdFilter()])) for aname in properties]
-        _logger.debug('trying ArraySchema creation for %s', array_name)
         schema = tiledb.ArraySchema(domain=dom, sparse=False,
                                     attrs=attrs, ctx=self.tiledb_ctx)
-        # Create the (empty) array on disk.
+        _logger.debug("Array schema for %s:\n%s", array_name, schema)
+        _logger.debug("Creating the array on storage...")
         _logger.debug('ensuring root storage directory exists: %s', self.tiledb_storage_root)
         self.tiledb_vfs.create_dir(self.tiledb_storage_root)
         _logger.debug('trying creation on disk of %s', array_name)

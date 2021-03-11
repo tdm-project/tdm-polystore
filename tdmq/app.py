@@ -58,6 +58,7 @@ def configure_logging(app):
     # 2. `root`, with handler `basic`: used for everything else.
     log_config = {
         'version': 1,
+        'disable_existing_loggers': False, # if not specified defaults to True
         'formatters': {
             'default': {
                 'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
@@ -97,7 +98,11 @@ def configure_logging(app):
     else:
         error = True
 
-    dictConfig(log_config)
+    if not app.config['TESTING']:
+        dictConfig(log_config)
+    else:
+        app.logger.info("Not configuring loggers since we're running in testing mode")
+
     if error:
         app.logger.error("LOG_LEVEL value %s is invalid. Defaulting to %s", level_str, log_config['root']['level'])
 

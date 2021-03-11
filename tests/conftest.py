@@ -11,18 +11,27 @@ import tempfile
 import time
 from collections import defaultdict
 
+import pytest
 import geojson
 import shapely.geometry as sg
-import pytest
+
 import tdmq.db
 import tdmq.db_manager as db_manager
 from tdmq.app import create_app
-
 
 def _rand_str(length=6):
     if length < 1:
         raise ValueError(f"Length must be >= 1 (got {length})")
     return ''.join([random.choice(string.ascii_lowercase) for _ in range(length)])
+
+@pytest.fixture(autouse=True)
+def enable_all_loggers():
+    # For some reason the client loggers end up being disabled when we run our tests.
+    # Until we figure out why they're getting disabled, this fixture brutally
+    # enables all existing loggers.
+    for _, logger in logging.root.manager.loggerDict.items():
+        if hasattr(logger, 'disabled'):
+            logger.disabled = False
 
 
 ## Data fixtures
@@ -152,9 +161,8 @@ def public_db_data(clean_db, public_source_data):
 ## Flask app fixtures
 
 @pytest.fixture
-def app(db_connection_config, auth_token, local_zone_db, caplog):
+def app(db_connection_config, auth_token, local_zone_db):
     """Create and configure a new app instance for each test."""
-    caplog.set_level(logging.DEBUG)
     app = create_app({
         'TESTING': True,
         'DB_HOST': db_connection_config['host'],

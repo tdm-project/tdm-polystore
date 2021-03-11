@@ -5,9 +5,11 @@ from collections.abc import Iterable
 from collections.abc import Mapping
 from contextlib import contextmanager
 
+import tiledb
 from tdmq.client.timeseries import ScalarTimeSeries
 from tdmq.client.timeseries import NonScalarTimeSeries
 from tdmq.errors import UnsupportedFunctionality
+from tdmq.utils import timeit
 
 _logger = logging.getLogger(__name__)
 
@@ -212,3 +214,66 @@ class NonScalarSource(Source):
         self.client.save_tiledb_frame(self.get_array(), slot, data)
         self.add_record({'time': t.strftime(self.client.TDMQ_DT_FMT),
                          'data': {'tiledb_index': slot}})
+
+
+    def consolidate(self, mode=None, config_dict=None, vacuum=True):
+        """
+        The keys "sm.consolidation.mode" and "sm.vacuum.mode" in the
+        configuration (both `config_dict` and in the Context) are ignored.
+        By default this function will run for all consolidation
+        (and vacuum) modes.  If you only want to run a specific mode, specify
+        it with the `mode` parameter.
+        """
+        valid_modes = ('fragments', 'fragment_meta', 'array_meta')
+        # pylint: disable=protected-access
+        array_name = self.client._source_data_path(self.tdmq_id)
+        _logger.debug("Ensuring client is connected...")
+        self.client.connect()
+
+        # As of 2021/03/10 to work around a bug in tiledb.consolidate
+        # we have to explicitly pass the config to the function (rather
+        # that implicitly using the configuration held by the context).
+        # https://forum.tiledb.com/t/write-confirmation-question/305/12
+
+        # Both options below generate an independent configuration object,
+        # copied/disjoint from its original source (i.e., config_dict or tiledb_ctx)
+        if config_dict:
+            config = tiledb.Config(config_dict)
+        else:
+            config = self.client.tiledb_ctx.config()
+
+        def _specific_consolidation(mode):
+            config["sm.consolidation.mode"] = mode
+            _logger.info("Executing %s consolidation on array %s", mode, array_name)
+            with timeit(_logger.info):
+                tiledb.consolidate(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+        if mode:
+            if mode not in valid_modes:
+                raise ValueError(f"Invalid tiledb consolidation mode '{mode}'. "
+                                 "Valid modes are {', '.join(valid_modes)}")
+            _specific_consolidation(mode)
+        else:
+            for m in valid_modes:
+                _specific_consolidation(m)
+
+        def _specific_vacuum(mode):
+            config["sm.vacuum.mode"] = mode
+            _logger.info("Executing %s vacuum on array %s", mode, array_name)
+            with timeit(_logger.info):
+                tiledb.vacuum(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+        if vacuum:
+            _logger.info("Vacuuming tiledb array %s", array_name)
+            # LP: I have found (empirically) that if I try to vacuum an array while it
+            # is open the vacuum call will block.
+            if self._tiledb_array and self._tiledb_array.isopen:
+                _logger.debug("Array is open.  Must close it before proceeding")
+                self.close_array()
+            if mode:
+                # mode already validated before consolidation
+                _specific_vacuum(mode)
+            else:
+                #for m in valid_modes:  -> 'array_meta' vacuum mode fails in tests
+                for m in ('fragments', 'fragment_meta'):
+                    _specific_vacuum(m)

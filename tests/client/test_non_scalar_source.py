@@ -89,13 +89,11 @@ def test_basic_tiledb_s3_operativity(clean_storage, service_info_with_creds):
 
     a = np.arange(5)
     logging.debug("trying to write array to s3: %s", array_name)
-    schema = tiledb.schema_like(a, ctx=ctx)
-    tiledb.DenseArray.create(array_name, schema)
-    with tiledb.DenseArray(array_name, 'w', ctx=ctx) as T:
+    with tiledb.empty_like(array_name, a, ctx=ctx) as T:
         T[:] = a
 
     logging.debug("reading back s3-backed array %s ", array_name)
-    with tiledb.DenseArray(array_name, ctx=ctx) as t:
+    with tiledb.open(array_name, ctx=ctx) as t:
         assert (t[0:5] == a).all()
 
 
@@ -191,3 +189,41 @@ def test_nonscalar_source_array_context(clean_storage, source_data, live_app):
         with s.array_context('w'):
             create_and_ingest_records(s, N)
         c.deregister_source(s)
+
+
+def test_nonscalar_source_custom_extents(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    desired_extents = [200, 700, 600]
+    s = c.register_source(src, nslots=3600, tiledb_extents=desired_extents)
+    with s.array_context():
+        ary = s.get_array()
+        for i, v in enumerate(desired_extents):
+            assert ary.dim(i).tile == v, f"For dim({i}), tile extent size {ary.dim(i).tile} != {v}"
+
+
+def test_nonscalar_source_custom_attr_data_type(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    properties = {
+        "VMI": { 'dtype': np.int32 }
+    }
+    s = c.register_source(src, nslots=3600, properties=properties)
+    with s.array_context():
+        ary = s.get_array()
+        assert ary.attr('VMI').dtype == np.int32
+        assert ary.attr('SRI').dtype == np.float32
+
+
+def test_consolidate(clean_storage, source_data, live_app, caplog):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    s = c.register_source(src, nslots=600)
+    with caplog.at_level(logging.DEBUG):
+        s.consolidate()
+    valid_modes = ('fragments', 'fragment_meta')
+    for m in valid_modes:
+        assert f"Executing {m} consolidation on array" in caplog.text
+        assert f"Executing {m} vacuum on array" in caplog.text
+    # We don't run array metadata vacuuming.  Fails in tests
+    assert f"Executing array_meta consolidation on array" in caplog.text
