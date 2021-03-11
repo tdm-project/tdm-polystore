@@ -213,3 +213,17 @@ def test_nonscalar_source_custom_attr_data_type(clean_storage, source_data, live
         ary = s.get_array()
         assert ary.attr('VMI').dtype == np.int32
         assert ary.attr('SRI').dtype == np.float32
+
+
+def test_consolidate(clean_storage, source_data, live_app, caplog):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    s = c.register_source(src, nslots=600)
+    with caplog.at_level(logging.DEBUG):
+        s.consolidate()
+    valid_modes = ('fragments', 'fragment_meta')
+    for m in valid_modes:
+        assert f"Executing {m} consolidation on array" in caplog.text
+        assert f"Executing {m} vacuum on array" in caplog.text
+    # We don't run array metadata vacuuming.  Fails in tests
+    assert f"Executing array_meta consolidation on array" in caplog.text
