@@ -194,7 +194,7 @@ def test_nonscalar_source_array_context(clean_storage, source_data, live_app):
 def test_nonscalar_source_custom_extents(clean_storage, source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
-    desired_extents = [200, 700, 600]
+    desired_extents = [10, 7, 6]
     s = c.register_source(src, nslots=3600, tiledb_extents=desired_extents)
     with s.array_context():
         ary = s.get_array()
@@ -227,3 +227,102 @@ def test_consolidate(clean_storage, source_data, live_app, caplog):
         assert f"Executing {m} vacuum on array" in caplog.text
     # We don't run array metadata vacuuming.  Fails in tests
     assert f"Executing array_meta consolidation on array" in caplog.text
+
+
+def test_ingest_one(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    properties = {
+        "VMI": { 'dtype': np.int32 }
+    }
+    s = c.register_source(src, nslots=3600, properties=properties)
+    data = {
+        'VMI': np.full(s.shape, 1),
+        'SRI': np.full(s.shape, 2.0)
+        }
+    now = datetime.now()
+    with s.array_context('w'):
+        s.ingest_one(now, data, slot=1)
+    with s.array_context('r'):
+        ts = s.timeseries(after=now)
+        assert len(ts) == 1
+        t, d = ts[0]
+        assert abs(t - now) < timedelta(seconds=1)
+        assert set(d.keys()) == {'VMI', 'SRI'}
+        assert d['VMI'].shape == s.shape
+        assert (d['VMI'] == data['VMI']).all()
+
+
+def test_ingest_one_auto_slot(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    s = c.register_source(src, nslots=3600)
+    data = {
+        'VMI': np.full(s.shape, 1),
+        'SRI': np.full(s.shape, 2.0)
+        }
+    now = datetime.now()
+    with s.array_context('w'):
+        s.ingest_one(now, data, slot=None)
+
+        latest = c.get_latest_source_activity(s.tdmq_id)
+        assert abs(latest['time'] - now) < timedelta(seconds=1)
+        assert latest['data']['tiledb_index'] == 0
+
+        now = now + timedelta(minutes=1)
+        s.ingest_one(now, data, slot=None)
+        latest = c.get_latest_source_activity(s.tdmq_id)
+        assert abs(latest['time'] - now) < timedelta(seconds=1)
+        assert latest['data']['tiledb_index'] == 1
+
+
+def test_ingest_many_to_be_stacked(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    properties = {
+        "VMI": { 'dtype': np.int32 }
+    }
+    s = c.register_source(src, nslots=3600, properties=properties)
+    n_elements = 4
+    data = {
+        'VMI': [ np.full(s.shape, i) for i in range(n_elements) ],
+        'SRI': [ np.full(s.shape, i * 2.0) for i in range(n_elements) ]
+        }
+    now = datetime.now()
+    interval = timedelta(minutes=5)
+    times = [ now + interval * i for i in range(n_elements) ]
+    with s.array_context('w'):
+        s.ingest_many(times, data, initial_slot=1)
+    with s.array_context('r'):
+        ts = s.timeseries(after=now)
+        assert len(ts) == n_elements
+        t, d = ts[0]
+        assert abs(t - now) < timedelta(seconds=1)
+        assert set(d.keys()) == {'VMI', 'SRI'}
+        assert d['VMI'].shape == s.shape
+        assert (d['VMI'] == data['VMI'][0]).all()
+        t, d = ts[n_elements - 1]
+        assert d['VMI'].shape == s.shape
+        assert (d['VMI'] == data['VMI'][n_elements - 1]).all()
+        with pytest.raises(IndexError):
+            # pylint: disable=pointless-statement
+            ts[n_elements]
+
+
+def test_ingest_many_to_be_stacked_auto_slot(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    s = c.register_source(src, nslots=3600)
+    n_elements = 4
+    data = {
+        'VMI': [ np.full(s.shape, i) for i in range(n_elements) ],
+        'SRI': [ np.full(s.shape, i * 2.0) for i in range(n_elements) ]
+        }
+    now = datetime.now()
+    interval = timedelta(minutes=5)
+    times = [ now + interval * i for i in range(n_elements) ]
+    with s.array_context('w'):
+        s.ingest_many(times, data, initial_slot=None)
+        latest = c.get_latest_source_activity(s.tdmq_id)
+        assert abs(latest['time'] - times[-1]) < timedelta(seconds=1)
+        assert latest['data']['tiledb_index'] == len(times) - 1

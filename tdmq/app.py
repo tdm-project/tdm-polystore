@@ -98,10 +98,15 @@ def configure_logging(app):
     else:
         error = True
 
-    if not app.config['TESTING']:
-        dictConfig(log_config)
-    else:
-        app.logger.info("Not configuring loggers since we're running in testing mode")
+    # LP: Leaving the "default" configuration during testing doesn't seem to work
+    # any better.  We still end up with various loggers disabled.  Until we
+    # have a chance to take a closer look at the issue, I'm reverting to the
+    # previous behaviour.
+    dictConfig(log_config)
+    #if not app.config['TESTING']:
+    #    dictConfig(log_config)
+    #else:
+    #    app.logger.info("Not configuring loggers since we're running in testing mode")
 
     if error:
         app.logger.error("LOG_LEVEL value %s is invalid. Defaulting to %s", level_str, log_config['root']['level'])
@@ -135,7 +140,7 @@ class DefaultConfig(object):
         "vfs.s3.region": "",
         "vfs.s3.verify_ssl": "false",
         "vfs.s3.use_virtual_addressing": "false",
-        "vfs.s3.use_multipart_upload": "false",
+        "vfs.s3.use_multipart_upload": "true",
     }
     TILEDB_VFS_CREDENTIALS = {
         "vfs.s3.aws_access_key_id": "tdm-user",
@@ -209,7 +214,13 @@ def create_app(test_config=None):
 
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):
-        return jsonify({"error": ERROR_CODES.get(e.code)}), e.code
+        logger = logging.getLogger("response")
+        logger.exception(e)
+        struct = {
+            "error": ERROR_CODES.get(e.code),
+            "description": e.description
+        }
+        return jsonify(struct), e.code
 
     @app.before_request
     def log_request():

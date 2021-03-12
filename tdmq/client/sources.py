@@ -1,10 +1,11 @@
 
 import abc
+import itertools
 import logging
-from collections.abc import Iterable
-from collections.abc import Mapping
+from collections.abc import Sequence
 from contextlib import contextmanager
 
+import numpy as np
 import tiledb
 from tdmq.client.timeseries import ScalarTimeSeries
 from tdmq.client.timeseries import NonScalarTimeSeries
@@ -89,20 +90,19 @@ class Source(abc.ABC):
         s = self.client.get_latest_source_activity(self.tdmq_id)
         return self.timeseries(after=s['time'], before=None)
 
+    ### Ingestion ###
+    ### Requires authentication
+    ###
     @abc.abstractmethod
-    def ingest(self, t, data, slot=None):
+    def ingest_one(self, t, data, slot=None, footprint=None):
         pass
 
-    def add_record(self, record):
-        assert isinstance(record, Mapping)
-        return self.add_records([record])
+    def ingest(self, t, data, slot=None):
+        self.ingest_one(t, data, slot)
 
-    def add_records(self, records):
-        assert isinstance(records, Iterable)
-        sid = {'source': self.id}
-        # sid will override potential pre-existing values for r['source']
-        to_be_shipped = [{**r, **sid} for r in records]
-        self.client.add_records(to_be_shipped)
+    @abc.abstractmethod
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        pass
 
 
 class ScalarSource(Source):
@@ -142,11 +142,30 @@ class ScalarSource(Source):
     def timeseries(self, after=None, before=None, bucket=None, op=None):
         return ScalarTimeSeries(self, after, before, bucket, op)
 
-    def ingest(self, t, data, slot=None):
-        if slot:
+    def _format_record(self, t, d, foot=None):
+        record = {
+            'time': t.strftime(self.client.TDMQ_DT_FMT),
+            'data': d,
+            'tdmq_id': self.tdmq_id }
+        if foot:
+            record['footprint'] = foot
+        return record
+
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        if footprint is None:
+            footprint_it = None
+        else:
+            footprint_it = [footprint]
+        self.ingest_many([t], [data], slot, footprint_it)
+
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        if initial_slot:
             raise TypeError("Can't specity a slot to ingest a scalar record")
-        self.add_record({'time': t.strftime(self.client.TDMQ_DT_FMT),
-                         'data': data})
+        if footprint_iter is None:
+            records = [ self._format_record(t, d) for t, d in zip(times, data) ]
+        else:
+            records = [ self._format_record(t, d, f) for t, d, f in zip(times, data, footprint_iter) ]
+        self.client.add_records(records)
 
 
 class NonScalarSource(Source):
@@ -181,13 +200,14 @@ class NonScalarSource(Source):
             self.client.close_array(self._tiledb_array)
             self._tiledb_array = None
             self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
+        return self._tiledb_array
 
 
     @contextmanager
     def array_context(self, mode='r'):
-        self.open_array(mode)
+        ary = self.open_array(mode)
         try:
-            yield
+            yield ary
         finally:
             self.close_array()
 
@@ -203,17 +223,98 @@ class NonScalarSource(Source):
         return NonScalarTimeSeries(self, after, before, bucket, op)
 
 
-    def ingest(self, t, data, slot=None):
-        self.open_array(mode='w')
+    def _format_record(self, t, slot, foot=None):
+        record = {
+            'time': t.strftime(self.client.TDMQ_DT_FMT),
+            'data': { 'tiledb_index': slot },
+            'tdmq_id': self.tdmq_id }
+        if foot:
+            record['footprint'] = foot
+        return record
+
+    def _get_next_slot(self):
+        _logger.debug("NonScalarSource._get_next_slot: getting latest activity")
+        s = self.client.get_latest_source_activity(self.tdmq_id)
+        if s['time'] is None:
+            _logger.debug("No activity found. Starting from beginning")
+            return 0 # first slot
+        if 'tiledb_index' not in s['data']:
+            raise RuntimeError(f"Activity record collected for {self.tdmq_id} does not contain `tiledb_index`!")
+        most_recent_slot = s['data']['tiledb_index']
+        _logger.debug("Found most recent slot %s. Returning %s + 1", most_recent_slot, most_recent_slot)
+        return most_recent_slot + 1
+
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        """
+        auto-slot -> if you don't specify a slot, the client will retrieve the latest slot
+        used for this source (as in most recent timestamp) and increment it by 1.
+
+        Don't use this feature unless you consistently append to the time series.  I.e.,
+        if the most recent record points to somewhere in the middle of the array, you'll
+        end up overwriting data in the tiledb array.
+        """
+        ary = self.open_array(mode='w')
 
         if slot is None:
-            raise UnsupportedFunctionality(f'No auto-slot support yet.')
+            slot = self._get_next_slot()
+            _logger.debug("source %s: auto-slot: %s", self.tdmq_id, slot)
+
         for p in self.controlled_properties:
             if p not in data:
                 raise ValueError(f'data is missing field {p}')
-        self.client.save_tiledb_frame(self.get_array(), slot, data)
-        self.add_record({'time': t.strftime(self.client.TDMQ_DT_FMT),
-                         'data': {'tiledb_index': slot}})
+        record = self._format_record(t, slot, footprint)
+        _logger.debug("Array %s: setting one slice in slot %s", self.tdmq_id, slot)
+        with timeit(_logger.debug):
+            ary[slot:slot + 1] = data
+        _logger.debug("Registering record with tdmq")
+        self.client.add_records([record])
+
+
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        if initial_slot is None:
+            initial_slot = self._get_next_slot()
+            _logger.debug("source %s: auto-slot: %s", self.tdmq_id, initial_slot)
+
+        for p in self.controlled_properties:
+            if p not in data:
+                raise ValueError(f'data is missing property {p}')
+
+        if footprint_iter is None:
+            footprint_iter = itertools.cycle([None])
+        records = [
+            self._format_record(t, s, f)
+            for t, s, f in zip(times, itertools.count(initial_slot), footprint_iter) ]
+
+        ary = self.open_array(mode='w')
+        # Prepare the data.  The `data` argument must always be a mapping
+        # property -> values to be ingested.
+        # The values can be:
+        # a) a sequence a np arrays, each one a slice for a single time slot;
+        # b) a single np array with the same ndim as our array, where the
+        #    first axis is the time dimension.
+        struct = dict()
+        for prop, value in data.items():
+            if isinstance(value, Sequence):
+                # The value should be a time sequence of np arrays, which we will stack
+                new_data = np.stack(value)
+            elif isinstance(value, np.ndarray):
+                new_data = value
+
+            if new_data.ndim != ary.ndim:
+                raise ValueError(f"Array for property {prop} has {value.ndim} dimensions, while "
+                                 "{ary.ndim} are expected")
+            if new_data.shape[1:] != ary.shape[1:]:
+                raise ValueError(f"Array for property {prop} has shape {value.shape} which "
+                                 "is incompatible with {ary.shape}")
+            # At this point, the array should be ok for assignment.
+            struct[prop] = new_data
+
+        _logger.debug("Array %s: setting %s slices in slots starting from %s",
+                      self.tdmq_id, new_data.shape[0], initial_slot)
+        with timeit(_logger.debug):
+            ary[initial_slot:(initial_slot + new_data.shape[0])] = struct
+        _logger.debug("Registering %s records with tdmq", len(records))
+        self.client.add_records(records)
 
 
     def consolidate(self, mode=None, config_dict=None, vacuum=True):

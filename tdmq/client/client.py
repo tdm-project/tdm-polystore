@@ -170,7 +170,7 @@ class Client:
                 _logger.exception(e)
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
                 self._destroy_source(tdmq_id)
-                raise TdmqError(f"Internal failure in registering {definition.get('id', '(id unavailable)')}.")
+                raise TdmqError(f"Error registering {definition.get('id', '(id unavailable)')}. {e}")
         return self.get_source(tdmq_id)
 
     @requires_connection
@@ -212,9 +212,9 @@ class Client:
     def get_latest_source_activity(self, tdmq_id):
         _logger.debug("get_latest_source_activity(%s)", tdmq_id)
         r = self._do_get(f'sources/{tdmq_id}/activity/latest')
-        r['time'] = datetime.utcfromtimestamp(r['time'])
+        if r['time'] is not None:
+            r['time'] = datetime.utcfromtimestamp(r['time'])
         return r
-
 
     def open_array(self, tdmq_id, mode='r'):
         aname = self._source_data_path(tdmq_id)
@@ -223,11 +223,6 @@ class Client:
 
     def close_array(self, tiledb_array):
         tiledb_array.close()
-
-
-    @requires_connection
-    def save_tiledb_frame(self, tiledb_array, slot, data):
-        tiledb_array[slot:slot + 1] = data
 
 
     @requires_connection

@@ -220,8 +220,8 @@
                 "SRI"
             ],
             "shape": [
-                1400,
-                1200
+                14,
+                12
             ],
             "storage": "tiledb",
             "geomapping": {

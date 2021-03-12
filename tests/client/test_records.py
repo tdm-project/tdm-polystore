@@ -7,8 +7,6 @@ from tdmq.client import Client
 
 from test_source import register_scalar_sources
 
-# import pytest
-# pytestmark = pytest.mark.skip(reason="not up-to-date with new pytest setup")
 
 source_desc = {
     "id": "tdm/sensor_1/test_barfoo",
@@ -32,85 +30,71 @@ def test_add_scalar_records_as_admin(clean_storage, public_source_data, live_app
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
-    tdmq_ids = []
     for s in srcs:
-        s.add_records(by_source[s.id])
-        c.deregister_source(s)
-        tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    for tid in tdmq_ids:
-        assert tid not in sources
+        records = by_source[s.id]
+        gen = ((datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO), r['data']) for r in records)
+        times, data = zip(*gen)
+        s.ingest_many(times, data)
 
 
 def test_add_scalar_records_as_user(clean_storage, public_source_data, live_app):
     # first create the resource with admin client
     c = Client(live_app.url(), auth_token=live_app.auth_token)
-    srcs = register_scalar_sources(c, public_source_data)
+    register_scalar_sources(c, public_source_data)
 
     # then get the sources as user and tries to add records
-    c = Client(live_app.url())    
+    c = Client(live_app.url())
     by_source = public_source_data['records_by_source']
     for s in c.find_sources():
         with pytest.raises(HTTPError) as ve:
-            s.add_records(by_source[s.id])
-            ve.code == 401
+            t = datetime.strptime(by_source[s.id][0]['time'], c.TDMQ_DT_FMT_NO_MICRO)
+            s.ingest_one(t, by_source[s.id][0]['data'])
+            assert ve.code == 401
 
 
 def test_add_scalar_record_as_admin(clean_storage, public_source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
-    tdmq_ids = []
     for s in srcs:
-        for r in by_source[s.id]:
-            s.add_record(r)
-        c.deregister_source(s)
-        tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    for tid in tdmq_ids:
-        assert tid not in sources
+        for record in by_source[s.id]:
+            t = datetime.strptime(record['time'], c.TDMQ_DT_FMT_NO_MICRO)
+            s.ingest_one(t, record['data'])
 
 
 def test_add_scalar_record_as_user(clean_storage, public_source_data, live_app):
     # first create the resource with admin client
     c = Client(live_app.url(), auth_token=live_app.auth_token)
-    srcs = register_scalar_sources(c, public_source_data)
+    register_scalar_sources(c, public_source_data)
 
     # then get the sources as user and tries to add record
-    c = Client(live_app.url())    
+    c = Client(live_app.url())
     by_source = public_source_data['records_by_source']
     for s in c.find_sources():
         with pytest.raises(HTTPError) as ve:
             for r in by_source[s.id]:
-                s.add_record(r)
-            ve.code == 401
+                t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
+                s.ingest_one(t, r['data'])
+            assert ve.code == 401
 
 
 def test_ingest_scalar_record_as_admin(clean_storage, public_source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
-    tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:
             try:
                 t = datetime.strptime(r['time'], c.TDMQ_DT_FMT)
             except ValueError:
                 t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
-            data = r['data']
-            s.ingest(t, data)
-        c.deregister_source(s)
-        tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    for tid in tdmq_ids:
-        assert tid not in sources
+            s.ingest_one(t, r['data'])
 
 
 def test_ingest_scalar_record_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
-    srcs = register_scalar_sources(c, public_source_data)
+    register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
-    tdmq_ids = []
 
     # then get the sources as user and tries to add record
     c = Client(live_app.url())
@@ -123,7 +107,7 @@ def test_ingest_scalar_record_as_user(clean_storage, public_source_data, live_ap
             data = r['data']
             with pytest.raises(HTTPError) as ve:
                 s.ingest(t, data)
-                ve.code = 401
+                assert ve.code == 401
 
 
 def test_check_timeseries(clean_storage, live_app):

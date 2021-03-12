@@ -559,19 +559,24 @@ def get_timeseries(tdmq_id, args=None):
 
 
 def get_latest_activity(tdmq_id):
+    """
+    Returns a dict { 'time': timestamp, 'data': [ list of grouped record data objects ] }
+    """
     query_template = sql.SQL("""
-        SELECT EXTRACT(epoch from MAX(record.time))
-        FROM record
+        SELECT EXTRACT(epoch from r.time) as time, jsonb_agg(r.data) as data
+        FROM record r
         WHERE
-        source_id = {source_id}
+            r.source_id = {source_id}
+            AND
+            r.time = (SELECT MAX(record.time) FROM record WHERE source_id = {source_id})
+        GROUP BY r.time;
         """)
 
     query = query_template.format(source_id=sql.Literal(tdmq_id))
-    row = query_db_all(query, one=True)
-    if row is None:
-        raise tdmq.errors.ItemNotFoundException(f"No activity for source {tdmq_id}")
-
-    return row[0]
+    struct = query_db_all(query, one=True, cursor_factory=psycopg2.extras.RealDictCursor)
+    if struct is None:
+        return None
+    return struct
 
 
 def add_db_cli(app):
