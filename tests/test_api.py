@@ -2,6 +2,7 @@
 import logging
 import re
 import tempfile
+import uuid
 from contextlib import contextmanager
 from datetime import datetime
 
@@ -424,9 +425,17 @@ def test_source_get_latest_activity(flask_client, public_db_data):
 
     response = flask_client.get(f'/sources/{tdmq_id}/activity/latest')
     struct = response.get_json()
-    assert set(struct.keys()) == { 'tdmq_id', 'time' }
+    assert set(struct.keys()) == { 'tdmq_id', 'time', 'data' }
     assert struct['tdmq_id'] == tdmq_id
     assert datetime.fromtimestamp(struct['time']) == datetime.fromisoformat("2019-05-02T11:20:00")
+    assert struct['data'] == {"temperature": 25, "relativeHumidity": 0.35}
+
+
+@pytest.mark.sources
+def test_source_get_latest_activity_not_found(flask_client, public_db_data):
+    some_uuid = str(uuid.uuid4())
+    response = flask_client.get(f'/sources/{some_uuid}/activity/latest')
+    assert response.status_code == 404
 
 
 @pytest.mark.timeseries

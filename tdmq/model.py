@@ -96,12 +96,28 @@ class Source:
 
     @classmethod
     def get_latest_activity(cls, tdmq_id: str) -> Dict[str, Any]:
-        time = db.get_latest_activity(tdmq_id)
+        # ensure the tdmq_id is valid
+        srcs = db.get_sources([tdmq_id])
+        if not srcs:
+            return None
 
-        struct = {
-            'tdmq_id': tdmq_id,
-            'time': time
-        }
+        struct = dict.fromkeys(('tdmq_id', 'time', 'data'))
+        struct['tdmq_id'] = tdmq_id
+
+        activity = db.get_latest_activity(tdmq_id)
+        if activity is not None:
+            struct['time'] = activity['time']
+            if len(activity['data']) == 1:
+                struct['data'] = activity['data'][0]
+            elif len(activity['data']) > 1:
+                logger.debug("get_latest_activity: merging %s data rows from source %s with timestamp %s",
+                             len(activity['data']), tdmq_id, activity['time'])
+                struct['data'] = dict()
+                for d in activity['data']:
+                    struct['data'] |= d
+            else:
+                raise RuntimeError(f"Internal error.  For source {tdmq_id} got latest "
+                                   "activity time {activity['time']} with no activity data")
         return struct
 
 

@@ -134,7 +134,7 @@ def sources_get_one(tdmq_id):
 
     source = Source.get_one(tdmq_id, anonymize_private)
     if source is None:
-        raise wex.NotFound()
+        raise wex.NotFound(f"source {tdmq_id} does not exist")
     return jsonify(source)
 
 
@@ -168,9 +168,10 @@ def timeseries_get(tdmq_id):
 @tdmq_bp.route('/sources/<uuid:tdmq_id>/activity/latest')
 def source_activity_latest(tdmq_id):
     result = Source.get_latest_activity(tdmq_id)
+    if result is None:
+        raise wex.NotFound(f"source {tdmq_id} does not exist")
     jres = jsonify(result)
     return jres
-
 
 
 @tdmq_bp.route('/records', methods=["POST"])
@@ -178,8 +179,10 @@ def source_activity_latest(tdmq_id):
 def records_post():
     def validate_record(record):
         if not all(k in record for k in ('time', 'data')) or \
-               not any(k in record for k in ('tdmq_id', 'source')):
-                raise wex.BadRequest("Missing fields in request.  Mandatory fields: 'time', 'data', ('tdmq_id' or 'source')")
+           not any(k in record for k in ('tdmq_id', 'source')):
+            raise wex.BadRequest(
+                "Missing fields in request.  "
+                "Mandatory fields: 'time', 'data', ('tdmq_id' or 'source')")
 
     data = request.json
     for record in data:

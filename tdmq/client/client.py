@@ -212,9 +212,9 @@ class Client:
     def get_latest_source_activity(self, tdmq_id):
         _logger.debug("get_latest_source_activity(%s)", tdmq_id)
         r = self._do_get(f'sources/{tdmq_id}/activity/latest')
-        r['time'] = datetime.utcfromtimestamp(r['time'])
+        if r['time'] is not None:
+            r['time'] = datetime.utcfromtimestamp(r['time'])
         return r
-
 
     def open_array(self, tdmq_id, mode='r'):
         aname = self._source_data_path(tdmq_id)
