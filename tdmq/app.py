@@ -98,10 +98,15 @@ def configure_logging(app):
     else:
         error = True
 
-    if not app.config['TESTING']:
-        dictConfig(log_config)
-    else:
-        app.logger.info("Not configuring loggers since we're running in testing mode")
+    # LP: Leaving the "default" configuration during testing doesn't seem to work
+    # any better.  We still end up with various loggers disabled.  Until we
+    # have a chance to take a closer look at the issue, I'm reverting to the
+    # previous behaviour.
+    dictConfig(log_config)
+    #if not app.config['TESTING']:
+    #    dictConfig(log_config)
+    #else:
+    #    app.logger.info("Not configuring loggers since we're running in testing mode")
 
     if error:
         app.logger.error("LOG_LEVEL value %s is invalid. Defaulting to %s", level_str, log_config['root']['level'])
