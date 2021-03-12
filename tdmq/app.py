@@ -135,7 +135,7 @@ class DefaultConfig(object):
         "vfs.s3.region": "",
         "vfs.s3.verify_ssl": "false",
         "vfs.s3.use_virtual_addressing": "false",
-        "vfs.s3.use_multipart_upload": "false",
+        "vfs.s3.use_multipart_upload": "true",
     }
     TILEDB_VFS_CREDENTIALS = {
         "vfs.s3.aws_access_key_id": "tdm-user",
