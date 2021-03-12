@@ -87,7 +87,7 @@ def test_sources_db_error(flask_client):
     # IMPORTANT: it must be left as first test in the file otherwise it fails since the other tests create the db
     response = flask_client.get('/sources')
     assert response.status == '500 INTERNAL SERVER ERROR'
-    assert response.get_json() == {"error": "error_retrieving_data"}
+    assert ("error", "error_retrieving_data") in response.get_json().items()
 
 
 @pytest.mark.sources
@@ -174,7 +174,7 @@ def test_source_create_duplicate(flask_client, db_data):
     _checkresp(response)
     response = flask_client.post('/sources', json=source_data, headers=headers)
     assert response.status == '409 CONFLICT'
-    assert response.get_json() == {"error": "duplicated_resource"}
+    assert ("error", "duplicated_resource") in response.get_json().items()
 
 
 @pytest.mark.sources
@@ -198,7 +198,7 @@ def test_source_create_unauthorized(flask_client, db_data):
     }]
     response = flask_client.post('/sources', json=source_data)
     assert response.status == '401 UNAUTHORIZED'
-    assert response.get_json() == {"error": "unauthorized"}
+    assert ("error", "unauthorized") in response.get_json().items()
 
 
 @pytest.mark.sources
@@ -208,7 +208,7 @@ def test_sources_method_not_allowed(flask_client):
     """
     response = flask_client.delete('/sources')
     assert response.status == '405 METHOD NOT ALLOWED'
-    assert response.get_json() == {"error": "method_not_allowed"}
+    assert ("error", "method_not_allowed") in response.get_json().items()
 
 
 @pytest.mark.sources
@@ -476,7 +476,7 @@ def test_create_timeseries_unauthorized(flask_client, app, db_data):
 
     response = flask_client.post('/records', json=timeseries_data)
     assert response.status == '401 UNAUTHORIZED'
-    assert response.get_json() == {"error": "unauthorized"}
+    assert ("error", "unauthorized") in response.get_json().items()
 
 
 @pytest.mark.timeseries

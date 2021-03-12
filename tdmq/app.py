@@ -214,7 +214,13 @@ def create_app(test_config=None):
 
     @app.errorhandler(wex.HTTPException)
     def handle_errors(e):
-        return jsonify({"error": ERROR_CODES.get(e.code)}), e.code
+        logger = logging.getLogger("response")
+        logger.exception(e)
+        struct = {
+            "error": ERROR_CODES.get(e.code),
+            "description": e.description
+        }
+        return jsonify(struct), e.code
 
     @app.before_request
     def log_request():

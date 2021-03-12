@@ -1,7 +1,5 @@
 
-import logging
 from datetime import datetime, timedelta
-from urllib.error import HTTPError
 
 import numpy as np
 import pytest
@@ -50,10 +48,6 @@ def test_check_timeseries_range(clean_storage, clean_db, live_app):
             assert np.array_equal(data['temperature'], temps[u:v])
             assert np.array_equal(data['humidity'], hums[u:v])
             assert np.array_equal(ts_times, times[u:v])
-    tid = s.tdmq_id
-    c.deregister_source(s)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    assert tid not in sources
 
 
 def test_check_timeseries_bucket(clean_storage, clean_db, live_app):
@@ -84,10 +78,6 @@ def test_check_timeseries_bucket(clean_storage, clean_db, live_app):
     assert np.array_equal(
         ts_times,
         np.reshape(np.array(times), (-1, bucket)).min(axis=1))
-    tid = s.tdmq_id
-    c.deregister_source(s)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    assert tid not in sources
 
 
 def test_empty_timeseries(clean_storage, clean_db, live_app):
@@ -97,7 +87,6 @@ def test_empty_timeseries(clean_storage, clean_db, live_app):
     ts = s.timeseries()
     assert len(ts.get_shape()) == 1
     assert len(ts) == 0
-    c.deregister_source(s)
 
 
 def test_source_get_latest_activity(clean_storage, public_db_data, live_app):
@@ -114,9 +103,11 @@ def test_create_timeseries_range_as_user(clean_storage, clean_db, live_app):
     # First create a source
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
+    tdmq_id = s.tdmq_id
 
     # inject new user client
-    s.client = Client(live_app.url())
+    c = Client(live_app.url())
+    s = c.get_source(tdmq_id)
 
     N = 1
     now = datetime.now()
@@ -149,7 +140,9 @@ def test_check_timeseries_range_as_user(clean_storage, clean_db, live_app):
                       'data': {'temperature': tv,
                                'humidity': th}})
     # inject new user client
-    s.client = Client(live_app.url())
+    tdmq_id = s.tdmq_id
+    c = Client(live_app.url())
+    s = c.get_source(tdmq_id)
     ts = s.timeseries(bucket=10, op='sum')
     ts_times, data = ts[:]
     assert np.allclose(
@@ -163,7 +156,3 @@ def test_check_timeseries_range_as_user(clean_storage, clean_db, live_app):
     assert np.array_equal(
         ts_times,
         np.reshape(np.array(times), (-1, bucket)).min(axis=1))
-    tid = s.tdmq_id
-    c.deregister_source(s)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    assert tid not in sources
