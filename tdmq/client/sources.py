@@ -104,17 +104,6 @@ class Source(abc.ABC):
     def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
         pass
 
-    def _add_record(self, record):
-        assert isinstance(record, Mapping)
-        return self._add_records([record])
-
-    def _add_records(self, records):
-        assert isinstance(records, Iterable)
-        sid = {'tdmq_id': self.tdmq_id}
-        # sid will override potential pre-existing values for r['tdmq_id']
-        to_be_shipped = [{**r, **sid} for r in records]
-        self.client.add_records(to_be_shipped)
-
 
 class ScalarSource(Source):
 

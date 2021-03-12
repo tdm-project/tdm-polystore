@@ -30,14 +30,11 @@ def test_add_scalar_records_as_admin(clean_storage, public_source_data, live_app
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
-    tdmq_ids = []
     for s in srcs:
-        s._add_records(by_source[s.id])
-        c.deregister_source(s)
-        tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    for tid in tdmq_ids:
-        assert tid not in sources
+        records = by_source[s.id]
+        gen = ((datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO), r['data']) for r in records)
+        times, data = zip(*gen)
+        s.ingest_many(times, data)
 
 
 def test_add_scalar_records_as_user(clean_storage, public_source_data, live_app):
@@ -50,7 +47,8 @@ def test_add_scalar_records_as_user(clean_storage, public_source_data, live_app)
     by_source = public_source_data['records_by_source']
     for s in c.find_sources():
         with pytest.raises(HTTPError) as ve:
-            s._add_records(by_source[s.id])
+            t = datetime.strptime(by_source[s.id][0]['time'], c.TDMQ_DT_FMT_NO_MICRO)
+            s.ingest_one(t, by_source[s.id][0]['data'])
             assert ve.code == 401
 
 
@@ -58,15 +56,10 @@ def test_add_scalar_record_as_admin(clean_storage, public_source_data, live_app)
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
-    tdmq_ids = []
     for s in srcs:
-        for r in by_source[s.id]:
-            s._add_record(r)
-        c.deregister_source(s)
-        tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    for tid in tdmq_ids:
-        assert tid not in sources
+        for record in by_source[s.id]:
+            t = datetime.strptime(record['time'], c.TDMQ_DT_FMT_NO_MICRO)
+            s.ingest_one(t, record['data'])
 
 
 def test_add_scalar_record_as_user(clean_storage, public_source_data, live_app):
@@ -80,7 +73,8 @@ def test_add_scalar_record_as_user(clean_storage, public_source_data, live_app):
     for s in c.find_sources():
         with pytest.raises(HTTPError) as ve:
             for r in by_source[s.id]:
-                s._add_record(r)
+                t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
+                s.ingest_one(t, r['data'])
             assert ve.code == 401
 
 
@@ -88,20 +82,13 @@ def test_ingest_scalar_record_as_admin(clean_storage, public_source_data, live_a
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     srcs = register_scalar_sources(c, public_source_data)
     by_source = public_source_data['records_by_source']
-    tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:
             try:
                 t = datetime.strptime(r['time'], c.TDMQ_DT_FMT)
             except ValueError:
                 t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
-            data = r['data']
-            s.ingest(t, data)
-        c.deregister_source(s)
-        tdmq_ids.append(s.tdmq_id)
-    sources = dict((_.tdmq_id, _) for _ in c.find_sources())
-    for tid in tdmq_ids:
-        assert tid not in sources
+            s.ingest_one(t, r['data'])
 
 
 def test_ingest_scalar_record_as_user(clean_storage, public_source_data, live_app):
