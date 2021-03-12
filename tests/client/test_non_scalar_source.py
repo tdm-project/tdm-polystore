@@ -253,6 +253,29 @@ def test_ingest_one(clean_storage, source_data, live_app):
         assert (d['VMI'] == data['VMI']).all()
 
 
+def test_ingest_one_auto_slot(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    s = c.register_source(src, nslots=3600)
+    data = {
+        'VMI': np.full(s.shape, 1),
+        'SRI': np.full(s.shape, 2.0)
+        }
+    now = datetime.now()
+    with s.array_context('w'):
+        s.ingest_one(now, data, slot=None)
+
+        latest = c.get_latest_source_activity(s.tdmq_id)
+        assert abs(latest['time'] - now) < timedelta(seconds=1)
+        assert latest['data']['tiledb_index'] == 0
+
+        now = now + timedelta(minutes=1)
+        s.ingest_one(now, data, slot=None)
+        latest = c.get_latest_source_activity(s.tdmq_id)
+        assert abs(latest['time'] - now) < timedelta(seconds=1)
+        assert latest['data']['tiledb_index'] == 1
+
+
 def test_ingest_many_to_be_stacked(clean_storage, source_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
@@ -284,3 +307,22 @@ def test_ingest_many_to_be_stacked(clean_storage, source_data, live_app):
         with pytest.raises(IndexError):
             # pylint: disable=pointless-statement
             ts[n_elements]
+
+
+def test_ingest_many_to_be_stacked_auto_slot(clean_storage, source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    src = next(s for s in source_data['sources'] if s['id'] == "tdm/tiledb_sensor_6")
+    s = c.register_source(src, nslots=3600)
+    n_elements = 4
+    data = {
+        'VMI': [ np.full(s.shape, i) for i in range(n_elements) ],
+        'SRI': [ np.full(s.shape, i * 2.0) for i in range(n_elements) ]
+        }
+    now = datetime.now()
+    interval = timedelta(minutes=5)
+    times = [ now + interval * i for i in range(n_elements) ]
+    with s.array_context('w'):
+        s.ingest_many(times, data, initial_slot=None)
+        latest = c.get_latest_source_activity(s.tdmq_id)
+        assert abs(latest['time'] - times[-1]) < timedelta(seconds=1)
+        assert latest['data']['tiledb_index'] == len(times) - 1

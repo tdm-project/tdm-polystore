@@ -2,7 +2,7 @@
 import abc
 import itertools
 import logging
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Sequence
 from contextlib import contextmanager
 
 import numpy as np
@@ -232,12 +232,33 @@ class NonScalarSource(Source):
             record['footprint'] = foot
         return record
 
+    def _get_next_slot(self):
+        _logger.debug("NonScalarSource._get_next_slot: getting latest activity")
+        s = self.client.get_latest_source_activity(self.tdmq_id)
+        if s['time'] is None:
+            _logger.debug("No activity found. Starting from beginning")
+            return 0 # first slot
+        if 'tiledb_index' not in s['data']:
+            raise RuntimeError(f"Activity record collected for {self.tdmq_id} does not contain `tiledb_index`!")
+        most_recent_slot = s['data']['tiledb_index']
+        _logger.debug("Found most recent slot %s. Returning %s + 1", most_recent_slot, most_recent_slot)
+        return most_recent_slot + 1
 
     def ingest_one(self, t, data, slot=None, footprint=None):
+        """
+        auto-slot -> if you don't specify a slot, the client will retrieve the latest slot
+        used for this source (as in most recent timestamp) and increment it by 1.
+
+        Don't use this feature unless you consistently append to the time series.  I.e.,
+        if the most recent record points to somewhere in the middle of the array, you'll
+        end up overwriting data in the tiledb array.
+        """
         ary = self.open_array(mode='w')
 
         if slot is None:
-            raise UnsupportedFunctionality(f'No auto-slot support yet.')
+            slot = self._get_next_slot()
+            _logger.debug("source %s: auto-slot: %s", self.tdmq_id, slot)
+
         for p in self.controlled_properties:
             if p not in data:
                 raise ValueError(f'data is missing field {p}')
@@ -251,7 +272,9 @@ class NonScalarSource(Source):
 
     def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
         if initial_slot is None:
-            raise UnsupportedFunctionality('No auto-slot support yet.')
+            initial_slot = self._get_next_slot()
+            _logger.debug("source %s: auto-slot: %s", self.tdmq_id, initial_slot)
+
         for p in self.controlled_properties:
             if p not in data:
                 raise ValueError(f'data is missing property {p}')
