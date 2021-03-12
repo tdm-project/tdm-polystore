@@ -32,7 +32,7 @@ def test_add_scalar_records_as_admin(clean_storage, public_source_data, live_app
     by_source = public_source_data['records_by_source']
     tdmq_ids = []
     for s in srcs:
-        s.add_records(by_source[s.id])
+        s._add_records(by_source[s.id])
         c.deregister_source(s)
         tdmq_ids.append(s.tdmq_id)
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
@@ -50,7 +50,7 @@ def test_add_scalar_records_as_user(clean_storage, public_source_data, live_app)
     by_source = public_source_data['records_by_source']
     for s in c.find_sources():
         with pytest.raises(HTTPError) as ve:
-            s.add_records(by_source[s.id])
+            s._add_records(by_source[s.id])
             assert ve.code == 401
 
 
@@ -61,7 +61,7 @@ def test_add_scalar_record_as_admin(clean_storage, public_source_data, live_app)
     tdmq_ids = []
     for s in srcs:
         for r in by_source[s.id]:
-            s.add_record(r)
+            s._add_record(r)
         c.deregister_source(s)
         tdmq_ids.append(s.tdmq_id)
     sources = dict((_.tdmq_id, _) for _ in c.find_sources())
@@ -80,7 +80,7 @@ def test_add_scalar_record_as_user(clean_storage, public_source_data, live_app):
     for s in c.find_sources():
         with pytest.raises(HTTPError) as ve:
             for r in by_source[s.id]:
-                s.add_record(r)
+                s._add_record(r)
             assert ve.code == 401
 
 

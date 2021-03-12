@@ -170,7 +170,7 @@ class Client:
                 _logger.exception(e)
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
                 self._destroy_source(tdmq_id)
-                raise TdmqError(f"Internal failure in registering {definition.get('id', '(id unavailable)')}.")
+                raise TdmqError(f"Error registering {definition.get('id', '(id unavailable)')}. {e}")
         return self.get_source(tdmq_id)
 
     @requires_connection
@@ -223,11 +223,6 @@ class Client:
 
     def close_array(self, tiledb_array):
         tiledb_array.close()
-
-
-    @requires_connection
-    def save_tiledb_frame(self, tiledb_array, slot, data):
-        tiledb_array[slot:slot + 1] = data
 
 
     @requires_connection
