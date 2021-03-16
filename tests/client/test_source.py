@@ -126,8 +126,6 @@ def test_access_attributes_scalar_source_private_unauthenticated(clean_storage, 
     src_id = 'tdm/sensor_7'
     tdmq_id = _compute_tdmq_id(src_id)
     s = c.get_source(tdmq_id)
-    print("----------------------------")
-    print("Source._full_body:\n", s._full_body)
     original = next(t for t in source_data['sources'] if t['id'] == src_id)
     assert s.id                         is None
     assert s.is_stationary              == original.get('stationary', True)
@@ -171,10 +169,4 @@ def test_repr(clean_storage, db_data, live_app):
     c = Client(live_app.url())
     sources = c.find_sources(args={'only_public': 'false'})
     for s in sources:
-        try:
-            assert repr(s)
-        except KeyError as e:
-            print("==============================")
-            print(e)
-            print("Source._full_body:\n", s._full_body)
-            raise
+        assert repr(s)
