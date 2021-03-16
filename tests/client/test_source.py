@@ -54,6 +54,22 @@ def test_register_deregister_simple_source_as_admin(clean_storage, public_source
         assert tid not in sources
 
 
+def test_register_deregister_nonscalar_source_as_admin(clean_storage, public_source_data, live_app):
+    import tiledb
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    source_def = next(s for s in public_source_data['sources'] if s['shape'])
+    source = c.register_source(source_def)
+    assert c.get_source(source.tdmq_id)
+    # pylint: disable=protected-access
+    assert tiledb.object_type(c._source_data_path(source.tdmq_id), ctx=c.tiledb_ctx) is not None
+    c.deregister_source(source)
+
+    with pytest.raises(HTTPError) as exc_info:
+        c.get_source(source.tdmq_id)
+    assert exc_info.value.response.status_code == 404
+    assert tiledb.object_type(c._source_data_path(source.tdmq_id), ctx=c.tiledb_ctx) is None
+
+
 def test_register_simple_source_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
 
@@ -82,8 +98,6 @@ def test_select_source_by_id(clean_storage, public_source_data, live_app):
         assert len(s2) == 1
         s2 = c.find_sources({'external_id': s.id})
         assert len(s2) == 1
-    for s in srcs:
-        c.deregister_source(s)
 
 
 def test_select_sources_by_entity_type(clean_storage, public_source_data, live_app):
@@ -93,9 +107,6 @@ def test_select_sources_by_entity_type(clean_storage, public_source_data, live_a
     for k in counts:
         s2 = c.find_sources({'entity_type': k})
         assert len(s2) == counts[k]
-    for s in srcs:
-        c.deregister_source(s)
-        # FIXME: add assertions
 
 
 def test_access_attributes_scalar_source(clean_storage, db_data, public_source_data, live_app):
