@@ -87,6 +87,9 @@ class Source(abc.ABC):
         pass
 
     def get_latest_activity(self):
+        """
+        Get Timeseries starting at latest registered record's timestamp.
+        """
         s = self.client.get_latest_source_activity(self.tdmq_id)
         return self.timeseries(after=s['time'], before=None)
 
@@ -95,14 +98,21 @@ class Source(abc.ABC):
     ###
     @abc.abstractmethod
     def ingest_one(self, t, data, slot=None, footprint=None):
-        pass
+        """
+        :param t: datetime object.  Assumed to be in UTC time.
+        """
 
     def ingest(self, t, data, slot=None):
+        """
+        :param t: datetime object.  Assumed to be in UTC time.
+        """
         self.ingest_one(t, data, slot)
 
     @abc.abstractmethod
     def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
-        pass
+        """
+        :param times: Sequence of datetime objects.  Assumed to be in UTC time.
+        """
 
 
 class ScalarSource(Source):
@@ -144,7 +154,8 @@ class ScalarSource(Source):
 
     def _format_record(self, t, d, foot=None):
         record = {
-            'time': t.strftime(self.client.TDMQ_DT_FMT),
+            # pylint: disable=protected-access
+            'time': self.client._format_timestamp(t),
             'data': d,
             'tdmq_id': self.tdmq_id }
         if foot:
