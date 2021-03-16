@@ -1,7 +1,6 @@
 import abc
 import warnings
 import numpy as np
-from datetime import datetime
 
 
 class TimeSeries(abc.ABC):
@@ -27,7 +26,8 @@ class TimeSeries(abc.ABC):
                 'bucket': self.bucket, 'op': self.op}
 
         res = self.source.get_timeseries(args)
-        self.time = np.array([datetime.fromtimestamp(v) for v in res['coords']['time']])
+        # pylint: disable=protected-access
+        self.time = np.array([self.source.client._parse_timestamp(v) for v in res['coords']['time']])
 
         return res['data']
 
@@ -44,7 +44,7 @@ class TimeSeries(abc.ABC):
             1. np.ndarray of timestamps
             2. OrderedDict mapping property names to  np.ndarrays containing the actual data.
         """
-        pass
+
 
     def __len__(self):
         return len(self.time)

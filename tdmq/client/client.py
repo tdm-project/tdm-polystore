@@ -3,7 +3,7 @@ import math
 import logging
 import os
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 import requests
@@ -30,8 +30,30 @@ def set_log_level(level):
 class Client:
     DEFAULT_TDMQ_BASE_URL = 'http://web:8000/api/v0.0'
 
+    # The 'Z' at the end should stand for Zulu, which is the same as UTC
     TDMQ_DT_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'
     TDMQ_DT_FMT_NO_MICRO = '%Y-%m-%dT%H:%M:%SZ'
+
+    @staticmethod
+    def _parse_timestamp(ts):
+        """
+        Create datetime object from a timestamp arriving from the API.
+        Timestamps are specified in UTC time.
+        """
+        return datetime.fromtimestamp(ts, timezone.utc)
+
+
+    @classmethod
+    def _format_timestamp(cls, ts):
+        """
+        Format a datetime object `ts` in preparation to be sent to the API.
+        If ts specifies a time zone, it is used to convert to UTC time.  Else
+        **we assume that it is UTC time**.
+        """
+        if ts.tzinfo is not None:
+            ts = ts.astimezone(timezone.utc)
+        return ts.strftime(cls.TDMQ_DT_FMT)
+
 
     def __init__(self, tdmq_base_url=None, auth_token=None):
         self.base_url = (tdmq_base_url or
@@ -213,7 +235,7 @@ class Client:
         _logger.debug("get_latest_source_activity(%s)", tdmq_id)
         r = self._do_get(f'sources/{tdmq_id}/activity/latest')
         if r['time'] is not None:
-            r['time'] = datetime.utcfromtimestamp(r['time'])
+            r['time'] = self._parse_timestamp(r['time'])
         return r
 
     def open_array(self, tdmq_id, mode='r'):

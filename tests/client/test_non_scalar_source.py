@@ -2,7 +2,7 @@
 
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
@@ -21,7 +21,7 @@ def create_data_frame(shape, properties, fill_value):
 
 
 def create_and_ingest_records(source, nrecs):
-    now = datetime.now()
+    now = datetime.now(tz=timezone.utc)
     t = now
     dt = timedelta(seconds=10)
     for slot in range(nrecs):
@@ -240,7 +240,7 @@ def test_ingest_one(clean_storage, source_data, live_app):
         'VMI': np.full(s.shape, 1),
         'SRI': np.full(s.shape, 2.0)
         }
-    now = datetime.now()
+    now = datetime.now(tz=timezone.utc)
     with s.array_context('w'):
         s.ingest_one(now, data, slot=1)
     with s.array_context('r'):
@@ -261,7 +261,7 @@ def test_ingest_one_auto_slot(clean_storage, source_data, live_app):
         'VMI': np.full(s.shape, 1),
         'SRI': np.full(s.shape, 2.0)
         }
-    now = datetime.now()
+    now = datetime.now(tz=timezone.utc)
     with s.array_context('w'):
         s.ingest_one(now, data, slot=None)
 
@@ -288,7 +288,7 @@ def test_ingest_many_to_be_stacked(clean_storage, source_data, live_app):
         'VMI': [ np.full(s.shape, i) for i in range(n_elements) ],
         'SRI': [ np.full(s.shape, i * 2.0) for i in range(n_elements) ]
         }
-    now = datetime.now()
+    now = datetime.now(tz=timezone.utc)
     interval = timedelta(minutes=5)
     times = [ now + interval * i for i in range(n_elements) ]
     with s.array_context('w'):
@@ -318,7 +318,7 @@ def test_ingest_many_to_be_stacked_auto_slot(clean_storage, source_data, live_ap
         'VMI': [ np.full(s.shape, i) for i in range(n_elements) ],
         'SRI': [ np.full(s.shape, i * 2.0) for i in range(n_elements) ]
         }
-    now = datetime.now()
+    now = datetime.now(tz=timezone.utc)
     interval = timedelta(minutes=5)
     times = [ now + interval * i for i in range(n_elements) ]
     with s.array_context('w'):

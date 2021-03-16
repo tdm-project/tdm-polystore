@@ -1,5 +1,5 @@
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
@@ -31,8 +31,7 @@ def test_check_timeseries_range(clean_storage, clean_db, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     N = 10
-    now = datetime.now()
-    time_base = datetime(now.year, now.month, now.day, now.hour)
+    time_base = datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
     times = [time_base + timedelta(i) for i in range(N)]
     temps = [20 + i for i in range(N)]
     hums = [i / N for i in range(N)]
@@ -51,8 +50,7 @@ def test_check_timeseries_ingest_many(clean_storage, clean_db, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     N = 10
-    now = datetime.now()
-    time_base = datetime(now.year, now.month, now.day, now.hour)
+    time_base = datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
     times = [time_base + timedelta(i) for i in range(N)]
     temps = [20 + i for i in range(N)]
     hums = [i / N for i in range(N)]
@@ -72,8 +70,7 @@ def test_check_timeseries_bucket(clean_storage, clean_db, live_app):
     s = c.register_source(source_desc)
     bucket = 10
     N = 10 * bucket
-    now = datetime.now()
-    time_base = datetime(now.year, now.month, now.day, now.hour)
+    time_base = datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
     times = [time_base + timedelta(seconds=i) for i in range(N)]
     temps = [20 + i for i in range(N)]
     hums = [i / N for i in range(N)]
@@ -110,7 +107,7 @@ def test_source_get_latest_activity(clean_storage, public_db_data, live_app):
     ts = s.get_latest_activity()
     assert len(ts) == 1
     timestamp = ts[-1][0]
-    assert timestamp == datetime.fromisoformat("2019-05-02T11:20:00")
+    assert timestamp == datetime.fromisoformat("2019-05-02T11:20:00+00:00")
 
 
 def test_create_timeseries_range_as_user(clean_storage, clean_db, live_app):
@@ -124,8 +121,7 @@ def test_create_timeseries_range_as_user(clean_storage, clean_db, live_app):
     s = c.get_source(tdmq_id)
 
     N = 1
-    now = datetime.now()
-    time_base = datetime(now.year, now.month, now.day, now.hour)
+    time_base = datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
     times = [time_base + timedelta(i) for i in range(N)]
     temps = [20 + i for i in range(N)]
     hums = [i / N for i in range(N)]
@@ -141,8 +137,7 @@ def test_check_timeseries_range_as_user(clean_storage, clean_db, live_app):
     s = c.register_source(source_desc)
     bucket = 10
     N = 10 * bucket
-    now = datetime.now()
-    time_base = datetime(now.year, now.month, now.day, now.hour)
+    time_base = datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
     times = [time_base + timedelta(seconds=i) for i in range(N)]
     temps = [20 + i for i in range(N)]
     hums = [i / N for i in range(N)]

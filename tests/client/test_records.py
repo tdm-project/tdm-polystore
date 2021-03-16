@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta
+
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
+import pytz
 from requests.exceptions import HTTPError
 from tdmq.client import Client
 
@@ -110,12 +112,36 @@ def test_ingest_scalar_record_as_user(clean_storage, public_source_data, live_ap
                 assert ve.code == 401
 
 
+def test_ingest_scalar_record_timezone(clean_storage, public_source_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    sensor_0 = next(s for s in public_source_data['sources'] if s['id'] == 'tdm/sensor_0')
+    source = c.register_source(sensor_0)
+    by_source = public_source_data['records_by_source']
+    records = by_source[sensor_0['id']]
+    r = records[0]
+    dt_naive = datetime.now() # naive datetime, no timezone
+    source.ingest_one(dt_naive, r['data'])
+    timeseries = source.timeseries()
+    assert abs(timeseries.time[0] - dt_naive.astimezone(timezone.utc)) < timedelta(seconds=1)
+
+    # timestamp in UTC
+    dt_utc = datetime.now(tz=timezone.utc) # utc timestamp
+    source.ingest_one(dt_utc, r['data'])
+    timeseries = source.timeseries()
+    assert abs(timeseries.time[-1] - dt_utc) < timedelta(seconds=1)
+
+    # timestamp in another time zone
+    dt_Rome = datetime.now(tz=pytz.timezone('Europe/Rome'))
+    source.ingest_one(dt_Rome, r['data'])
+    timeseries = source.timeseries()
+    assert (timeseries.time[-1] - dt_Rome.astimezone(timezone.utc)) < timedelta(seconds=1)
+
+
 def test_check_timeseries(clean_storage, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     s = c.register_source(source_desc)
     N = 10
-    now = datetime.now()
-    time_base = datetime(now.year, now.month, now.day, now.hour)
+    time_base = datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
     times = [time_base + timedelta(i) for i in range(N)]
     temps = [20 + i for i in range(N)]
     hums = [i / N for i in range(N)]
