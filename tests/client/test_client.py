@@ -97,3 +97,7 @@ def test_get_anonymized_source(clean_storage, db_data, source_data, live_app):
     with pytest.raises(HTTPError) as exc_info:
         c.get_source(tdmq_id, anonymized=False)
     assert exc_info.value.response.status_code == 401 # unauthorized
+
+def test_imports():
+    from tdmq.client import Source
+    from tdmq.client import TimeSeries
