@@ -47,8 +47,5 @@ services:
 
 networks:
   tdmq:
-    name: "tdmq"
-    external: true
-
 
 # vim: filetype=yaml

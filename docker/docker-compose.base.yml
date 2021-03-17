@@ -60,6 +60,5 @@ services:
 
 networks:
   tdmq:
-    name: "tdmq"
 
 # vim: filetype=yaml

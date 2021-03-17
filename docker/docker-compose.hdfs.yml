@@ -24,5 +24,3 @@ services:
 
 networks:
   tdmq:
-    name: "tdmq"
-    external: true
