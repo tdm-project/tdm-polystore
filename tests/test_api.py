@@ -432,6 +432,29 @@ def test_source_get_latest_activity(flask_client, public_db_data):
 
 
 @pytest.mark.sources
+def test_source_get_latest_activity_multiple_records(flask_client, public_db_data):
+    # Tests case when we get multiple data records with same timestamp
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+
+    response = flask_client.get(f'/sources/{tdmq_id}/activity/latest')
+    struct = response.get_json()
+    # now we'll POST another record with the same timestamp as the one we got
+    struct['data'] = { 'barometricPressure': 1010 }
+    # API returns an integer timestamp.  Need to format it for input
+    from tdmq.client import Client
+    struct['time'] = Client._parse_timestamp(struct['time'])
+
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.post('/records', json=[struct], headers=headers)
+
+    response = flask_client.get(f'/sources/{tdmq_id}/activity/latest')
+    assert response.get_json()['data'] == {
+        "temperature": 25, "relativeHumidity": 0.35, 'barometricPressure': 1010 }
+
+
+@pytest.mark.sources
 def test_source_get_latest_activity_not_found(flask_client, public_db_data):
     some_uuid = str(uuid.uuid4())
     response = flask_client.get(f'/sources/{some_uuid}/activity/latest')
