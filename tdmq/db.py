@@ -560,7 +560,7 @@ def get_timeseries(tdmq_id, args=None):
 
 def get_latest_activity(tdmq_id):
     """
-    Returns a dict { 'time': timestamp, 'data': [ list of grouped record data objects ] }
+    Returns a dict { 'time': timestamp, 'data': [ record data objects ] }
     """
     query_template = sql.SQL("""
         SELECT EXTRACT(epoch from r.time) as time, jsonb_agg(r.data) as data

@@ -101,24 +101,25 @@ class Source:
         if not srcs:
             return None
 
-        struct = dict.fromkeys(('tdmq_id', 'time', 'data'))
-        struct['tdmq_id'] = tdmq_id
+        retval = dict.fromkeys(('tdmq_id', 'time', 'data'))
+        retval['tdmq_id'] = tdmq_id
 
         activity = db.get_latest_activity(tdmq_id)
+        # activity is None or a dict { 'time': timestamp, 'data': [ record data objects ] }
         if activity is not None:
-            struct['time'] = activity['time']
+            retval['time'] = activity['time']
             if len(activity['data']) == 1:
-                struct['data'] = activity['data'][0]
+                retval['data'] = activity['data'][0]
             elif len(activity['data']) > 1:
                 logger.debug("get_latest_activity: merging %s data rows from source %s with timestamp %s",
                              len(activity['data']), tdmq_id, activity['time'])
-                struct['data'] = dict()
+                retval['data'] = dict()
                 for d in activity['data']:
-                    struct['data'] |= d
+                    retval['data'].update(d)
             else:
                 raise RuntimeError(f"Internal error.  For source {tdmq_id} got latest "
                                    "activity time {activity['time']} with no activity data")
-        return struct
+        return retval
 
 
     @staticmethod
