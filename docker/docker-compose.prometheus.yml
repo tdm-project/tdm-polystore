@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.24.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    networks:
+      - tdmq
+
+networks:
+  tdmq:

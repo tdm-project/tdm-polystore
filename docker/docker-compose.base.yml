@@ -1,0 +1,64 @@
+version: "3"
+
+services:
+  timescaledb:
+    image: tdmproject/tdmq-db
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_DB=tdmqtest
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=foobar
+      - START_DB=true
+      - POSTGRES_RUN_MIGRATIONS=true
+    healthcheck:
+      test: [ "CMD", "pg_isready", "--username=postgres" ]
+      interval: "15s"
+      retries: 5
+    networks:
+      - tdmq
+
+  web:
+    # Remember that this service is using its default configuration
+    # to access the database, so the settings must match the environment
+    # configuration set for timescaledb above.
+    image: tdmproject/tdmq
+    depends_on:
+      - "timescaledb"
+    ports:
+      - "8000:8000"
+    env_file: &env_file
+      - settings.conf
+    environment:
+      - "CREATE_DB=false"
+      - "DEV=false"
+    healthcheck:
+      test: [ "CMD", "/usr/bin/curl", "http://web:8000/api/v0.0/entity_types" ]
+      interval: "30s"
+      timeout: "5s"
+      retries: "3"
+    networks:
+      - tdmq
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    env_file: *env_file
+    environment:
+      - MINIO_BROWSER=off
+      - MINIO_HTTP_TRACE=/dev/stderr
+    entrypoint: [ "/bin/sh", "-c",
+                  "mkdir -p /data/$${STORAGE_BUCKET} && exec /usr/bin/docker-entrypoint.sh minio server /data" ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - tdmq
+
+networks:
+  tdmq:
+
+# vim: filetype=yaml

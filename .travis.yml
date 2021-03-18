@@ -7,6 +7,8 @@ cache: pip
 services: docker
 
 before_install:
+  # try log into into dockerhub.  This will double our free pull rate limit
+  - echo -n "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin || true
   - pip install 'flake8>=3.6'
   - flake8 . || true  # We don't fail a build for a flake8 complaint
 
@@ -14,9 +16,9 @@ install:
   - make images
 
 script:
- # sometimes `make start` fails due to services no being ready. We ignore failures at this
- # stage because `make run-tests` will check again
- - make start  || true
- - make run-tests
+  # sometimes `make start` fails due to services no being ready. We ignore failures at this
+  # stage because `make run-tests` will check again
+  - make start  || true
+  - make run-tests
 
 after_success: .travis/push-images
