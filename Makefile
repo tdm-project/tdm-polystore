@@ -88,7 +88,7 @@ run-tests: start
 	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.hdfs.yml -f ./docker/docker-compose.testing.yml exec tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
 	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.hdfs.yml -f ./docker/docker-compose.testing.yml exec tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
 	docker-compose -f ./docker/docker-compose.hdfs.yml exec namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
-	docker run -it --rm --net tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
+	docker run -it --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
 
 
 clean: stop
