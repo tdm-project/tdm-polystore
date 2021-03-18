@@ -1,5 +1,8 @@
 
-FROM timescale/timescaledb-postgis:1.4.0-pg11
+#FROM timescale/timescaledb-postgis:1.4.0-pg11
+# To work around the pull rate limits on the official timescaledb repository
+# on dockerhub, we copy the tags that we use to our own mirror (on dockerhub).
+FROM tdmproject/timescaledb-postgis:1.4.0-pg11
 
 LABEL name="tdmq-db" \
       container.version="cv0.1"
@@ -49,3 +52,5 @@ RUN cd "${TDMQ_DIST}" \
  && find . -type f -print0 | xargs -0 chmod a+r \
  && find . -type d -print0 | xargs -0 chmod a+rx \
  && pip3 install --no-deps .
+
+# vim: filetype=dockerfile
