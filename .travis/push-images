@@ -62,9 +62,13 @@ for image in "${Images[@]}"; do
   # ImageSlug used here must match the image tag set by the
   # docker build command in the Makefile
   docker tag "${ImageSlug}" "${FullImageName}"
+  log "Tagging tdmq image ${FullImageName} as ${ImageSlug}:latest"
+  docker tag "${FullImageName}" "${ImageSlug}:latest"
 
   log "Pushing ${FullImageName} to dockerhub"
   docker push "${FullImageName}"
+  log "Pushing ${ImageSlug}:latest"
+  docker push "${ImageSlug}:latest"
 done
 
 log "Finished"
