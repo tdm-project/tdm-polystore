@@ -40,12 +40,16 @@ def get_db():
         _db_connection = None
 
     if not _db_connection:
+        query_timeout = 50000
+        logger.info("Setting database query timeout to %s", query_timeout)
         import flask
         db_settings = {
             'user': flask.current_app.config['DB_USER'],
             'password': flask.current_app.config['DB_PASSWORD'],
             'host': flask.current_app.config['DB_HOST'],
             'dbname': flask.current_app.config['DB_NAME'],
+            # abort queries after query_timeout milliseconds
+            'options': f'-c statement_timeout={query_timeout}'
         }
         logger.info("Creating DB connection")
         _db_connection = tdmq.db_manager.db_connect(db_settings)
