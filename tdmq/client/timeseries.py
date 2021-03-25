@@ -1,9 +1,20 @@
 import abc
+import collections.abc
 import warnings
 import numpy as np
 
 
 class TimeSeries(abc.ABC):
+
+    def __init__(self, source, after, before, bucket, op):
+        self.source = source
+        self.after = after
+        self.before = before
+        self.bucket = bucket
+        self.op = op
+        self.time = []
+        self.fetch()
+
 
     def _pre_fetch(self):
         """
@@ -52,17 +63,68 @@ class TimeSeries(abc.ABC):
     def __getitem__(self, indx):
         return self.get_item(np.index_exp[indx])
 
-    def __init__(self, source, after, before, bucket, op):
-        self.source = source
-        self.after = after
-        self.before = before
-        self.bucket = bucket
-        self.op = op
-        self.time = []
-        self.fetch()
-
     def get_shape(self):
         return (len(self.time),) + self.source.shape
+
+
+class NoneArray(collections.abc.Sequence):
+    def __init__(self, length):
+        if length < 0:
+            raise ValueError("length < 0")
+        self._length = length
+
+
+    def __getitem__(self, s):
+        if isinstance(s, slice):
+            start, stop, step = s.indices(self._length)
+            if step == 0:
+                raise ValueError("slice step cannot be zero")
+            if start >= stop:
+                return []
+            selected_length = 1 + (stop - start - 1) // step
+            return np.array([None] * selected_length)
+
+        if isinstance(s, tuple):
+            if len(s) != 1:
+                raise IndexError(f"Wrong number of indices for this array. Expected 1; got {len(s)}")
+            s = s[0]
+            # Continue into next `if`
+
+        if isinstance(s, int):
+            if -self._length <= s < self._length:
+                return None
+            raise IndexError(f"index {s} out of range")
+
+        # else:
+        raise TypeError(f"list indices must be integers, slices or tuples (index {s} is a {type(s)})")
+
+
+    def __len__(self):
+        return self._length
+
+
+    def __contains__(self, item):
+        return self._length > 0 and item is None
+
+
+    def __iter__(self):
+        for _ in range(self._length):
+            yield None
+
+
+    def __reversed__(self):
+        yield from self.__iter__()
+
+
+    def index(self, value, start=0, stop=9223372036854775807):
+        start, stop, _ = slice(start, stop).indices(self._length)
+        if start < stop and value is None:
+            return 0
+        raise ValueError(f"{value} is not in list")
+
+
+    def count(self, value):
+        return self._length if value is None else 0
 
 
 class ScalarTimeSeries(TimeSeries):
@@ -72,10 +134,20 @@ class ScalarTimeSeries(TimeSeries):
     which contains a dict mapping property names to np_arrays of scalar data.
     """
 
+    def __init__(self, source, after, before, bucket, op):
+        self.series = None
+        super().__init__(source, after, before, bucket, op)
+
     def fetch(self):
         data = self._pre_fetch()
         # convert the arrays returned by _pre_fetch into numpy arrays
-        self.series = dict((fname, np.array(data[fname])) for fname in data)
+        self.series = dict()
+        for fname in data:
+            if data[fname] is not None:
+                self.series[fname] = np.array(data[fname])
+            else:
+                self.series[fname] = NoneArray(len(self))
+
 
     def get_item(self, args):
         assert len(args) == 1
@@ -84,6 +156,7 @@ class ScalarTimeSeries(TimeSeries):
 
 class NonScalarTimeSeries(TimeSeries):
     def __init__(self, source, after, before, bucket, op):
+        self.tiledb_indices = None
         if bucket:
             raise NotImplementedError("Bucketing is not yet implemented in the client for non-scalar timeseries")
         super().__init__(source, after, before, bucket, op)
