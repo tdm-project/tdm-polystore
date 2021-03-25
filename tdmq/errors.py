@@ -1,12 +1,16 @@
 
 
 class TdmqError(Exception):
-    pass
+    @property
+    def description(self):
+        return self.args[0] if self.args else None
 
 
 class RequestException(TdmqError):
     pass
 
+class QueryTooLargeException(RequestException):
+    pass
 
 class DuplicateItemException(RequestException):
     pass

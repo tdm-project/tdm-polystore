@@ -38,6 +38,17 @@ def handle_errors(e):
     return jsonify(struct), e.code
 
 
+@tdmq_bp.app_errorhandler(tdmq.errors.QueryTooLargeException)
+def handle_errors(e):
+    logger = logging.getLogger("response")
+    logger.exception(e)
+    struct = {
+        "error": "query_too_large",
+        "description": e.description
+    }
+    return jsonify(struct), 413
+
+
 def _request_authorized():
     auth_header = request.headers.get('Authorization')
     return f"Bearer {current_app.config['AUTH_TOKEN']}" == auth_header

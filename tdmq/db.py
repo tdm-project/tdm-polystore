@@ -69,10 +69,14 @@ def close_db():
 
 def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
     with get_db() as db:
-        with db.cursor(cursor_factory=cursor_factory) as cur:
-            #print("Query:", q.as_string(cur))
-            cur.execute(q, tuple(args))
-            result = cur.fetchall() if fetch else None
+        try:
+            with db.cursor(cursor_factory=cursor_factory) as cur:
+                #print("Query:", q.as_string(cur))
+                cur.execute(q, tuple(args))
+                result = cur.fetchall() if fetch else None
+        except psycopg2.extensions.QueryCanceledError:
+            raise tdmq.errors.QueryTooLargeException(
+                "Query too large.  Use the appropriate arguments to reduce the result set")
 
     if one:
         return result[0] if result else None
