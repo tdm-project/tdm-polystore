@@ -117,6 +117,7 @@ class DefaultConfig(object):
     DB_NAME = 'tdmqtest'
     DB_USER = 'postgres'
     DB_PASSWORD = 'foobar'
+    DB_MAX_QUERY_TIME = '50000'
 
     LOG_LEVEL = "INFO"
 

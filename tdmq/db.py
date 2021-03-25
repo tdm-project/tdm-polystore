@@ -40,9 +40,9 @@ def get_db():
         _db_connection = None
 
     if not _db_connection:
-        query_timeout = 50000
-        logger.info("Setting database query timeout to %s", query_timeout)
         import flask
+        query_timeout = flask.current_app.config.get('DB_MAX_QUERY_TIME', 50000)
+        logger.info("Setting database query timeout to %s", query_timeout)
         db_settings = {
             'user': flask.current_app.config['DB_USER'],
             'password': flask.current_app.config['DB_PASSWORD'],
