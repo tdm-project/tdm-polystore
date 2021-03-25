@@ -250,6 +250,15 @@ class Timeseries:
         transpose = zip(*rows) if len(rows) > 0 else iter([[]] * (2 + len(properties)))
         result['coords'] = dict((p, next(transpose)) for p in ['time', 'footprint'])
         result['data'] = dict((p, next(transpose)) for p in properties)
+
+        # remove the arrays that are all None values
+        if len(result['coords']['time']) > 0:
+            if all(x is None for x in result['coords']['footprint']):
+                result['coords']['footprint'] = None
+            for k in [ k for k in result['data'].keys() ]: # materialize it since we need to change the dict
+                if all(x is None for x in result['data'][k]):
+                    result['data'][k] = None
+
         return result
 
 
@@ -275,7 +284,7 @@ class Timeseries:
         # timestamped footprint.
         if anonymize_private and not db_result.get('public'):
             # pylint: disable=unsubscriptable-object,unsupported-assignment-operation
-            struct["coords"]["footprint"] = [ None ] * len(struct["coords"]["footprint"])
+            struct["coords"]["footprint"] = None
         else:
             struct["default_footprint"] = db_result['source_info']['default_footprint']
 

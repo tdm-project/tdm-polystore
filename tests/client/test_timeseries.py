@@ -160,3 +160,30 @@ def test_check_timeseries_range_as_user(clean_storage, clean_db, live_app):
     assert np.array_equal(
         ts_times,
         np.reshape(np.array(times), (-1, bucket)).min(axis=1))
+
+
+def test_timeseries_none_arrays(clean_storage, db_data, live_app):
+    c = Client(live_app.url())
+    s = c.find_sources(args={'id': 'tdm/sensor_1'})[0]
+    assert s
+    ts = s.timeseries()
+    # sensor_1 only container data for relativeHumidity and temperature
+    from tdmq.client.timeseries import NoneArray
+    assert isinstance(ts.series['CO'], NoneArray)
+    assert isinstance(ts.series['temperature'], np.ndarray)
+    none_array = ts.series['CO']
+    assert len(ts) == len(none_array)
+    assert len(ts) == len(ts.series['temperature'])
+    # slicing
+    assert len(none_array[1:3]) == 2
+    assert all(x is None for x in none_array[1:3])
+    assert none_array[1] is None
+    # iterating
+    assert [x for x in none_array] == [None]*len(ts)
+    # contains
+    assert None in none_array
+    assert none_array.count(None) == len(ts)
+    assert none_array.count(1) == 0
+    assert none_array.index(None) == 0
+    with pytest.raises(ValueError):
+        none_array.index(1)

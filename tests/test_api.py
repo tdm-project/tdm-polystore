@@ -553,6 +553,20 @@ def test_get_timeseries(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
+def test_get_timeseries_empty_properties(flask_client, app, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries')
+    d = response.get_json()
+    assert d['coords']['footprint'] is None
+    assert d['data']['CO'] is None
+    assert d['data']['SO2'] is None
+    assert d['data']['temperature'] is not None
+    assert d['data']['relativeHumidity'] is not None
+
+
+@pytest.mark.timeseries
 def test_get_private_timeseries_unauthenticated(flask_client, clean_db, source_data):
     private_source = [ next(s for s in source_data['sources'] if not s.get('public')) ]
     headers = _create_auth_header(flask_client.auth_token)
@@ -565,7 +579,7 @@ def test_get_private_timeseries_unauthenticated(flask_client, clean_db, source_d
     d = response.get_json()
     assert d['tdmq_id'] == tdmq_id
     assert 'default_footprint' not in d
-    assert all(pos is None for pos in d['coords']['footprint'])
+    assert d['coords']['footprint'] is None
 
 
 @pytest.mark.timeseries
@@ -581,7 +595,7 @@ def test_get_private_timeseries_authenticated(flask_client, clean_db, source_dat
     d = response.get_json()
     assert d['tdmq_id'] == tdmq_id
     assert 'default_footprint' not in d
-    assert all(pos is None for pos in d['coords']['footprint'])
+    assert d['coords']['footprint'] is None
 
 
 @pytest.mark.timeseries
@@ -597,7 +611,7 @@ def test_get_private_timeseries_authenticated_no_private(flask_client, clean_db,
     d = response.get_json()
     assert d['tdmq_id'] == tdmq_id
     assert 'default_footprint' not in d
-    assert all(pos is None for pos in d['coords']['footprint'])
+    assert d['coords']['footprint'] is None
 
 
 @pytest.mark.timeseries
