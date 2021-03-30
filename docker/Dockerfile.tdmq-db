@@ -1,11 +1,11 @@
 
-#FROM timescale/timescaledb-postgis:1.4.0-pg11
+#FROM timescale/timescaledb-postgis:1.7.4-pg11
 # To work around the pull rate limits on the official timescaledb repository
 # on dockerhub, we copy the tags that we use to our own mirror (on dockerhub).
-FROM tdmproject/timescaledb-postgis:1.4.0-pg11
+FROM tdmproject/timescaledb-postgis:1.7.4-pg11
 
 LABEL name="tdmq-db" \
-      container.version="cv0.1"
+      container.version="cv0.2"
 
 ENV START_DB=false
 
@@ -22,20 +22,19 @@ ENV TDMQ_DIST=/tdmq-dist
 # Create entrypoint script to initialize DB, run migrations, and start the DB only if START_DB is set.
 # We remove the 'exec "$@"' line from the original entrypoint script, then append the new portion.
 RUN cat /usr/local/bin/docker-entrypoint.sh | \
-    sed -e '/^exec "$@" */d' | \
-    sed -e \
-'$a export POSTGRES_USER="${POSTGRES_USER:-postgres}"\n\
+    sed -e 's%^\texec "$@"\s*$%\n\
 if [[ "$1" = "postgres" ]]; then\n\
+  export POSTGRES_USER="${POSTGRES_USER:-postgres}"\n\
   /usr/local/bin/run_migrations.sh\n\
-  printf "Initialization completed\\n" >&2\n\
+  printf "Initialization completed\\n" >\&2\n\
 fi\n\
 if [[ "${START_DB:-}" = "true" ]]; then\n\
-  printf "Starting database\\n" >&2\n\
+  printf "Starting database\\n" >\&2\n\
   exec "$@"\n\
 else\n\
-  printf "Initialized DB but not starting it since START_DB is not set\\n" >&2\n\
+  printf "Initialized DB but not starting it since START_DB is not set\\n" >\&2\n\
 fi\n\
-'  > /usr/local/bin/tdmq-db-entrypoint.sh
+%'  > /usr/local/bin/tdmq-db-entrypoint.sh
 
 ENTRYPOINT [ "/usr/local/bin/tdmq-db-entrypoint.sh" ]
 CMD [ "postgres" ]
