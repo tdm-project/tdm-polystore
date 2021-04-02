@@ -41,11 +41,15 @@ def get_db():
 
     if not _db_connection:
         import flask
+        query_timeout = flask.current_app.config.get('DB_MAX_QUERY_TIME', 50000)
+        logger.info("Setting database query timeout to %s", query_timeout)
         db_settings = {
             'user': flask.current_app.config['DB_USER'],
             'password': flask.current_app.config['DB_PASSWORD'],
             'host': flask.current_app.config['DB_HOST'],
             'dbname': flask.current_app.config['DB_NAME'],
+            # abort queries after query_timeout milliseconds
+            'options': f'-c statement_timeout={query_timeout}'
         }
         logger.info("Creating DB connection")
         _db_connection = tdmq.db_manager.db_connect(db_settings)
@@ -65,10 +69,14 @@ def close_db():
 
 def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
     with get_db() as db:
-        with db.cursor(cursor_factory=cursor_factory) as cur:
-            #print("Query:", q.as_string(cur))
-            cur.execute(q, tuple(args))
-            result = cur.fetchall() if fetch else None
+        try:
+            with db.cursor(cursor_factory=cursor_factory) as cur:
+                #print("Query:", q.as_string(cur))
+                cur.execute(q, tuple(args))
+                result = cur.fetchall() if fetch else None
+        except psycopg2.extensions.QueryCanceledError:
+            raise tdmq.errors.QueryTooLargeException(
+                "Query too large.  Use the appropriate arguments to reduce the result set")
 
     if one:
         return result[0] if result else None

@@ -15,6 +15,40 @@ logger = logging.getLogger(__name__)
 tdmq_bp = Blueprint('tdmq', __name__)
 
 
+ERROR_CODES = {
+    400: "bad_request",
+    401: "unauthorized",
+    403: "forbidden",
+    404: "not_found",
+    405: "method_not_allowed",
+    409: "duplicated_resource",
+    413: "payload_too_large",
+    500: "error_retrieving_data"
+}
+
+
+@tdmq_bp.app_errorhandler(wex.HTTPException)
+def handle_errors(e):
+    logger = logging.getLogger("response")
+    logger.exception(e)
+    struct = {
+        "error": ERROR_CODES.get(e.code),
+        "description": e.description
+    }
+    return jsonify(struct), e.code
+
+
+@tdmq_bp.app_errorhandler(tdmq.errors.QueryTooLargeException)
+def handle_errors(e):
+    logger = logging.getLogger("response")
+    logger.exception(e)
+    struct = {
+        "error": "query_too_large",
+        "description": e.description
+    }
+    return jsonify(struct), 413
+
+
 def _request_authorized():
     auth_header = request.headers.get('Authorization')
     return f"Bearer {current_app.config['AUTH_TOKEN']}" == auth_header

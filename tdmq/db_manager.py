@@ -23,14 +23,12 @@ def db_connect(conn_params=None, override_db_name=None):
             'password': os.getenv("POSTGRES_PASSWORD", ""),
             'dbname': os.getenv("POSTGRES_DB", "tdm")
         }
-    actual_db_name = override_db_name if override_db_name else conn_params['dbname']
-    con = psy.connect(
-        host=conn_params.get('host'),
-        port=conn_params.get('port'),
-        user=conn_params['user'],
-        password=conn_params['password'],
-        dbname=actual_db_name)
-    logger.debug("Connected to database '%s'", actual_db_name)
+    else:
+        conn_params = conn_params.copy()
+    if override_db_name:
+        conn_params['dbname'] = override_db_name
+    con = psy.connect(**conn_params)
+    logger.debug("Connected to database '%s'", conn_params['dbname'])
     return con
 
 

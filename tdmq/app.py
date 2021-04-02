@@ -8,10 +8,8 @@ import time
 from logging.config import dictConfig
 
 import flask
-import werkzeug.exceptions as wex
 
 from flask import request
-from flask.json import jsonify
 from prometheus_client import Histogram
 from prometheus_client.utils import INF
 from prometheus_flask_exporter import PrometheusMetrics
@@ -38,17 +36,6 @@ metrics_response_size_bytes = Histogram(
         labelnames=('method', 'status', 'path'),
         registry=metrics.registry,
         buckets=(500, 1500, 3000, 6000, 12000, 24000, 48000, INF))
-
-ERROR_CODES = {
-    400: "bad_request",
-    401: "unauthorized",
-    403: "forbidden",
-    404: "not_found",
-    405: "method_not_allowed",
-    409: "duplicated_resource",
-    500: "error_retrieving_data"
-}
-
 
 def configure_logging(app):
     # Log configuration
@@ -130,6 +117,7 @@ class DefaultConfig(object):
     DB_NAME = 'tdmqtest'
     DB_USER = 'postgres'
     DB_PASSWORD = 'foobar'
+    DB_MAX_QUERY_TIME = '50000'
 
     LOG_LEVEL = "INFO"
 
@@ -211,16 +199,6 @@ def create_app(test_config=None):
 
     # prometheus exporter must be configured after the routes are registered
     configure_prometheus_exporter(app)
-
-    @app.errorhandler(wex.HTTPException)
-    def handle_errors(e):
-        logger = logging.getLogger("response")
-        logger.exception(e)
-        struct = {
-            "error": ERROR_CODES.get(e.code),
-            "description": e.description
-        }
-        return jsonify(struct), e.code
 
     @app.before_request
     def log_request():
