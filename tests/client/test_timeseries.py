@@ -187,3 +187,22 @@ def test_timeseries_none_arrays(clean_storage, db_data, live_app):
     assert none_array.index(None) == 0
     with pytest.raises(ValueError):
         none_array.index(1)
+
+
+def test_timeseries_step_index(clean_storage, db_data, source_data, live_app):
+    source_id = 'tdm/sensor_0'
+    records = source_data['records_by_source'][source_id]
+
+    c = Client(live_app.url())
+    s = c.find_sources(args={'id': source_id})[0]
+    assert s
+
+    ts = s.timeseries()
+    # extract each second tuple
+    (times, _) = ts[0:-1:2]
+    def parse_timestamp(time_str):
+        return datetime.strptime(time_str, Client.TDMQ_DT_FMT_NO_MICRO).astimezone(timezone.utc)
+
+    assert abs(times[0] - parse_timestamp(records[0]['time'])) < timedelta(seconds=1)
+    assert abs(times[1] - parse_timestamp(records[2]['time'])) < timedelta(seconds=1)
+    assert abs(times[2] - parse_timestamp(records[4]['time'])) < timedelta(seconds=1)
