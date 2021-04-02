@@ -4,6 +4,7 @@ import logging
 import os
 
 from datetime import datetime, timezone
+from functools import wraps
 
 import numpy as np
 import requests
@@ -75,6 +76,7 @@ class Client:
         """
         Decorator for methods that require a connection to the tdmq service.
         """
+        @wraps(func)
         def wrapper_requires_connection(self, *args, **kwargs):
             if not self.connected:
                 self.connect()
