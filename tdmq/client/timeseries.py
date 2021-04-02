@@ -75,6 +75,14 @@ class NoneArray(collections.abc.Sequence):
 
 
     def __getitem__(self, s):
+        is_tuple = False
+        if isinstance(s, tuple):
+            is_tuple = True
+            if len(s) != 1:
+                raise IndexError(f"Wrong number of indices for this array. Expected 1; got {len(s)}")
+            s = s[0]
+            # Continue into next `if`
+
         if isinstance(s, slice):
             start, stop, step = s.indices(self._length)
             if step == 0:
@@ -84,19 +92,18 @@ class NoneArray(collections.abc.Sequence):
             selected_length = 1 + (stop - start - 1) // step
             return np.array([None] * selected_length)
 
-        if isinstance(s, tuple):
-            if len(s) != 1:
-                raise IndexError(f"Wrong number of indices for this array. Expected 1; got {len(s)}")
-            s = s[0]
-            # Continue into next `if`
-
         if isinstance(s, int):
             if -self._length <= s < self._length:
                 return None
             raise IndexError(f"index {s} out of range")
 
         # else:
-        raise TypeError(f"list indices must be integers, slices or tuples (index {s} is a {type(s)})")
+        error_msg = "list indices must be integers, slices or tuples of integers or slices "
+        if is_tuple:
+            error_msg += f"(index ({s},) is a tuple of {type(s)})"
+        else:
+            error_msg += f"(index {s} is a {type(s)})"
+        raise TypeError(error_msg)
 
 
     def __len__(self):
