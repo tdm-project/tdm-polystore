@@ -206,3 +206,13 @@ def test_timeseries_step_index(clean_storage, db_data, source_data, live_app):
     assert abs(times[0] - parse_timestamp(records[0]['time'])) < timedelta(seconds=1)
     assert abs(times[1] - parse_timestamp(records[2]['time'])) < timedelta(seconds=1)
     assert abs(times[2] - parse_timestamp(records[4]['time'])) < timedelta(seconds=1)
+
+
+def test_timeseries_properties_subset(clean_storage, db_data, live_app):
+    c = Client(live_app.url())
+    s = c.find_sources(args={'id': 'tdm/sensor_1'})[0]
+    ts = s.timeseries()
+    assert len(ts.series.keys()) == len(s.controlled_properties)
+    ts = s.timeseries(properties=['temperature'])
+    assert len(ts.series.keys()) == 1
+    assert 'temperature' in ts.series.keys()

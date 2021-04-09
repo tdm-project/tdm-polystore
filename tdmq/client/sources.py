@@ -83,7 +83,7 @@ class Source(abc.ABC):
         return self.client.get_timeseries(self.tdmq_id, args)
 
     @abc.abstractmethod
-    def timeseries(self, after, before, bucket=None, op=None):
+    def timeseries(self, after, before, bucket=None, op=None, properties=None):
         pass
 
     def get_latest_activity(self):
@@ -149,8 +149,8 @@ class ScalarSource(Source):
             'sensor_id':              self.sensor_id,
             })
 
-    def timeseries(self, after=None, before=None, bucket=None, op=None):
-        return ScalarTimeSeries(self, after, before, bucket, op)
+    def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
+        return ScalarTimeSeries(self, after, before, bucket, op, properties)
 
     def _format_record(self, t, d, foot=None):
         record = {
@@ -229,7 +229,7 @@ class NonScalarSource(Source):
         return self._tiledb_array
 
 
-    def timeseries(self, after=None, before=None, bucket=None, op=None):
+    def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
         self.open_array(mode='r')
         return NonScalarTimeSeries(self, after, before, bucket, op)
 
