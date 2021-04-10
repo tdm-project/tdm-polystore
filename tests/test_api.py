@@ -523,6 +523,7 @@ def test_get_empty_timeseries(flask_client, app, db_data):
     _checkresp(response)
     d = response.get_json()
     assert 'temperature' in d['data']
+    assert len(d['data'].keys()) == 1
     assert d['data']['temperature'] == []
 
 

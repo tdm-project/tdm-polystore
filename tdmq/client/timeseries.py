@@ -6,17 +6,17 @@ import numpy as np
 
 class TimeSeries(abc.ABC):
 
-    def __init__(self, source, after, before, bucket, op):
+    def __init__(self, source, after, before, bucket, op, properties=None):
         self.source = source
         self.after = after
         self.before = before
         self.bucket = bucket
         self.op = op
         self.time = []
-        self.fetch()
+        self.fetch(properties)
 
 
-    def _pre_fetch(self):
+    def _pre_fetch(self, properties=None):
         """
         Fetch timeseries from tdmq web service and set the self.time array; returns tdmq
         timeseries data.
@@ -36,6 +36,9 @@ class TimeSeries(abc.ABC):
         args = {'after': self.after, 'before': self.before,
                 'bucket': self.bucket, 'op': self.op}
 
+        if properties:
+            args['fields'] = ','.join(properties)
+
         res = self.source.get_timeseries(args)
         # pylint: disable=protected-access
         self.time = np.array([self.source.client._parse_timestamp(v) for v in res['coords']['time']])
@@ -43,7 +46,7 @@ class TimeSeries(abc.ABC):
         return res['data']
 
     @abc.abstractmethod
-    def fetch(self):
+    def fetch(self, properties=None):
         pass
 
     @abc.abstractmethod
@@ -141,12 +144,12 @@ class ScalarTimeSeries(TimeSeries):
     which contains a dict mapping property names to np_arrays of scalar data.
     """
 
-    def __init__(self, source, after, before, bucket, op):
+    def __init__(self, source, after, before, bucket, op, properties=None):
         self.series = None
-        super().__init__(source, after, before, bucket, op)
+        super().__init__(source, after, before, bucket, op, properties)
 
-    def fetch(self):
-        data = self._pre_fetch()
+    def fetch(self, properties=None):
+        data = self._pre_fetch(properties)
         # convert the arrays returned by _pre_fetch into numpy arrays
         self.series = dict()
         for fname in data:
@@ -169,7 +172,8 @@ class NonScalarTimeSeries(TimeSeries):
         super().__init__(source, after, before, bucket, op)
 
 
-    def fetch(self):
+    def fetch(self, properties=None):
+        # NonScalarTimeSeries ignores any properties specified.  It only considers tiledb_index
         raw_data = self._pre_fetch()
         self.tiledb_indices = raw_data['tiledb_index']
 
