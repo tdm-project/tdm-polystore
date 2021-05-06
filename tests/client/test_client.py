@@ -98,6 +98,20 @@ def test_find_source_private_find_by_id(clean_storage, db_data, source_data, liv
     assert sources[0].tdmq_id == tdmq_id
 
 
+def test_extra_properties(clean_storage, db_data, live_app):
+    c = Client(live_app.url())
+    src_id = 'tdm/tiledb_sensor_6'
+    src = c.find_sources(args={'id': src_id})[0]
+
+    expected_attributes = (
+        "reference",
+        "brand_name",
+        "model_name",
+        "operated_by")
+    assert all(getattr(src, s) for s in expected_attributes)
+    assert src.comments is None
+
+
 def test_get_anonymized_source(clean_storage, db_data, source_data, live_app):
     from tdmq.db import _compute_tdmq_id
     c = Client(live_app.url())

@@ -461,6 +461,20 @@ def test_source_get_latest_activity_not_found(flask_client, public_db_data):
     assert response.status_code == 404
 
 
+def test_source_get_ensure_safe_attributes(flask_client, public_db_data):
+    source_id = 'tdm/tiledb_sensor_6'
+    response = flask_client.get(f'/sources?id={source_id}')
+    src = response.get_json()[0]
+    inner_desc = src['description']
+    expected_attributes = (
+        "comments",
+        "reference",
+        "brand_name",
+        "model_name",
+        "operated_by")
+    assert all(a in inner_desc for a in expected_attributes)
+
+
 @pytest.mark.timeseries
 def test_timeseries_method_not_allowed(flask_client):
     # Test the records endpoint
