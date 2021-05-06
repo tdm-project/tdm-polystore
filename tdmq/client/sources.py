@@ -184,6 +184,26 @@ class NonScalarSource(Source):
         super().__init__(client, tdmq_id, desc)
         self._tiledb_array = None
 
+    @property
+    def comments(self):
+        return self._get_info().get('comments')
+
+    @property
+    def reference(self):
+        return self._get_info().get('reference')
+
+    @property
+    def brand_name(self):
+        return self._get_info().get('brand_name')
+
+    @property
+    def model_name(self):
+        return self._get_info().get('model_name')
+
+    @property
+    def operated_by(self):
+        return self._get_info().get('operated_by')
+
 
     def __del__(self):
         _logger.debug("NonScalarSource destructor")
