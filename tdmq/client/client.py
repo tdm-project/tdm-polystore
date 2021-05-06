@@ -218,6 +218,52 @@ class Client:
 
     @requires_connection
     def find_sources(self, args=None):
+        """
+        Gets the list of sources filtered using the provided args dictionary.  With
+        no parameters, it returns all the sources.  Multiple arguments are combined
+        with an AND condition (i.e., the intersection is returned).
+
+        Arguments:
+
+        only_public:
+            Boolean. Default: True. Specify `only_public=False` to also select private sources.
+        public:
+            Boolean.  Select public (True) or private (False) sources.
+        after:
+            datetime.  Selects sources that have been active after (included) the specified time.
+        before:
+            datetime.  Selects sources that have been active before the specified time.
+        roi:
+            string in the format `circle((center_lon, center_lat), radius_in_meters)`.
+            Selects sources in the specified region of interest.
+            Longitude and Latitude are WGS coordinates.
+        entity_type, entity_category:
+            String. Select sources of the specified entity type and category, respectively.
+        stationary:
+            Boolean. Select stationary or mobile sources.
+        controlledProperties:
+            string.  Comma-separated list of controlled properties that the source must provide.
+        id, external_id:
+            string. External ID of source.
+        other attributes:
+            Any attributes not listed above are matched for equality against the Source
+            description metadata.  *This will be work on public** sources.
+
+            Recognized attributes:
+                'registration_time',
+                'tdmq_id'
+                'brand_name',
+                'edge_id',
+                'model_name',
+                'operated_by',
+                'sensor_id',
+                'shape',
+                'station_id',
+                'station_model',
+                'type',
+            WARNING: Any queries trying to match attributes not defined in this doc will be
+            **limited to public sources**.
+        """
         return [ self.__source_factory(s) for s in self._do_get('sources', params=args) ]
 
     @requires_connection
