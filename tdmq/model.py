@@ -216,7 +216,10 @@ class Source:
         if match_attr:
             query_args.update(match_attr)
 
-        if not (cls.SafeKeys >= query_args.keys() and \
+        # Generally, queries that container "unsafe" search keys will be limited to
+        # private sources.  However, we allow querying private sources by specific
+        # external source id.
+        if not ((cls.SafeKeys | {'id', 'external_id'}) >= query_args.keys() and \
                 cls.SafeDescriptionKeys >= match_attr.keys()):
             # can't do query on private sources because it uses unsafe attributes
             query_args['public'] = True

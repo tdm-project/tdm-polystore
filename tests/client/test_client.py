@@ -85,6 +85,19 @@ def test_find_source_not_anonymized(clean_storage, db_data, source_data, live_ap
     assert all(s.id for s in sources) # when anonymizing the `id` is removed
 
 
+def test_find_source_private_find_by_id(clean_storage, db_data, source_data, live_app):
+    from tdmq.db import _compute_tdmq_id
+    c = Client(live_app.url())
+    private_src_id = 'tdm/sensor_7'
+    sources = c.find_sources(args={'id': private_src_id})
+    assert len(sources) == 0
+
+    sources = c.find_sources(args={'id': private_src_id, 'only_public': False})
+    assert len(sources) == 1
+    tdmq_id = str(_compute_tdmq_id(private_src_id))
+    assert sources[0].tdmq_id == tdmq_id
+
+
 def test_get_anonymized_source(clean_storage, db_data, source_data, live_app):
     from tdmq.db import _compute_tdmq_id
     c = Client(live_app.url())
