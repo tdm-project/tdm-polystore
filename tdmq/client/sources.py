@@ -68,6 +68,26 @@ class Source(abc.ABC):
     def controlled_properties(self):
         return self._get_info()['controlledProperties']
 
+    @property
+    def comments(self):
+        return self._get_info().get('comments')
+
+    @property
+    def reference(self):
+        return self._get_info().get('reference')
+
+    @property
+    def brand_name(self):
+        return self._get_info().get('brand_name')
+
+    @property
+    def model_name(self):
+        return self._get_info().get('model_name')
+
+    @property
+    def operated_by(self):
+        return self._get_info().get('operated_by')
+
     def __repr__(self):
         return repr({
             'tdmq_id ': self.tdmq_id,
@@ -77,7 +97,13 @@ class Source(abc.ABC):
             'default_footprint ': self.default_footprint,
             'is_stationary ': self.is_stationary,
             'shape ': self.shape,
-            'controlled_properties ': self.controlled_properties })
+            'controlled_properties ': self.controlled_properties,
+            'brand_name ': self.brand_name,
+            'model_name ': self.model_name,
+            'operated_by ': self.operated_by,
+            'reference ': self.reference,
+            'comments ': self.comments,
+            })
 
     def get_timeseries(self, args):
         return self.client.get_timeseries(self.tdmq_id, args)
@@ -183,27 +209,6 @@ class NonScalarSource(Source):
     def __init__(self, client, tdmq_id, desc):
         super().__init__(client, tdmq_id, desc)
         self._tiledb_array = None
-
-    @property
-    def comments(self):
-        return self._get_info().get('comments')
-
-    @property
-    def reference(self):
-        return self._get_info().get('reference')
-
-    @property
-    def brand_name(self):
-        return self._get_info().get('brand_name')
-
-    @property
-    def model_name(self):
-        return self._get_info().get('model_name')
-
-    @property
-    def operated_by(self):
-        return self._get_info().get('operated_by')
-
 
     def __del__(self):
         _logger.debug("NonScalarSource destructor")
