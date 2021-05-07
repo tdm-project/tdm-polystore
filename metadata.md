@@ -36,8 +36,8 @@ point recorded from the Source.
 
 For specific information about these two broad categories consult the dedicated
 pages:
-* [scalar sources](./scalar-metadata.md)
-* [non-scalar sources](./multidimensional-metadata.md)
+* [scalar sources](scalar-metadata)
+* [non-scalar sources](multidimensional-metadata)
 
 
 ### Identifying a Source
@@ -119,7 +119,7 @@ will have the following description properties:
 * `sensor_id`
 
 For a full description see the [page dedicated to scalar
-sources](./scalar-metadata.md).
+sources](scalar-metadata).
 
 
 #### `description` for Non-scalar Sources
@@ -138,7 +138,7 @@ sources are the following:
 * `comments`
 
 For a full description see the [page dedicated to non-scalar
-sources](./multidimensional-metadata.md).
+sources](multidimensional-metadata).
 
 
 ## Key specific source metadata
@@ -199,7 +199,7 @@ series through the API.
 Source.  However, the Source may not transmit data for all its theoretical
 capabilities.
 
-For [scalar sources](./scalar-metadata.md), the specific set of
+For [scalar sources](scalar-metadata), the specific set of
 `controlledProperties` of a Source depends on its category and type.  For
-[non-scalar sources](./multidimensional-metadata.md) it depends on the specific
+[non-scalar sources](multidimensional-metadata) it depends on the specific
 device:  additional information will be found in the specific Source's metadata.
