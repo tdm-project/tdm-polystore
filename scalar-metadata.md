@@ -396,3 +396,14 @@ sensors.
 For instance, the `PULSE` sensor will have the full set of
 `EnergyConsumptionMonitor` controlled properties but will have data only for the
 `meterPulses` property.
+
+## Additional metadata
+
+As for any source, the following properties *may* be defined to provide
+additional information regarding the sensing device and who is operating it.
+
+* `brand_name`
+* `model_name`
+* `operated_by`
+* `reference `
+* `comments`
