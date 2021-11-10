@@ -100,8 +100,8 @@ def configure_logging(app):
         app.logger.error("LOG_LEVEL value %s is invalid. Defaulting to %s", level_str, log_config['root']['level'])
 
     app.logger.info('Logging is active. Log level: %s', logging.getLevelName(app.logger.getEffectiveLevel()))
-    if app.logger.isEnabledFor(logging.DEBUG) and 'build_description' in globals():
-        app.logger.debug("\n" + build_description())
+    # if app.logger.isEnabledFor(logging.DEBUG) and 'build_description' in globals():
+    #     app.logger.debug("\n" + build_description())
 
 
 def configure_prometheus_exporter(app):
@@ -217,7 +217,7 @@ def create_app(test_config=None):
     @app.after_request
     def log_response(response):
         logger = logging.getLogger("response")
-        processing_time = (time.time() - request.start_time) / 1000.0
+        processing_time = (time.time() * 1000.0 - request.start_time * 1000.0)
         logger.info(
             "resp: %s %s %s %s %s %s %s %s %0.3fms",
             request.remote_addr,
@@ -234,9 +234,10 @@ def create_app(test_config=None):
 
     @app.after_request
     def record_response_metrics(response):
-        metrics_response_size_bytes.\
-            labels(method=request.method, status=response.status_code, path=request.path).\
-            observe(response.content_length)
+        if response.content_length is not None:
+            metrics_response_size_bytes.\
+                labels(method=request.method, status=response.status_code, path=request.path).\
+                observe(response.content_length)
         return response
 
     return app

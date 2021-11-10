@@ -282,3 +282,80 @@ class Timeseries:
             struct["default_footprint"] = db_result['source_info']['default_footprint']
 
         return struct
+
+    class QueryResult:
+        def __init__(self,
+                     tdmq_id: str, shape: Dict, bucket: Dict,
+                     default_footprint: Dict,
+                     db_query_result, anonymize_private: bool = True):
+            self._tdmq_id = tdmq_id
+            self._anonymize_private = anonymize_private
+            self._shape = shape
+            self._bucket = bucket
+            self._default_footprint = default_footprint
+            self._db_query_result = db_query_result
+
+        @property
+        def tdmq_id(self):
+            return self._tdmq_id
+
+        @property
+        def anonymize_private(self):
+            return self._anonymize_private
+
+        @property
+        def shape(self):
+            return self._shape
+
+        @property
+        def bucket(self):
+            return self._bucket
+
+        @property
+        def default_footprint(self):
+            return self._default_footprint
+
+        @property
+        def fields(self):
+            return self._db_query_result.fields
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            row_batch = next(self._db_query_result)
+
+            # If private data is not to be returned, we erase the mobile footprint
+            # from the result by replacing it with nulls.  Otherwise, we leave
+            # location data in the result
+            if self._anonymize_private and not self._db_query_result.is_public:
+                for row in row_batch:
+                    row[1] = None
+            return row_batch
+
+    @classmethod
+    def get_one_by_batch(cls, tdmq_id: str, anonymize_private: bool = True, args: Dict[str, Any] = None) -> Generator[Dict[str, Any]]:
+        if not args:
+            args = dict()
+
+        ts_result = db.get_timeseries_result(tdmq_id, **args)
+
+        if args['bucket']:
+            bucket = {
+                "interval": args['bucket'].total_seconds(), "op": args.get("op")}
+        else:
+            bucket = None
+
+        # If private data is not to be returned, we don't provide the footprint
+        if not anonymize_private or ts_result.is_public:
+            default_footprint = ts_result.source_info['default_footprint']
+        else:
+            default_footprint = None
+
+        result = cls.QueryResult(tdmq_id=tdmq_id,
+                                 shape=ts_result.source_info['shape'],
+                                 bucket=bucket,
+                                 default_footprint=default_footprint,
+                                 db_query_result=ts_result,
+                                 anonymize_private=anonymize_private)
+        return result

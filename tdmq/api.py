@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 from datetime import timedelta
 from functools import wraps
@@ -180,6 +181,43 @@ def sources_delete(tdmq_id):
 
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
+def timeseries_get_stream(tdmq_id):
+    logger.debug("Calling timeseries_get_stream")
+    rargs = request.args
+
+    anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized("Unauthorized request for unanonymized private data")
+
+    args = dict((k, rargs.get(k, None))
+                for k in ['after', 'before', 'bucket', 'fields', 'op'])
+    if args['bucket'] is not None:
+        args['bucket'] = timedelta(seconds=float(args['bucket']))
+    if args['fields'] is not None:
+        args['fields'] = args['fields'].split(',')
+
+    result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, args)
+
+    def generate():
+        first_batch = True
+        response_opening = \
+            f'{{"tdmq_id": {json.dumps(str(tdmq_id))},'\
+            f'"shape": {json.dumps(result.shape)},'\
+            f'"bucket": {json.dumps(result.bucket)},'\
+            f'"fields": {json.dumps(result.fields)},'
+        if result.default_footprint:
+            response_opening += f'"default_footprint": {json.dumps(result.default_footprint)},'
+        response_opening += '"items": ['
+        yield response_opening
+        for batch in result:
+            if not first_batch:
+                yield ','
+                first_batch = False
+            yield ','.join(json.dumps(row) for row in batch)
+        yield ']}'  # response closing
+    return current_app.response_class(generate(), content_type='application/json')
+
+
 def timeseries_get(tdmq_id):
     rargs = request.args
 

@@ -2,6 +2,7 @@
 import json
 import logging
 import uuid
+from typing import Any, Dict, Iterator, List
 
 import psycopg2.extras
 import psycopg2.sql as sql
@@ -81,6 +82,17 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
         return result[0] if result else None
     # else
     return result
+
+
+def query_db_batches(q, args=(), batch_size: int = 10000, cursor_factory=None):
+    with get_db() as db:
+        with db.cursor(cursor_factory=cursor_factory) as cur:
+            cur.execute(q, tuple(args))
+            while True:
+                batch = cur.fetchmany(batch_size)
+                if not batch:
+                    break
+                yield batch
 
 
 def list_sources(args=None, limit=None, offset=None):
@@ -433,7 +445,7 @@ supported_bucket_ops = {
 }
 
 
-def _get_source_info(tdmq_id):
+def get_source_info(tdmq_id):
     q = sql.SQL("""
         SELECT
             source.description,
@@ -509,7 +521,7 @@ def get_timeseries(tdmq_id, args=None):
                Fields are in the same order as specified in args.
     """
 
-    info = _get_source_info(tdmq_id)
+    info = get_source_info(tdmq_id)
     description = info['description']
     source_is_private = not info.get('public', False)
     logger.debug("get_timeseries for source %s", tdmq_id)
@@ -563,6 +575,111 @@ def get_timeseries(tdmq_id, args=None):
                 public=(not source_is_private),
                 properties=properties,
                 rows=rows)
+
+
+class TimeseriesResult:
+    def __init__(self,
+                 source_info: Dict[str, Any], is_public: bool,
+                 fields: List[str], batch_row_iterator: Iterator[List[List]]):
+        self._source_info = source_info
+        self._is_public = is_public
+        self._fields = fields
+        self._batch_row_iter = batch_row_iterator
+
+    @property
+    def source_info(self):
+        return self._source_info
+
+    @property
+    def is_public(self):
+        return self._is_public
+
+    @property
+    def fields(self):
+        return self._fields
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return next(self._batch_row_iter)
+
+
+def get_timeseries_result(tdmq_id, **kwargs):
+    """
+    Just like get_timeseries, but allows fetching results by batches.
+
+     :query after: consider only sensors reporting strictly after
+                   this time, e.g., '2019-02-21T11:03:25Z'
+
+     :query before: consider only sensors reporting strictly before
+                    this time, e.g., '2019-02-22T11:03:25Z'
+
+     :query bucket: time bucket for data aggregation, e.g., '20 min'
+
+     :query op: aggregation operation on data contained in bucket. One of the
+                values in supported_bucket_ops
+
+     :query fields: list of controlledProperties from the source,
+                    or nothing to select all of them.
+
+     :returns: array of arrays: time, footprint, field+
+               Fields are in the same order as specified in args.
+    """
+    info = get_source_info(tdmq_id)
+    description = info['description']
+    source_is_private = not info.get('public', False)
+    logger.debug("get_timeseries_batches for source %s", tdmq_id)
+
+    if description.get('shape'):
+        properties = ['tiledb_index']
+    else:
+        properties = description['controlledProperties']
+        if kwargs and kwargs.get('fields', []):
+            fields = kwargs['fields']
+            # keep the order specified in fields
+            properties = [f for f in fields if f in properties]
+            if fields != properties:
+                unknown_fields = ', '.join(set(fields).difference(properties))
+                raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
+
+    query_template = sql.SQL("""
+        SELECT {select_list}
+        FROM record
+        WHERE
+        {where_clause}
+        {grouping_clause}""")
+
+    if kwargs and kwargs.get('bucket'):
+        bucket_interval = kwargs['bucket']
+
+        if description.get('shape'):
+            bucket_op = 'jsonb_agg'
+        else:
+            bucket_op = kwargs['op']
+            if bucket_op not in supported_bucket_ops:
+                raise tdmq.errors.RequestException(f"Unsupported bucketing operation '{bucket_op}'")
+
+        clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
+    else:
+        bucket_op = None
+        clauses = _timeseries_select(properties)
+
+    where = [sql.SQL("source_id = {}").format(sql.Literal(tdmq_id))]
+    if kwargs and kwargs.get('after'):
+        where.append(sql.SQL("record.time >= {}").format(sql.Literal(kwargs['after'])))
+    if kwargs and kwargs.get('before'):
+        where.append(sql.SQL("record.time < {}").format(sql.Literal(kwargs['before'])))
+
+    clauses['where_clause'] = sql.SQL(" AND ").join(where)
+
+    query = query_template.format(**clauses)
+
+    return TimeseriesResult(
+        source_info=description,
+        is_public=(not source_is_private),
+        fields=['time', 'footprint'] + properties,
+        batch_row_iterator=query_db_batches(query))
 
 
 def get_latest_activity(tdmq_id):
