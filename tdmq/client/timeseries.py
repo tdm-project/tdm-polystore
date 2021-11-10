@@ -40,9 +40,10 @@ class TimeSeries(abc.ABC):
 
         res = self.source.get_timeseries(args)
         # pylint: disable=protected-access
-        self.time = np.array([self.source.client._parse_timestamp(v) for v in res['coords']['time']])
+        assert res['fields'][0] == 'time'
+        self.time = np.array([self.source.client._parse_timestamp(v[0]) for v in res['items']])
 
-        return res['data']
+        return res
 
     @abc.abstractmethod
     def fetch(self, properties=None):
@@ -140,14 +141,20 @@ class ScalarTimeSeries(TimeSeries):
         super().__init__(source, after, before, bucket, op, properties)
 
     def fetch(self, properties=None):
-        data = self._pre_fetch(properties)
+        api_response = self._pre_fetch(properties)
         # convert the arrays returned by _pre_fetch into numpy arrays
+        if len(api_response['items']) > 0:
+            transpose = list(zip(*api_response['items']))
+        else:
+            transpose = [[]] * len(api_response['fields'])
+
         self.series = dict()
-        for fname in data:
-            if data[fname] is not None:
-                self.series[fname] = np.array(data[fname])
+        for idx in range(2, len(api_response['fields'])):
+            field_name = api_response['fields'][idx]
+            if all(x is None for x in transpose[idx]):
+                self.series[field_name] = NoneArray(len(transpose[idx))
             else:
-                self.series[fname] = NoneArray(len(self))
+                self.series[field_name] = np.array(transpose[idx])
 
     def get_item(self, args):
         assert len(args) == 1
@@ -163,8 +170,9 @@ class NonScalarTimeSeries(TimeSeries):
 
     def fetch(self, properties=None):
         # NonScalarTimeSeries ignores any properties specified.  It only considers tiledb_index
-        raw_data = self._pre_fetch()
-        self.tiledb_indices = raw_data['tiledb_index']
+        api_response = self._pre_fetch()
+        assert api_response['fields'][2] == 'tiledb_index'
+        self.tiledb_indices = [row[2] for row in api_response['items']]
 
     def fetch_data_block(self, args):
         if self.bucket is None:
