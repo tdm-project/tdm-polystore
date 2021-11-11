@@ -3,6 +3,7 @@ import math
 import logging
 import os
 
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -80,6 +81,9 @@ class Client:
 
         return wrapper_requires_connection
 
+    def url_for(self, resource: str) -> str:
+        return f'{self.base_url}/{resource}'
+
     def connect(self):
         if self.connected:
             return
@@ -107,6 +111,12 @@ class Client:
         r = requests.get(f'{self.base_url}/{resource}', params=params, headers=self.headers)
         r.raise_for_status()
         return r.json()
+
+    @contextmanager
+    def _do_get_stream_ctx(self, resource, params=None):
+        with requests.get(f'{self.base_url}/{resource}', stream=True, params=params, headers=self.headers) as r:
+            r.raise_for_status()
+            yield r
 
     def _destroy_source(self, tdmq_id):
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers)
@@ -275,7 +285,8 @@ class Client:
             args['sparse'] = sparse
         # for testing!  args['batch_size'] = 1
         _logger.debug('get_timeseries(%s, %s)', code, args)
-        return self._do_get(f'sources/{code}/timeseries', params=args)
+        with self._do_get_stream_ctx(f'sources/{code}/timeseries', params=args) as req:
+            return req.json()
 
     @requires_connection
     def get_latest_source_activity(self, tdmq_id):
