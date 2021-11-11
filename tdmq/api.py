@@ -212,7 +212,8 @@ def timeseries_get_stream(tdmq_id):
 
     def format_sparse_row(row: List) -> str:
         assert len(row) == len(result.fields)
-        return json.dumps(dict(zip(result.fields, row)))
+        d = {field_name: value for field_name, value in zip(result.fields, row) if value is not None}
+        return json.dumps(d)
 
     def format_dense_row(row: List) -> str:
         return json.dumps(row)
