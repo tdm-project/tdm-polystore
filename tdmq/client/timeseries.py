@@ -12,10 +12,11 @@ class TimeSeries(abc.ABC):
         self.before = before
         self.bucket = bucket
         self.op = op
-        self.time = []
-        self.fetch(properties)
+        self.time = None
+        self.properties = properties
+        self._fetch()
 
-    def _pre_fetch(self, properties=None):
+    def _fetch_ts_and_set_time(self, sparse: bool = None):
         """
         Fetch timeseries from tdmq web service and set the self.time array; returns tdmq
         timeseries data.
@@ -35,18 +36,23 @@ class TimeSeries(abc.ABC):
         args = {'after': self.after, 'before': self.before,
                 'bucket': self.bucket, 'op': self.op}
 
-        if properties:
-            args['fields'] = ','.join(properties)
+        if self.properties:
+            args['fields'] = ','.join(self.properties)
 
-        res = self.source.get_timeseries(args)
+        res = self.source.get_timeseries(args, sparse)
         # pylint: disable=protected-access
         assert res['fields'][0] == 'time'
-        self.time = np.array([self.source.client._parse_timestamp(v[0]) for v in res['items']])
+        if res['sparse']:
+            timestamps = (row['time'] for row in res['items'])
+        else:
+            timestamps = (row[0] for row in res['items'])
+
+        self.time = np.array([self.source.client._parse_timestamp(t) for t in timestamps])
 
         return res
 
     @abc.abstractmethod
-    def fetch(self, properties=None):
+    def _fetch(self):
         pass
 
     @abc.abstractmethod
@@ -140,15 +146,41 @@ class ScalarTimeSeries(TimeSeries):
         self.series = None
         super().__init__(source, after, before, bucket, op, properties)
 
-    def fetch(self, properties=None):
-        api_response = self._pre_fetch(properties)
-        # convert the arrays returned by _pre_fetch into numpy arrays
+    def _fetch(self):
+        api_response = self._fetch_ts_and_set_time()
+        if api_response['sparse']:
+            self._parse_sparse_response(api_response)
+        else:
+            self._parse_dense_response(api_response)
+
+    def _parse_sparse_response(self, api_response):
+        assert api_response['sparse']
+        # Sparse representation is a list of dictionaries.  In each dictionary,
+        # the fields are they keys.  We skip the first two fields
+        # (time and footprint) which are handled elsewhere.
+        self.series = dict()
+        for f in api_response['fields'][2:]:
+            # extract the value for the field. If the value was None on the
+            # server side, it was not sent -- so we cannot assume that the key
+            # will be in the dict.
+            field_data = [row.get(f) for row in api_response['items']]
+            # If all values are None, replace the array with a NoneArray;
+            # else we store the data in a numpy array.
+            if all(x is None for x in field_data):
+                self.series[f] = NoneArray(len(self))
+            else:
+                self.series[f] = np.array(field_data)
+
+    def _parse_dense_response(self, api_response):
+        assert not api_response['sparse']
+        # convert the arrays returned by _fetch_ts_and_set_time into numpy arrays
         if len(api_response['items']) > 0:
             transpose = list(zip(*api_response['items']))
         else:
             transpose = [[]] * len(api_response['fields'])
 
         self.series = dict()
+        # iterate over fields, except for 'time' and 'footprint' (the first two)
         for idx in range(2, len(api_response['fields'])):
             field_name = api_response['fields'][idx]
             if all(x is None for x in transpose[idx]):
@@ -168,9 +200,9 @@ class NonScalarTimeSeries(TimeSeries):
             raise NotImplementedError("Bucketing is not yet implemented in the client for non-scalar timeseries")
         super().__init__(source, after, before, bucket, op)
 
-    def fetch(self, properties=None):
+    def _fetch(self):
         # NonScalarTimeSeries ignores any properties specified.  It only considers tiledb_index
-        api_response = self._pre_fetch()
+        api_response = self._fetch_ts_and_set_time(sparse=False)
         assert api_response['fields'][2] == 'tiledb_index'
         self.tiledb_indices = [row[2] for row in api_response['items']]
 

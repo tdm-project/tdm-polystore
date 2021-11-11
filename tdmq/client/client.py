@@ -269,8 +269,10 @@ class Client:
         return self.__source_factory(res)
 
     @requires_connection
-    def get_timeseries(self, code, args):
+    def get_timeseries(self, code, args, sparse: bool = None):
         args = dict((k, v) for k, v in args.items() if v is not None)
+        if sparse is not None:
+            args['sparse'] = sparse
         # for testing!  args['batch_size'] = 1
         _logger.debug('get_timeseries(%s, %s)', code, args)
         return self._do_get(f'sources/{code}/timeseries', params=args)

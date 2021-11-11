@@ -639,7 +639,7 @@ def get_timeseries_result(tdmq_id, batch_size: int = None, **kwargs):
         properties = ['tiledb_index']
     else:
         properties = description['controlledProperties']
-        if kwargs and kwargs.get('fields', []):
+        if kwargs.get('fields'):
             fields = kwargs['fields']
             # keep the order specified in fields
             properties = [f for f in fields if f in properties]
@@ -654,7 +654,7 @@ def get_timeseries_result(tdmq_id, batch_size: int = None, **kwargs):
         {where_clause}
         {grouping_clause}""")
 
-    if kwargs and kwargs.get('bucket'):
+    if kwargs.get('bucket'):
         bucket_interval = kwargs['bucket']
 
         if description.get('shape'):

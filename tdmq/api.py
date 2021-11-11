@@ -198,9 +198,9 @@ def timeseries_get_stream(tdmq_id):
     if rargs.get('sparse'):
         sparse_format = str_to_bool(rargs['sparse'])
     else:
-        # By default, use a sparse format if only a subset of the possible fields is 
+        # By default, use a dense format if only a subset of the fields is
         # requested by the query.
-        sparse_format = bool(args['fields'])
+        sparse_format = not bool(args['fields'])
 
     batch_size = int(rargs.get('batch_size', -1))
     if batch_size <= 0:

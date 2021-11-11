@@ -335,6 +335,9 @@ paths:
         *  fields: comma-separated controlledProperties from the source,
                 or nothing to select all of them.
 
+        * sparse: boolean requesting sparse or dense format.
+                  Default: TDMq decides based on query.
+
         ## Example response
 
         ```
@@ -342,21 +345,15 @@ paths:
           Content-Type: application/json
 
           {
-            "source_id": "...",
+            "tdmq_id": "...",
             "default_footprint": {...},
             "shape": [...],
+            "fields": [...],
             "bucket": null,
           <oppure>
             "bucket": { "interval": 10, "op": "avg" },
 
-            "coords": {
-                "footprint": [...],
-                "time": [...]
-            },
-            "data": {
-              "humidity": [...],
-              "temperature": [...],
-            }
+            "items": [...]
           }
         ```
 
