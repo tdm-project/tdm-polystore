@@ -183,7 +183,6 @@ def sources_delete(tdmq_id):
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
 def timeseries_get_stream(tdmq_id):
-    logger.debug("Calling timeseries_get_stream")
     rargs = request.args
 
     anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))
@@ -203,7 +202,13 @@ def timeseries_get_stream(tdmq_id):
         # requested by the query.
         sparse_format = bool(args['fields'])
 
-    result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, args)
+    batch_size = int(rargs.get('batch_size', -1))
+    if batch_size <= 0:
+        batch_size = None
+    else:
+        logger.debug("GET requested batch_size of %s", batch_size)
+
+    result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, batch_size, args)
 
     def format_sparse_row(row: List) -> str:
         assert len(row) == len(result.fields)

@@ -582,6 +582,19 @@ def test_get_timeseries_empty_properties(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
+def test_get_timeseries_multibatch(flask_client, app, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?batch_size=1')
+    assert response.is_streamed
+    d = response.get_json()
+    assert len(d['items']) == 4
+    assert d['sparse'] is True
+    assert isinstance(d['items'][0], dict)
+
+
+@pytest.mark.timeseries
 def test_get_timeseries_properties_sparse(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')

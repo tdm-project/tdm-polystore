@@ -84,7 +84,10 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
     return result
 
 
-def query_db_batches(q, args=(), batch_size: int = 10000, cursor_factory=None):
+def query_db_batches(q, args=(), batch_size: int = None, cursor_factory=None):
+    if batch_size is None:
+        batch_size = 10000
+    logger.debug("executing batch query with batch_size %s", batch_size)
     with get_db() as db:
         with db.cursor(cursor_factory=cursor_factory) as cur:
             cur.execute(q, tuple(args))
@@ -605,7 +608,7 @@ class TimeseriesResult:
         return next(self._batch_row_iter)
 
 
-def get_timeseries_result(tdmq_id, **kwargs):
+def get_timeseries_result(tdmq_id, batch_size: int = None, **kwargs):
     """
     Just like get_timeseries, but allows fetching results by batches.
 
@@ -626,6 +629,7 @@ def get_timeseries_result(tdmq_id, **kwargs):
      :returns: array of arrays: time, footprint, field+
                Fields are in the same order as specified in args.
     """
+    assert batch_size is None or batch_size > 0
     info = get_source_info(tdmq_id)
     description = info['description']
     source_is_private = not info.get('public', False)
@@ -679,7 +683,7 @@ def get_timeseries_result(tdmq_id, **kwargs):
         source_info=description,
         is_public=(not source_is_private),
         fields=['time', 'footprint'] + properties,
-        batch_row_iterator=query_db_batches(query))
+        batch_row_iterator=query_db_batches(query, batch_size=batch_size))
 
 
 def get_latest_activity(tdmq_id):

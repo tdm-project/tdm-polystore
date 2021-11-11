@@ -334,11 +334,12 @@ class Timeseries:
             return row_batch
 
     @classmethod
-    def get_one_by_batch(cls, tdmq_id: str, anonymize_private: bool = True, args: Dict[str, Any] = None) -> Generator[Dict[str, Any]]:
+    def get_one_by_batch(cls, tdmq_id: str, anonymize_private: bool = True,
+                         batch_size: int = None, args: Dict[str, Any] = None) -> Generator[Dict[str, Any]]:
         if not args:
             args = dict()
 
-        ts_result = db.get_timeseries_result(tdmq_id, **args)
+        ts_result = db.get_timeseries_result(tdmq_id, batch_size, **args)
 
         if args['bucket']:
             bucket = {

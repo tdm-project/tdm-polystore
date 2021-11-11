@@ -271,6 +271,7 @@ class Client:
     @requires_connection
     def get_timeseries(self, code, args):
         args = dict((k, v) for k, v in args.items() if v is not None)
+        # for testing!  args['batch_size'] = 1
         _logger.debug('get_timeseries(%s, %s)', code, args)
         return self._do_get(f'sources/{code}/timeseries', params=args)
 
