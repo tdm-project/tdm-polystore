@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
+from typing import List
 
 import werkzeug.exceptions as wex
 from flask import Blueprint, current_app, jsonify, request, url_for
@@ -195,30 +196,49 @@ def timeseries_get_stream(tdmq_id):
         args['bucket'] = timedelta(seconds=float(args['bucket']))
     if args['fields'] is not None:
         args['fields'] = args['fields'].split(',')
+    if rargs.get('sparse'):
+        sparse_format = str_to_bool(rargs['sparse'])
+    else:
+        # By default, use a sparse format if only a subset of the possible fields is 
+        # requested by the query.
+        sparse_format = bool(args['fields'])
 
     result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, args)
 
-    def generate():
+    def format_sparse_row(row: List) -> str:
+        assert len(row) == len(result.fields)
+        return json.dumps(dict(zip(result.fields, row)))
+
+    def format_dense_row(row: List) -> str:
+        return json.dumps(row)
+
+    def generate(row_format_fn):
         first_batch = True
         response_opening = \
             f'{{"tdmq_id": {json.dumps(str(tdmq_id))},'\
             f'"shape": {json.dumps(result.shape)},'\
             f'"bucket": {json.dumps(result.bucket)},'\
-            f'"fields": {json.dumps(result.fields)},'
+            f'"fields": {json.dumps(result.fields)},'\
+            f'"sparse": {json.dumps(sparse_format)},'
         if result.default_footprint:
             response_opening += f'"default_footprint": {json.dumps(result.default_footprint)},'
         response_opening += '"items": ['
         yield response_opening
         for batch in result:
-            if not first_batch:
+            if not first_batch:  # First batch does not need pre-pending the comma
                 yield ','
                 first_batch = False
-            yield ','.join(json.dumps(row) for row in batch)
+            yield ','.join(row_format_fn(row) for row in batch)
         yield ']}'  # response closing
-    return current_app.response_class(generate(), content_type='application/json')
+    return current_app.response_class(
+        generate(format_sparse_row if sparse_format else format_dense_row),
+        content_type='application/json')
 
 
 def timeseries_get(tdmq_id):
+    """
+    Old implementation of GET /timeseries that retrieves and returns the entire query set at once.
+    """
     rargs = request.args
 
     anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))
