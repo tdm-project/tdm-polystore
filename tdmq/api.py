@@ -219,7 +219,7 @@ def timeseries_get_stream(tdmq_id):
         return json.dumps(row)
 
     def generate(row_format_fn):
-        first_batch = True
+        logger.debug("Generating timeseries output")
         response_opening = \
             f'{{"tdmq_id": {json.dumps(str(tdmq_id))},'\
             f'"shape": {json.dumps(result.shape)},'\
@@ -230,11 +230,13 @@ def timeseries_get_stream(tdmq_id):
             response_opening += f'"default_footprint": {json.dumps(result.default_footprint)},'
         response_opening += '"items": ['
         yield response_opening
+        first_batch = True
         for batch in result:
+            logger.debug("Timeseries: sending %s records", len(batch))
             if not first_batch:  # First batch does not need pre-pending the comma
                 yield ','
-                first_batch = False
-            yield ','.join(row_format_fn(row) for row in batch)
+            yield ','.join((row_format_fn(row) for row in batch))
+            first_batch = False
         yield ']}'  # response closing
     return current_app.response_class(
         generate(format_sparse_row if sparse_format else format_dense_row),
