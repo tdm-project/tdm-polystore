@@ -1,4 +1,6 @@
 
+import tempfile
+
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
@@ -187,6 +189,25 @@ def test_timeseries_none_arrays(clean_storage, db_data, live_app):
     assert none_array.index(None) == 0
     with pytest.raises(ValueError):
         none_array.index(1)
+
+
+def test_timeseries_export_csv(clean_storage, db_data, live_app):
+    c = Client(live_app.url())
+    s = c.find_sources(args={'id': 'tdm/sensor_1'})[0]
+    assert s
+    ts = s.timeseries()
+    with tempfile.TemporaryFile(mode="w+b") as f:
+        ts.export(f)
+        f.seek(0)
+        contents = f.read().decode("utf-8")
+    lines = contents.splitlines(keepends=False)
+    assert len(lines) == 5
+    table_heading = lines[0].split(',')
+    assert set(table_heading) > { 'time', 'footprint', 'temperature', 'relativeHumidity' }
+    table = [line.split(',') for line in lines[1:]]
+    temp_index = table_heading.index('temperature')
+    assert temp_index >= 0
+    assert table[0][temp_index] == "20"
 
 
 def test_timeseries_step_index(clean_storage, db_data, source_data, live_app):

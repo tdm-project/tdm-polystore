@@ -289,6 +289,18 @@ class Client:
             return req.json()
 
     @requires_connection
+    def export_timeseries(self, code, args, data_format: str = 'csv', chunk_size=16384):
+        if data_format != 'csv':
+            raise NotImplementedError("only CSV export is supported")
+        _logger.debug('export_timeseries(%s, %s, data_format=%s, chunk_size=%s)',
+                      code, args, data_format, chunk_size)
+        args = dict((k, v) for k, v in args.items() if v is not None)
+        args['format'] = data_format
+        with self._do_get_stream_ctx(f'sources/{code}/timeseries', params=args) as req:
+            for chunk in req.iter_content(chunk_size=chunk_size):
+                yield chunk
+
+    @requires_connection
     def get_latest_source_activity(self, tdmq_id):
         _logger.debug("get_latest_source_activity(%s)", tdmq_id)
         r = self._do_get(f'sources/{tdmq_id}/activity/latest')
