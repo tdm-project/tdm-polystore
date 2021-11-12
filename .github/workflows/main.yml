@@ -9,8 +9,9 @@ on:
     tags:
       - "*.*.*"
   pull_request:
-    - master
-    - develop
+    branches:
+      - master
+      - develop
 
 env:
   TERM: xterm
