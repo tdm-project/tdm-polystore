@@ -57,7 +57,7 @@ jobs:
         env:
           BASE_BUILD_NUM: ${{ github.run_number }}
         run: |
-          echo ::set-env name=BUILD_NUM::$(($BASE_BUILD_NUM+500))
+          echo "BUILD_NUM=$(($BASE_BUILD_NUM+500))" >> $GITHUB_ENV
       # Extract Docker metadata
       - name: Extract Docker metadata
         id: docker_meta
