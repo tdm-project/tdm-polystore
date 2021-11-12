@@ -581,6 +581,31 @@ def test_get_timeseries_empty_properties(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
+def test_get_timeseries_csv(flask_client, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?format=csv')
+
+    assert response.content_type == 'text/csv'
+    d = response.get_data(as_text=True)
+    lines = d.splitlines(keepends=False)
+    assert len(lines) == 5
+    table_heading = lines[0].split(',')
+    assert set(table_heading) > { 'time', 'footprint', 'temperature', 'relativeHumidity' }
+    table = [line.split(',') for line in lines[1:]]
+    assert all(len(row) == len(table_heading) for row in table)
+    # Take a controlledProperty for which this source does not provide data:  CO
+    # Verify that the None value gets represented in the CSV as an empty string
+    CO_index = table_heading.index('CO')
+    assert CO_index >= 0
+    assert table[0][CO_index] == ''
+    temp_index = table_heading.index('temperature')
+    assert temp_index >= 0
+    assert table[0][temp_index] == "20"
+
+
+@pytest.mark.timeseries
 def test_get_timeseries_multibatch(flask_client, app, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
