@@ -71,7 +71,6 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
     with get_db() as db:
         try:
             with db.cursor(cursor_factory=cursor_factory) as cur:
-                #print("Query:", q.as_string(cur))
                 cur.execute(q, tuple(args))
                 result = cur.fetchall() if fetch else None
         except psycopg2.extensions.QueryCanceledError:
@@ -80,8 +79,8 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
 
     if one:
         return result[0] if result else None
-    else:
-        return result
+    # else
+    return result
 
 
 def list_sources(args=None, limit=None, offset=None):
@@ -453,7 +452,7 @@ def _timeseries_select(properties):
     # select_list.append( sql.SQL("record.time, record.footprint") )
     select_list.extend(
         [sql.SQL("data->{} AS {}").format(sql.Literal(field), sql.Identifier(field))
-            for field in properties])
+         for field in properties])
 
     grouping_clause = sql.SQL(" ORDER BY record.time ASC ")
 

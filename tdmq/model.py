@@ -7,7 +7,6 @@ from typing import Any, Dict, Generator, Iterable, List
 
 import pyproj
 import shapely.geometry as sg
-import werkzeug.exceptions as wex
 from shapely.ops import transform as shapely_transform
 
 import tdmq.db as db
@@ -77,9 +76,8 @@ class Source:
         # Take the `description.description` and move its contents to the top level dict
         db_source['description'].update(db_source['description'].pop('description'))
 
-
     @classmethod
-    def get_one(cls, tdmq_id: str, anonymize_private: bool=True) -> dict:
+    def get_one(cls, tdmq_id: str, anonymize_private: bool = True) -> dict:
         srcs = db.get_sources([tdmq_id])
         if not srcs:
             return None
@@ -92,7 +90,6 @@ class Source:
             return source
         # Somehow we got more than one results from the query
         raise RuntimeError(f"Got more than one source for tdmq_id {tdmq_id}")
-
 
     @classmethod
     def get_latest_activity(cls, tdmq_id: str) -> Dict[str, Any]:
@@ -120,7 +117,6 @@ class Source:
                 raise RuntimeError(f"Internal error.  For source {tdmq_id} got latest "
                                    "activity time {activity['time']} with no activity data")
         return retval
-
 
     @staticmethod
     def delete_one(tdmq_id: str) -> None:
@@ -158,12 +154,10 @@ class Source:
 
         return sanitized
 
-
     @classmethod
     def _anonymizing_iter(cls, sources: Iterable[dict]) -> Generator[dict, None, None]:
         for s in sources:
             yield cls._anonymize_source(s)
-
 
     @classmethod
     def _quantize_roi(cls, roi: dict) -> None:
@@ -171,13 +165,12 @@ class Source:
         roi['center']['coordinates'] = [ round(c, cls.ROI_CENTER_DIGITS) for c in roi['center']['coordinates'] ]
         roi['radius'] = cls.ROI_RADIUS_INCREMENT * round(roi['radius'] / cls.ROI_RADIUS_INCREMENT)
 
-
     @classmethod
     def _roi_intersection_filter(cls, roi: dict, sources: Iterable[dict]) -> Generator[dict, None, None]:
         # filter sources that end up outside ROI because of anonymization
         # Geom specify wgs84 coordinates.
         wgs84 = pyproj.CRS('EPSG:4326')
-        mm = pyproj.CRS('EPSG:3003') # Monte Mario
+        mm = pyproj.CRS('EPSG:3003')  # Monte Mario
         mm_projection = pyproj.Transformer.from_crs(wgs84, mm, always_xy=True).transform
 
         # project both ROI and geometry to Monte Mario coordinates
@@ -190,10 +183,9 @@ class Source:
             if mm_geom.intersects(mm_roi):
                 yield s
 
-
     @classmethod
-    def search(cls, search_args: Dict[str, Any], match_attr: Dict[str, Any]=None, anonymize_private: bool=True,
-               limit: int=None, offset: int=None) -> list:
+    def search(cls, search_args: Dict[str, Any], match_attr: Dict[str, Any] = None, anonymize_private: bool = True,
+               limit: int = None, offset: int = None) -> list:
         """
         search_args: any from AcceptedSearchKeys
         match_attr:  general attribute matching in the
@@ -202,7 +194,7 @@ class Source:
         if limit or offset:
             raise NotImplementedError("Limit and offset are not implemented")
 
-        query_args = search_args.copy() # copy so we can modify the dictionary
+        query_args = search_args.copy()  # copy so we can modify the dictionary
 
         e_id = query_args.pop('external_id', None)
         if e_id:
@@ -219,7 +211,7 @@ class Source:
         # Generally, queries that container "unsafe" search keys will be limited to
         # private sources.  However, we allow querying private sources by specific
         # external source id.
-        if not ((cls.SafeKeys | {'id', 'external_id'}) >= query_args.keys() and \
+        if not ((cls.SafeKeys | {'id', 'external_id'}) >= query_args.keys() and
                 cls.SafeDescriptionKeys >= match_attr.keys()):
             # can't do query on private sources because it uses unsafe attributes
             query_args['public'] = True
@@ -244,7 +236,6 @@ class Timeseries:
     def store_new_records(data: Iterable[dict]) -> int:
         return db.load_records(data)
 
-
     @staticmethod
     def _restructure_timeseries(rows: List[list], properties: List[str]) -> Dict[str, Any]:
         # The arrays time and footprint define the scaffolding on which
@@ -258,15 +249,14 @@ class Timeseries:
         if len(result['coords']['time']) > 0:
             if all(x is None for x in result['coords']['footprint']):
                 result['coords']['footprint'] = None
-            for k in [ k for k in result['data'].keys() ]: # materialize it since we need to change the dict
+            for k in [ k for k in result['data'].keys() ]:  # materialize it since we need to change the dict
                 if all(x is None for x in result['data'][k]):
                     result['data'][k] = None
 
         return result
 
-
     @classmethod
-    def get_one(cls, tdmq_id: str, anonymize_private: bool=True, args: Dict[str, Any]=None) -> Dict[str, Any]:
+    def get_one(cls, tdmq_id: str, anonymize_private: bool = True, args: Dict[str, Any] = None) -> Dict[str, Any]:
         if not args:
             args = dict()
 

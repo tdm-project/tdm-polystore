@@ -13,7 +13,8 @@ import tempfile
 import urllib.parse as up
 
 import shapefile
-import shapely, shapely.geometry as sg
+import shapely
+import shapely.geometry as sg
 from shapely.strtree import STRtree
 
 from tdmq.utils import find_exec
@@ -161,7 +162,6 @@ class ZoneDB:
         _logger.info("Loaded ZoneDB with %s zones", len(self._index_by_id))
         return self
 
-
     def lookup(self, shapely_geometry):
         if self._rtree is None:
             raise RuntimeError("ZoneDB not loaded")
@@ -189,18 +189,15 @@ class LocAnonymizer:
         geometry=sg.shape({ "type": "Point", "coordinates": [ 12.492227554321289, 41.890441712228586 ] }),
         properties={'name': "Somewhere"})
 
-
     def __init__(self, app=None):
         self._zone_db = None
         self._db_source = None
         if app:
             self.init_app(app)
 
-
     @property
     def db_source(self):
         return self._db_source
-
 
     def init_app(self, flask_app):
         db_path = flask_app.config.get('LOC_ANONYMIZER_DB')
@@ -222,7 +219,6 @@ class LocAnonymizer:
             # operation successful
             self._zone_db = zone_db
             self._db_source = db_path
-
 
     def anonymize_location(self, geometry):
         """

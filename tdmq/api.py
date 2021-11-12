@@ -28,9 +28,9 @@ ERROR_CODES = {
 
 
 @tdmq_bp.app_errorhandler(wex.HTTPException)
-def handle_errors(e):
-    logger = logging.getLogger("response")
-    logger.exception(e)
+def handle_http_exception(e):
+    response_logger = logging.getLogger("response")
+    response_logger.exception(e)
     struct = {
         "error": ERROR_CODES.get(e.code),
         "description": e.description
@@ -39,9 +39,9 @@ def handle_errors(e):
 
 
 @tdmq_bp.app_errorhandler(tdmq.errors.QueryTooLargeException)
-def handle_errors(e):
-    logger = logging.getLogger("response")
-    logger.exception(e)
+def handle_query_too_large_exception(e):
+    response_logger = logging.getLogger("response")
+    response_logger.exception(e)
     struct = {
         "error": "query_too_large",
         "description": e.description
@@ -138,7 +138,7 @@ def sources_get():
     if offset:
         offset = int(offset)
 
-    match_attr = rargs # everything that hasn't been popped
+    match_attr = rargs  # everything that hasn't been popped
 
     try:
         items = Source.search(search_args, match_attr, anonymize_private, limit, offset)

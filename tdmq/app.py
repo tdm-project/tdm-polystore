@@ -22,7 +22,7 @@ from tdmq.api import tdmq_bp
 from tdmq.db import add_db_cli, close_db
 from .loc_anonymizer import loc_anonymizer
 
-## This is the best way I've found to close the DB connect when the application exits.
+# This is the best way I've found to close the DB connect when the application exits.
 atexit.register(close_db)
 
 DEFAULT_PREFIX = '/api/v0.0'
@@ -37,6 +37,7 @@ metrics_response_size_bytes = Histogram(
         registry=metrics.registry,
         buckets=(500, 1500, 3000, 6000, 12000, 24000, 48000, INF))
 
+
 def configure_logging(app):
     # Log configuration
     # We set up three loggers:
@@ -45,7 +46,7 @@ def configure_logging(app):
     # 2. `root`, with handler `basic`: used for everything else.
     log_config = {
         'version': 1,
-        'disable_existing_loggers': False, # if not specified defaults to True
+        'disable_existing_loggers': False,  # if not specified defaults to True
         'formatters': {
             'default': {
                 'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
@@ -90,10 +91,10 @@ def configure_logging(app):
     # have a chance to take a closer look at the issue, I'm reverting to the
     # previous behaviour.
     dictConfig(log_config)
-    #if not app.config['TESTING']:
-    #    dictConfig(log_config)
-    #else:
-    #    app.logger.info("Not configuring loggers since we're running in testing mode")
+    # if not app.config['TESTING']:
+    #     dictConfig(log_config)
+    # else:
+    #     app.logger.info("Not configuring loggers since we're running in testing mode")
 
     if error:
         app.logger.error("LOG_LEVEL value %s is invalid. Defaulting to %s", level_str, log_config['root']['level'])
@@ -108,7 +109,7 @@ def configure_prometheus_exporter(app):
     app.metrics = metrics
 
 
-class DefaultConfig(object):
+class DefaultConfig:
     SECRET_KEY = 'dev'
 
     APP_PREFIX = DEFAULT_PREFIX

@@ -1,11 +1,10 @@
 
 from prometheus_client.exposition import make_wsgi_app
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from tdmq.app import create_app
 
 
-class PrefixMiddleware(object):
+class PrefixMiddleware:
 
     def __init__(self, app, prom_app, prefix='', prom_prefix='/metrics'):
         self.app = app
@@ -18,17 +17,19 @@ class PrefixMiddleware(object):
             environ['PATH_INFO'] = environ['PATH_INFO'][len(self.prefix):]
             environ['SCRIPT_NAME'] = self.prefix
             return self.app(environ, start_response)
-        elif environ['PATH_INFO'].startswith(self.prom_prefix):
+        if environ['PATH_INFO'].startswith(self.prom_prefix):
             return self.prom_app(environ, start_response)
-        else:
-            start_response('404', [('Content-Type', 'text/plain')])
-            return ["This url does not belong to the app.".encode()]
+        # else:
+        start_response('404', [('Content-Type', 'text/plain')])
+        return ["This url does not belong to the app.".encode()]
+
 
 def get_wsgi_app():
     app = create_app()
     prom_app = make_wsgi_app()
     app.wsgi_app = PrefixMiddleware(app.wsgi_app, prom_app)
     return app
+
 
 if __name__ == "__main__":
     app = get_wsgi_app()

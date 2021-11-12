@@ -30,8 +30,8 @@ def test_extract_archive(local_zone_db):
 
 def test_zone_basics(a_geojson_feature):
     zone = la.Zone(sg.shape(a_geojson_feature.geometry), a_geojson_feature.properties)
-    assert id(zone.centroid) == id(zone.centroid) # these should be cached
-    assert id(zone.area) == id(zone.area) # these should be cached
+    assert id(zone.centroid) == id(zone.centroid)  # these should be cached
+    assert id(zone.area) == id(zone.area)  # these should be cached
     assert pytest.approx(8.9357, zone.centroid.x)
     assert pytest.approx(38.9900, zone.centroid.y)
     assert zone.area > 0

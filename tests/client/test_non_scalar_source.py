@@ -132,6 +132,7 @@ def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_ap
         c.deregister_source(srcs[0])
         assert ve.code == 401
 
+
 def test_nonscalar_source_access_as_user(clean_storage, source_data, live_app):
     # first creates the source as admin
     c = Client(live_app.url(), auth_token=live_app.auth_token)

@@ -9,8 +9,10 @@ class TdmqError(Exception):
 class RequestException(TdmqError):
     pass
 
+
 class QueryTooLargeException(RequestException):
     pass
+
 
 class DuplicateItemException(RequestException):
     pass

@@ -149,8 +149,9 @@ def test_get_timeseries_after(app, db_data, source_data):
 
     result = db_query.get_timeseries(tdmq_id, {'after': after})
 
-    assert len(result['properties']) == \
-            len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
+    assert \
+        len(result['properties']) == \
+        len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
     assert len(result['rows']) == len(records)
 
 
@@ -163,8 +164,9 @@ def test_get_timeseries_before(app, db_data, source_data):
 
     result = db_query.get_timeseries(tdmq_id, {'before': before})
 
-    assert len(result['properties']) == \
-            len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
+    assert \
+        len(result['properties']) == \
+        len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
     assert len(result['rows']) == len(records)
 
 
@@ -177,8 +179,9 @@ def test_get_timeseries_before_after(app, db_data, source_data):
     tdmq_id = db_query.list_sources({'id': source_id})[0]['tdmq_id']
     result = db_query.get_timeseries(tdmq_id, {'after': after, 'before': before})
 
-    assert len(result['properties']) == \
-            len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
+    assert \
+        len(result['properties']) == \
+        len(next(s for s in source_data['sources'] if s['id'] == source_id)['controlledProperties'])
     assert len(result['rows']) == len(records)
 
 

@@ -1,15 +1,16 @@
 
 
-import pytest
 import tempfile
+import pytest
 
 pytestmark = pytest.mark.skip(reason="not up-to-date with json model migration")
+
 
 def test_db_init(runner, monkeypatch):
     class Recorder:
         called = False
 
-    def fake_init_db(drop=False):
+    def fake_init_db(_drop=False):
         Recorder.called = True
     monkeypatch.setattr('tdmq.db.init_db', fake_init_db)
     result = runner.invoke(args=['db', 'init'])
@@ -43,25 +44,25 @@ def assert_n_dumped(runner, _type, expected_n):
     assert "Dumped {}".format(expected_n) in result.output
 
 
-def test_load_db(runner):
-    runner.invoke(args=['db', 'init', '--drop'])
-    result = runner.invoke(args=['db', 'load', sensors_fname])
-    n = len(json.load(open(sensors_fname))['sensors'])
-    assert_n_dumped(runner, 'sensors', n)
-    assert "Loaded {'sensors': %d}" % n in result.output
-    result = runner.invoke(args=['db', 'load', records_fname])
-    n = len(json.load(open(records_fname))['records'])
-    assert "Loaded {'records': %d}" % n in result.output
-    n = len(json.load(open(records_fname))['records'])
-    assert_n_dumped(runner, 'records', n)
+# def test_load_db(runner):
+#     runner.invoke(args=['db', 'init', '--drop'])
+#     result = runner.invoke(args=['db', 'load', sensors_fname])
+#     n = len(json.load(open(sensors_fname))['sensors'])
+#     assert_n_dumped(runner, 'sensors', n)
+#     assert "Loaded {'sensors': %d}" % n in result.output
+#     result = runner.invoke(args=['db', 'load', records_fname])
+#     n = len(json.load(open(records_fname))['records'])
+#     assert "Loaded {'records': %d}" % n in result.output
+#     n = len(json.load(open(records_fname))['records'])
+#     assert_n_dumped(runner, 'records', n)
 
 
-def init_db_drop(runner):
-    runner.invoke(args=['db', 'init', '--drop'])
-    runner.invoke(args=['db', 'load', sensor_types_fname])
-    n = len(json.load(open(sensor_types_fname))['sensor_types'])
-    assert_n_dumped(runner, 'sensor_types', n)
-    runner.invoke(args=['db', 'init'])
-    assert_n_dumped(runner, 'sensor_types', n)
-    runner.invoke(args=['db', 'init', '--drop'])
-    assert_n_dumped(runner, 'sensor_types', 0)
+# def init_db_drop(runner):
+#     runner.invoke(args=['db', 'init', '--drop'])
+#     runner.invoke(args=['db', 'load', sensor_types_fname])
+#     n = len(json.load(open(sensor_types_fname))['sensor_types'])
+#     assert_n_dumped(runner, 'sensor_types', n)
+#     runner.invoke(args=['db', 'init'])
+#     assert_n_dumped(runner, 'sensor_types', n)
+#     runner.invoke(args=['db', 'init', '--drop'])
+#     assert_n_dumped(runner, 'sensor_types', 0)

@@ -226,7 +226,7 @@ def test_sources_get_no_args(flask_client, db_data, public_source_data):
 def test_sources_get_by_roi_private_shifted_out(flask_client, app, db_data, source_data):
     # The anonymization process can bump a source outside of the roi by shifting
     # its coordinates
-    geom = 'circle((8.99, 39.15), 1000)' # right over the private source_7
+    geom = 'circle((8.99, 39.15), 1000)'  # right over the private source_7
     q = f'roi={geom}'
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
@@ -237,10 +237,10 @@ def test_sources_get_by_roi_private_shifted_out(flask_client, app, db_data, sour
 
 
 @pytest.mark.sources
-def test_sources_get_by_roi_radius_too_small(flask_client, app, db_data, source_data):
+def test_sources_get_by_roi_radius_too_small(flask_client, db_data, source_data):
     # The anonymization process can bump a source outside of the roi by shifting
     # its coordinates
-    geom = 'circle((8.99, 39.15), 100)' # right over the private source_7.  Radius should be rounded to 0
+    geom = 'circle((8.99, 39.15), 100)'  # right over the private source_7.  Radius should be rounded to 0
     q = f'roi={geom}'
     response = flask_client.get(f'/sources?{q}')
     _checkresp(response)
@@ -250,9 +250,8 @@ def test_sources_get_by_roi_radius_too_small(flask_client, app, db_data, source_
     _validate_ids(data, { 'tdm/tiledb_sensor_6' })
 
 
-
 @pytest.mark.sources
-def test_sources_get_only_geom(flask_client, app, db_data, public_source_data):
+def test_sources_get_only_geom(flask_client, db_data, public_source_data):
     geom = 'circle((9.132, 39.248), 1000)'
     q = f'roi={geom}'
     response = flask_client.get(f'/sources?{q}')
@@ -262,7 +261,7 @@ def test_sources_get_only_geom(flask_client, app, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_get_active_after_before(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after_before(flask_client, db_data, public_source_data):
     after, before = '2019-05-02T11:30:00Z', '2019-05-02T12:30:00Z'
     q = f'after={after}&before={before}'
     response = flask_client.get(f'/sources?{q}')
@@ -274,7 +273,7 @@ def test_sources_get_active_after_before(flask_client, app, db_data, public_sour
 
 
 @pytest.mark.sources
-def test_sources_get_active_after(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after(flask_client, db_data, public_source_data):
     after = '2019-05-02T11:00:22Z'
     q = f'after={after}'
     response = flask_client.get(f'/sources?{q}')
@@ -342,9 +341,8 @@ def test_source_query_by_external_id(flask_client, app, db_data, public_source_d
     assert item_with_id['external_id'] == response_with_tdmq_id.get_json()['external_id']
 
 
-
 @pytest.mark.sources
-def test_source_query_private_by_external_id(flask_client, app, db_data, source_data):
+def test_source_query_private_by_external_id(flask_client, db_data, source_data):
     external_source_id = "tdm/sensor_7"
     response = flask_client.get(f'/sources?id={external_source_id}')
     _checkresp(response)
@@ -492,7 +490,7 @@ def test_timeseries_method_not_allowed(flask_client):
 
 
 @pytest.mark.timeseries
-def test_create_timeseries(flask_client, app, db_data):
+def test_create_timeseries(flask_client, db_data):
     _create_source(flask_client)
     timeseries_data = [{
         "time": "2019-05-02T10:50:00Z",
@@ -729,8 +727,6 @@ def test_get_service_info_authenticated(flask_client):
     assert 'vfs.s3.aws_secret_access_key' not in info['tiledb']['config']
 
 
-
-
 @pytest.mark.config
 def test_app_config_tiledb(local_zone_db):
     hdfs_root = 'hdfs://someserver:8020/'
@@ -748,7 +744,6 @@ def test_app_config_tiledb(local_zone_db):
         assert 'tiledb' in info
         assert info['tiledb']['storage.root'] == hdfs_root
         assert info['tiledb']['config'][k] == v
-
 
 
 @pytest.mark.config

@@ -11,8 +11,7 @@ import requests
 
 import tiledb
 from tdmq.client.sources import NonScalarSource, ScalarSource
-from tdmq.errors import (DuplicateItemException, TdmqError,
-                         UnsupportedFunctionality)
+from tdmq.errors import (DuplicateItemException, TdmqError)
 
 # FIXME need to do this to patch a overzealous logging by urllib3
 logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
@@ -43,7 +42,6 @@ class Client:
         """
         return datetime.fromtimestamp(ts, timezone.utc)
 
-
     @classmethod
     def _format_timestamp(cls, ts):
         """
@@ -54,7 +52,6 @@ class Client:
         if ts.tzinfo is not None:
             ts = ts.astimezone(timezone.utc)
         return ts.strftime(cls.TDMQ_DT_FMT)
-
 
     def __init__(self, tdmq_base_url=None, auth_token=None):
         self.base_url = (tdmq_base_url or
@@ -70,7 +67,6 @@ class Client:
         self.tiledb_ctx = None
         self.tiledb_vfs = None
         self.headers = {'Authorization': f'Bearer {auth_token}'} if auth_token is not None else {}
-
 
     def requires_connection(func):
         """
@@ -213,8 +209,8 @@ class Client:
     def __source_factory(self, api_struct):
         if api_struct['description'].get('shape'):
             return NonScalarSource(self, api_struct['tdmq_id'], api_struct)
-        else:
-            return ScalarSource(self, api_struct['tdmq_id'], api_struct)
+        # else
+        return ScalarSource(self, api_struct['tdmq_id'], api_struct)
 
     @requires_connection
     def find_sources(self, args=None):
@@ -290,10 +286,8 @@ class Client:
         aname = self._source_data_path(tdmq_id)
         return tiledb.open(aname, mode=mode, ctx=self.tiledb_ctx)
 
-
     def close_array(self, tiledb_array):
         tiledb_array.close()
-
 
     @requires_connection
     def fetch_non_scalar_slice(self, tiledb_array, tiledb_indices, args):
@@ -311,7 +305,6 @@ class Client:
         data = tiledb_array[tiledb_i]
         return data
 
-
     def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots, extent_sizes=None):
         array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
@@ -320,6 +313,7 @@ class Client:
         assert len(shape) > 0 and n_slots > 0
 
         attr_defaults = dict(dtype=np.float32, filters=tiledb.FilterList([tiledb.ZstdFilter()]))
+
         def _attr_params(attr_name, attr_config=None):
             if not attr_config:
                 attr_config = attr_defaults
