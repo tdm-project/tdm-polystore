@@ -1,0 +1,115 @@
+name: CI Pipeline
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "*.*.*"
+  pull_request:
+    - master
+    - develop
+
+env:
+  TERM: xterm
+  # enable Docker push only if the required secrets are defined
+  ENABLE_DOCKER_PUSH: ${{ secrets.DOCKERHUB_USER != null && secrets.DOCKERHUB_TOKEN != null }}
+
+jobs:
+  # Verifies pep8, pyflakes and circular complexity
+  flake8:
+    name: Check Flake8 (python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Set up Python v${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install flake8
+        run: pip install flake8
+      - name: Run checks
+        run: flake8 -v .
+
+  tests:
+    name: Build, Test and Push Docker image
+    runs-on: ubuntu-latest
+    needs: [flake8]
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      # Set Docker image
+      - name: Set up Docker repository
+        run: echo "DOCKERHUB_REPO=$( if [[ -n $USER_REPO ]]; then echo $USER_REPO; else echo $GITHUB_REPOSITORY; fi )" >> $GITHUB_ENV
+        env:
+          USER_REPO: ${{ secrets.DOCKERHUB_REPO }}
+      - name: Compute build number -- offset by old TravisCI build number
+        env:
+          BASE_BUILD_NUM: ${{ github.run_number }}
+        run: |
+          echo ::set-env name=BUILD_NUM::$(($BASE_BUILD_NUM+500))
+      # Extract Docker metadata
+      - name: Extract Docker metadata
+        id: docker_meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+          labels: |
+            org.opencontainers.image.version=${{ github.branch }}-${{ env.BUILD_NUM }}
+      # Set up Docker tags
+      - name: Set up Docker tags
+        run: |
+          IFS=$'\n'      # Change IFS to new line
+          tags=($TAGS)   # split to array
+          echo "DOCKER_TAGS=$(printf "'%s' " "${tags[@]}")" >> $GITHUB_ENV
+        env:
+          TAGS: ${{ steps.docker_meta.outputs.tags }}
+      # Set up Docker labels
+      - name: Set up Docker labels
+        run: |
+          IFS=$'\n'      # Change IFS to new line
+          labels=($LABELS) # split to array $names
+          echo "DOCKER_LABELS=$(printf "'%s' " "${labels[@]}")" >> $GITHUB_ENV
+        env:
+          LABELS: ${{ steps.docker_meta.outputs.labels }}
+      - name: Build Docker images
+        run: |
+          make images
+      - name: Start testing services
+        run: |
+          make start
+      - name: Run tests
+        run: |
+          make run-tests
+      - name: Teardown testing environment
+        run: make down
+      # DockerHub Login
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        if: ${{ env.ENABLE_DOCKER_PUSH == 'true' }}
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      #      - name: Push Docker image
+      #        if: ${{ env.ENABLE_DOCKER_PUSH == 'true' }}
+      #        run: |
+      #          for t in ${TAGS}; do
+      #              docker push ${t}
+      #          done
+      #        env:
+      #          TAGS: ${{ steps.docker_meta.outputs.tags }}
+      - name: Clean up working environment
+        run: make clean
