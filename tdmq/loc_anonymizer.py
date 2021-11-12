@@ -99,8 +99,8 @@ def _iter_shapefile_archive(uri):
             _logger.error("Incompatible archive.  Expected to find exactly "
                           "one basename in shapefile archive but found %s", len(unique_set))
             _logger.error("Shape file parts found: %s", '\n'.join(unique_set))
-            raise ValueError(f"Incompatible shapefile archive.  Expected example "
-                             "one basename but found {len(unique_set)}")
+            raise ValueError("Incompatible shapefile archive.  Expected example "
+                             f"one basename but found {len(unique_set)}")
 
         shapefile_basename = unique_set.pop()
         _logger.info("Found shapefile %s in archive", shapefile_basename)

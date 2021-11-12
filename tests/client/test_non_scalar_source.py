@@ -227,7 +227,7 @@ def test_consolidate(clean_storage, source_data, live_app, caplog):
         assert f"Executing {m} consolidation on array" in caplog.text
         assert f"Executing {m} vacuum on array" in caplog.text
     # We don't run array metadata vacuuming.  Fails in tests
-    assert f"Executing array_meta consolidation on array" in caplog.text
+    assert "Executing array_meta consolidation on array" in caplog.text
 
 
 def test_ingest_one(clean_storage, source_data, live_app):

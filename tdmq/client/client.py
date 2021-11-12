@@ -164,8 +164,8 @@ class Client:
         if 'properties' in kwargs:
             unknown_properties = [ p for p in kwargs['properties'].keys() if p not in definition['controlledProperties'] ]
             if unknown_properties:
-                raise ValueError(f"kwargs['properties'] references the following properties that are not "
-                                 "in the source's controlledProperties: {', '.join(unknown_properties)}")
+                raise ValueError("kwargs['properties'] references the following properties that are not "
+                                 f"in the source's controlledProperties: {', '.join(unknown_properties)}")
             for k, v in kwargs['properties'].items():
                 known_configs = ('dtype', 'filters')
                 if any(k not in known_configs for k in v.keys()):
