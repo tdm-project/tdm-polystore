@@ -70,18 +70,30 @@ startdev: base-images docker/docker-compose.base.yml docker/docker-compose.hdfs.
 stopdev: docker/docker-compose.base.yml docker/docker-compose.hdfs.yml docker/docker-compose.dev.yml
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml -f docker/docker-compose.dev.yml down
 
-start: base-images docker/docker-compose.base.yml docker/docker-compose.hdfs.yml docker/docker-compose.testing.yml
+start-light: base-images docker/docker-compose.base.yml docker/docker-compose.testing.yml
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml up -d
+	# Try to wait for timescaleDB
+	docker-compose -f ./docker/docker-compose.base.yml exec -T timescaledb bash -c 'for i in {1..8}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'
+
+start: docker/docker-compose.hdfs.yml start-light
 	chmod a+r ./docker/prometheus.yml
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml -f docker/docker-compose.testing.yml up -d
-	# Try to wait for timescaleDB and HDFS
-	docker-compose -f ./docker/docker-compose.base.yml exec -T timescaledb bash -c 'for i in {1..8}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'
+	# Try to wait for HDFS
 	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T namenode hdfs dfsadmin -safemode wait
 	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T datanode bash -c 'for i in {1..8}; do sleep 5; datanode_cid && break; done || { echo ">> Timed out waiting for datanode to join HDFS" >&2; exit 3; }'
 
 stop: docker/docker-compose.base.yml docker/docker-compose.hdfs.yml docker/docker-compose.testing.yml
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml -f docker/docker-compose.testing.yml down
 
-run-tests: start
+run-tests: start-light
+	# Run tests that don't use the hdfs fixture
+	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.testing.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
+	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
+	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
+	docker run -it --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
+
+
+run-full-tests: start
 	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.hdfs.yml -f ./docker/docker-compose.testing.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
 	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -mkdir -p /tiledb"
 	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -chmod a+wr /tiledb"

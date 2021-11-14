@@ -91,7 +91,7 @@ jobs:
           make images
       - name: Start testing services
         run: |
-          make start
+          make start-light
       - name: Run tests
         run: |
           make run-tests
