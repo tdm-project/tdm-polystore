@@ -97,20 +97,20 @@ stop: docker/docker-compose.base.yml docker/docker-compose.testing.yml docker/do
 run-tests: start
 	$(info Running all tests except for those on HDFS storage)
 	# Run tests that don't use the hdfs fixture
-	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
-	docker run -it --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
+	docker run --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
 
 run-full-tests: start-extra
 	$(info Running all tests)
-	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml  exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml  exec -T --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
 	docker-compose -f docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -mkdir -p /tiledb"
 	docker-compose -f docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
 	docker-compose -f docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
-	docker run -it --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
+	docker run --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
 
 
 clean: stop
