@@ -91,12 +91,12 @@ jobs:
           make images
       - name: Start testing services
         run: |
-          make start-light
+          make start
       - name: Run tests
         run: |
           make run-tests
       - name: Teardown testing environment
-        run: make down
+        run: make stop
       # DockerHub Login
       - name: Login to DockerHub
         uses: docker/login-action@v1
