@@ -31,7 +31,6 @@ services:
   tdmqc:
     image: tdmproject/tdmqc
     depends_on:
-      - "namenode"
       - "timescaledb"
     #DEV user: USER_UID:USER_GID
     #DEV volumes:
@@ -40,7 +39,6 @@ services:
     #DEV - "LOCAL_PATH/tdmq:/tdmq-dist/tdmq"
     env_file: *env_file
     environment:
-      - NAMENODE_HOSTNAME=namenode
       - TDMQ_AUTH_TOKEN=
     networks:
       - tdmq

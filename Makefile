@@ -60,46 +60,56 @@ docker/docker-compose.testing.yml: docker/docker-compose.testing.yml-tmpl
 	    -e "s^USER_GID^$$(id -g)^" \
 	     < docker/docker-compose.testing.yml-tmpl > docker/docker-compose.testing.yml
 
-run: base-images docker/docker-compose.base.yml docker/docker-compose.hdfs.yml docker/docker-compose.testing.yml
-	docker-compose -f ./docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.testing.yml up
+start-dev: base-images docker/docker-compose.base.yml docker/docker-compose.dev.yml
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.dev.yml up -d
 
-startdev: base-images docker/docker-compose.base.yml docker/docker-compose.hdfs.yml docker/docker-compose.dev.yml
+start-dev-extra: docker/docker-compose.hdfs.yml start-dev
 	chmod a+r ./docker/prometheus.yml
-	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml -f docker/docker-compose.dev.yml up -d
+	$(info Starting development environment with extra services)
+	docker-compose \
+		-f docker/docker-compose.base.yml \
+		-f docker/docker-compose.dev.yml \
+		-f docker/docker-compose.hdfs.yml \
+		-f docker/docker-compose.prometheus.yml up -d
 
-stopdev: docker/docker-compose.base.yml docker/docker-compose.hdfs.yml docker/docker-compose.dev.yml
-	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml -f docker/docker-compose.dev.yml down
-
-start-light: base-images docker/docker-compose.base.yml docker/docker-compose.testing.yml
+start: base-images docker/docker-compose.base.yml docker/docker-compose.testing.yml
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml up -d
 	# Try to wait for timescaleDB
-	docker-compose -f ./docker/docker-compose.base.yml exec -T timescaledb bash -c 'for i in {1..8}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'
+	docker-compose -f docker/docker-compose.base.yml exec -T timescaledb bash -c 'for i in {1..8}; do sleep 5; pg_isready && break; done || { echo ">> Timed out waiting for timescaleDB" >&2; exit 2; }'
+	$(info Minimal docker-compose ready for use.)
 
-start: docker/docker-compose.hdfs.yml start-light
-	chmod a+r ./docker/prometheus.yml
-	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml -f docker/docker-compose.testing.yml up -d
+start-extra: docker/docker-compose.hdfs.yml docker/docker-compose.prometheus.yml start
+	chmod a+r docker/prometheus.yml
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml up -d
 	# Try to wait for HDFS
-	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T namenode hdfs dfsadmin -safemode wait
-	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T datanode bash -c 'for i in {1..8}; do sleep 5; datanode_cid && break; done || { echo ">> Timed out waiting for datanode to join HDFS" >&2; exit 3; }'
+	docker-compose -f docker/docker-compose.hdfs.yml exec -T namenode hdfs dfsadmin -safemode wait
+	docker-compose -f docker/docker-compose.hdfs.yml exec -T datanode bash -c 'for i in {1..8}; do sleep 5; datanode_cid && break; done || { echo ">> Timed out waiting for datanode to join HDFS" >&2; exit 3; }'
+	$(info Full docker-compose ready for use.)
 
-stop: docker/docker-compose.base.yml docker/docker-compose.hdfs.yml docker/docker-compose.testing.yml
-	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.hdfs.yml -f docker/docker-compose.prometheus.yml -f docker/docker-compose.testing.yml down
+stop: docker/docker-compose.base.yml docker/docker-compose.testing.yml docker/docker-compose.dev.yml docker/docker-compose.hdfs.yml docker/docker-compose.prometheus.yml
+	docker-compose \
+		-f docker/docker-compose.base.yml \
+		-f docker/docker-compose.testing.yml \
+		-f docker/docker-compose.dev.yml \
+		-f docker/docker-compose.hdfs.yml \
+		-f docker/docker-compose.prometheus.yml down
 
-run-tests: start-light
+run-tests: start
+	$(info Running all tests except for those on HDFS storage)
 	# Run tests that don't use the hdfs fixture
-	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.testing.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
-	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
-	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
 	docker run -it --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
 
-
-run-full-tests: start
-	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.hdfs.yml -f ./docker/docker-compose.testing.yml exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
-	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -mkdir -p /tiledb"
-	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
-	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.hdfs.yml -f ./docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
-	docker-compose -f ./docker/docker-compose.base.yml -f ./docker/docker-compose.hdfs.yml -f ./docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
-	docker-compose -f ./docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
+run-full-tests: start-extra
+	$(info Running all tests)
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml  exec --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests'
+	docker-compose -f docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -mkdir -p /tiledb"
+	docker-compose -f docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -chmod a+wr /tiledb"
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml -f docker/docker-compose.hdfs.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
+	docker-compose -f docker/docker-compose.hdfs.yml exec -T namenode bash -c "hdfs dfs -rm -r hdfs://namenode:8020/tiledb"
 	docker run -it --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
 
 
@@ -107,5 +117,7 @@ clean: stop
 	rm -rf docker-stacks
 	rm -rf docker/tdmq-dist
 	rm -rf docker/notebooks
+	rm -f docker/docker-compose.{dev,testing}.yml
 
-.PHONY: all tdmq-client-conda tdmqc-conda tdmq-client tdmqc jupyter web images base-images run start stop startdev stopdev clean
+.PHONY: all tdmq-client-conda tdmqc-conda tdmq-client tdmqc jupyter web images base-images \
+	      start-dev start-dev-extra start start-extra stop run-tests run-full-tests clean
