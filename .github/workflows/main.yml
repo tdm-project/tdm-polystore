@@ -61,15 +61,15 @@ jobs:
           echo "ImageTag=${GITHUB_REF_NAME}-${BUILD_NUM}" >> $GITHUB_ENV
           echo "ImageOwner=tdmproject" >> $GITHUB_ENV
           echo "Images=tdmq-client-conda tdmq-client tdmq tdmqj tdmq-db tdmqj-hub" >> $GITHUB_ENV
-      #- name: Build Docker images
-      #  run: |
-      #    make images
-      #- name: Start testing services
-      #  run: |
-      #    make start
-      #- name: Run tests
-      #  run: |
-      #    make run-tests
+      - name: Build Docker images
+        run: |
+          make images
+      - name: Start testing services
+        run: |
+          make start
+      - name: Run tests
+        run: |
+          make run-tests
       # DockerHub Login
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -88,17 +88,13 @@ jobs:
             ImageSlug="${ImageOwner}/${image}"
             FullImageName="${ImageSlug}:${ImageTag}"
 
-            echo "Tagging tdmq image ${ImageSlug} as ${FullImageName}" >&2
             # ImageSlug used here must match the image tag set by the
             # docker build command in the Makefile
-            echo "cmd:" docker tag "${ImageSlug}" "${FullImageName}"
-            echo "Tagging tdmq image ${FullImageName} as ${ImageSlug}:latest" >&2
-            echo "cmd:" docker tag "${FullImageName}" "${ImageSlug}:latest"
+            docker tag "${ImageSlug}" "${FullImageName}"
+            docker tag "${FullImageName}" "${ImageSlug}:latest"
 
-            echo "Pushing ${FullImageName} to dockerhub" >&2
-            echo "cmd:" docker push "${FullImageName}"
-            echo "Pushing ${ImageSlug}:latest" >&2
-            echo "cmd:" docker push "${ImageSlug}:latest"
+            docker push "${FullImageName}"
+            docker push "${ImageSlug}:latest"
           done
       - name: Clean up working environment
         run: make clean
