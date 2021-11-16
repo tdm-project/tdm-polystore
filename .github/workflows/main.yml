@@ -78,7 +78,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Tag and push images
-        if: github.event_name != 'pull_request' && env.DOCKER_SECRETS_AVAILABLE == 'true'
+        if: >
+          env.GITHUB_EVENT_NAME != 'pull_request' &&
+          (env.GITHUB_REF_NAME == 'master' || env.GITHUB_REF_NAME == 'develop') &&
+          env.DOCKER_SECRETS_AVAILABLE == 'true'
         run: |
           set -o nounset; set -o errexit
           for image in ${Images}; do
