@@ -97,7 +97,10 @@ stop: docker/docker-compose.base.yml docker/docker-compose.testing.yml docker/do
 run-tests: start
 	$(info Running all tests except for those on HDFS storage)
 	# Run tests that don't use the hdfs fixture
-	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
+	# We first unset all environment variables HADOOP* to avoid having tiledb try
+	# to activate its HDFS client.
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc \
+		fake_user.sh /bin/bash -c 'for varname in "$${!HADOOP*}"; do unset "$${varname}"; done; cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
 	docker run --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
