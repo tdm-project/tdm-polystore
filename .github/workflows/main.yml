@@ -65,7 +65,7 @@ jobs:
         run: |
           echo "ImageTag=${GITHUB_REF_NAME}-${BUILD_NUM}" >> $GITHUB_ENV
           echo "ImageOwner=tdmproject" >> $GITHUB_ENV
-          echo "Images=tdmq-client-conda tdmq-client tdmq tdmqj tdmq-db tdmqj-hub" >> $GITHUB_ENV
+          echo "Images=tdmq-client-conda tdmq-client tdmq tdmqj tdmq-db" >> $GITHUB_ENV
       - name: Build Docker images
         run: |
           make images
