@@ -42,6 +42,9 @@ jobs:
     name: Build, Test and Push Docker image
     runs-on: ubuntu-latest
     needs: [flake8]
+    defaults:
+      run:
+        shell: bash
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
@@ -76,11 +79,12 @@ jobs:
       #  run: make stop
       - name: Tag images
         run: |
+          set -o nounset; set -o errexit
           for image in ${Images}; do
             ImageSlug="${ImageOwner}/${image}"
-            FullImageName="${ImageSlug}:${tag}"
+            FullImageName="${ImageSlug}:${ImageTag}"
 
-            echo "Tagging tdmq image ${ImageSlug} as ${FullImageName}\n" >&2
+            echo "Tagging tdmq image ${ImageSlug} as ${FullImageName}" >&2
             # ImageSlug used here must match the image tag set by the
             # docker build command in the Makefile
             echo "cmd:" docker tag "${ImageSlug}" "${FullImageName}"
