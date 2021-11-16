@@ -54,6 +54,7 @@ jobs:
       - name: print github stuff
         run: |
           echo github.event_name=${{github.event_name}}
+          echo github.ref=${{github.ref}}
           echo GITHUB_REF_NAME=${GITHUB_REF_NAME}
           echo ENV_GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME}
       - name: Compute build number -- offset by old TravisCI build number
@@ -99,9 +100,11 @@ jobs:
 
             # ImageSlug used here must match the image tag set by the
             # docker build command in the Makefile
+            echo "=== Tagging ${ImageSlug} as ${FullImageName} and ${ImageSlug}:latest ==="
             docker tag "${ImageSlug}" "${FullImageName}"
             docker tag "${FullImageName}" "${ImageSlug}:latest"
 
+            echo "=== Pushing ${FullImageName} and ${ImageSlug}:latest ==="
             docker push "${FullImageName}"
             docker push "${ImageSlug}:latest"
           done
