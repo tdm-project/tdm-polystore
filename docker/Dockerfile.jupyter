@@ -25,7 +25,7 @@ RUN mamba install -c conda-forge --yes \
 
 # The JupyterLab extension is installed as per the suggestion found in this issue on github;
 # https://github.com/jupyterlab/jupyterlab/issues/4930
-RUN jupyter labextension install --clean -y jupyter-leaflet \
+RUN jupyter labextension install --clean -y @jupyter-widgets/jupyterlab-manager jupyter-leaflet \
  && jupyter lab clean \
  && jlpm cache clean \
  && npm cache clean --force \
