@@ -75,7 +75,7 @@ def test_check_timeseries_bucket(clean_storage, clean_db, live_app):
     temps = [20 + i for i in range(N)]
     hums = [i / N for i in range(N)]
     for t, tv, th in zip(times, temps, hums):
-        s.ingest_one(t,{'temperature': tv, 'humidity': th})
+        s.ingest_one(t, {'temperature': tv, 'humidity': th})
     ts = s.timeseries(bucket=10, op='sum')
     ts_times, data = ts[:]
     assert np.allclose(
@@ -200,6 +200,7 @@ def test_timeseries_step_index(clean_storage, db_data, source_data, live_app):
     ts = s.timeseries()
     # extract each second tuple
     (times, _) = ts[0:-1:2]
+
     def parse_timestamp(time_str):
         return datetime.strptime(time_str, Client.TDMQ_DT_FMT_NO_MICRO).astimezone(timezone.utc)
 

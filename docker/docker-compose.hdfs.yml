@@ -22,5 +22,13 @@ services:
     networks:
       - tdmq
 
+  # Add hdfs dependencies on tdmqc service
+  tdmqc:
+    image: tdmproject/tdmqc
+    depends_on:
+      - "namenode"
+    environment:
+      - NAMENODE_HOSTNAME=namenode
+
 networks:
   tdmq:

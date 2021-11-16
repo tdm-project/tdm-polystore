@@ -116,19 +116,19 @@ def test_access_attributes_scalar_source(clean_storage, db_data, public_source_d
     assert len(sources) == 1
     s = sources[0]
     original = next(s for s in public_source_data['sources'] if s['id'] == src_id)
-    assert s.id                         == original['id']
-    assert s.is_stationary              == original.get('stationary', True)
-    assert s.entity_category            == original['entity_category']
-    assert s.entity_type                == original['entity_type']
-    assert s.public                     == original['public']
-    assert s.alias                      == original['alias']
-    assert len(s.shape)                 == 0
+    assert s.id == original['id']
+    assert s.is_stationary == original.get('stationary', True)
+    assert s.entity_category == original['entity_category']
+    assert s.entity_type == original['entity_type']
+    assert s.public == original['public']
+    assert s.alias == original['alias']
+    assert len(s.shape) == 0
     assert set(s.controlled_properties) == set(original['controlledProperties'])
-    assert s.edge_id                    == original['description']['edge_id']
-    assert s.station_id                 == original['description']['station_id']
-    assert s.station_model              == original['description']['station_model']
-    assert s.sensor_id                  == original['description']['sensor_id']
-    assert s.registration_time          is not None
+    assert s.edge_id == original['description']['edge_id']
+    assert s.station_id == original['description']['station_id']
+    assert s.station_model == original['description']['station_model']
+    assert s.sensor_id == original['description']['sensor_id']
+    assert s.registration_time is not None
 
 
 def test_access_attributes_scalar_source_private_unauthenticated(clean_storage, db_data, source_data, live_app):
@@ -138,20 +138,19 @@ def test_access_attributes_scalar_source_private_unauthenticated(clean_storage, 
     tdmq_id = _compute_tdmq_id(src_id)
     s = c.get_source(tdmq_id)
     original = next(t for t in source_data['sources'] if t['id'] == src_id)
-    assert s.id                         is None
-    assert s.is_stationary              == original.get('stationary', True)
-    assert s.entity_category            == original['entity_category']
-    assert s.entity_type                == original['entity_type']
-    assert s.public                     == original['public']
-    assert s.alias                      is None
-    assert len(s.shape)                 == 0
+    assert s.id is None
+    assert s.is_stationary == original.get('stationary', True)
+    assert s.entity_category == original['entity_category']
+    assert s.entity_type == original['entity_type']
+    assert s.public == original['public']
+    assert s.alias is None
+    assert len(s.shape) == 0
     assert set(s.controlled_properties) == set(original['controlledProperties'])
-    assert s.edge_id                    == original['description']['edge_id']
-    assert s.station_id                 == original['description']['station_id']
-    assert s.station_model              == original['description']['station_model']
-    assert s.sensor_id                  == original['description']['sensor_id']
-    assert s.registration_time          is not None
-
+    assert s.edge_id == original['description']['edge_id']
+    assert s.station_id == original['description']['station_id']
+    assert s.station_model == original['description']['station_model']
+    assert s.sensor_id == original['description']['sensor_id']
+    assert s.registration_time is not None
 
 
 def test_find_source_by_roi(clean_storage, db_data, live_app):

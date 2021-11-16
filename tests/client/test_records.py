@@ -119,13 +119,13 @@ def test_ingest_scalar_record_timezone(clean_storage, public_source_data, live_a
     by_source = public_source_data['records_by_source']
     records = by_source[sensor_0['id']]
     r = records[0]
-    dt_naive = datetime.now() # naive datetime, no timezone
+    dt_naive = datetime.now()  # naive datetime, no timezone
     source.ingest_one(dt_naive, r['data'])
     timeseries = source.timeseries()
     assert abs(timeseries.time[0] - dt_naive.astimezone(timezone.utc)) < timedelta(seconds=1)
 
     # timestamp in UTC
-    dt_utc = datetime.now(tz=timezone.utc) # utc timestamp
+    dt_utc = datetime.now(tz=timezone.utc)  # utc timestamp
     source.ingest_one(dt_utc, r['data'])
     timeseries = source.timeseries()
     assert abs(timeseries.time[-1] - dt_utc) < timedelta(seconds=1)

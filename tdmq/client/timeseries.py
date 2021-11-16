@@ -15,7 +15,6 @@ class TimeSeries(abc.ABC):
         self.time = []
         self.fetch(properties)
 
-
     def _pre_fetch(self, properties=None):
         """
         Fetch timeseries from tdmq web service and set the self.time array; returns tdmq
@@ -59,7 +58,6 @@ class TimeSeries(abc.ABC):
             2. OrderedDict mapping property names to  np.ndarrays containing the actual data.
         """
 
-
     def __len__(self):
         return len(self.time)
 
@@ -75,7 +73,6 @@ class NoneArray(collections.abc.Sequence):
         if length < 0:
             raise ValueError("length < 0")
         self._length = length
-
 
     def __getitem__(self, s):
         is_tuple = False
@@ -108,30 +105,24 @@ class NoneArray(collections.abc.Sequence):
             error_msg += f"(index {s} is a {type(s)})"
         raise TypeError(error_msg)
 
-
     def __len__(self):
         return self._length
 
-
     def __contains__(self, item):
         return self._length > 0 and item is None
-
 
     def __iter__(self):
         for _ in range(self._length):
             yield None
 
-
     def __reversed__(self):
         yield from self.__iter__()
-
 
     def index(self, value, start=0, stop=9223372036854775807):
         start, stop, _ = slice(start, stop).indices(self._length)
         if start < stop and value is None:
             return 0
         raise ValueError(f"{value} is not in list")
-
 
     def count(self, value):
         return self._length if value is None else 0
@@ -158,7 +149,6 @@ class ScalarTimeSeries(TimeSeries):
             else:
                 self.series[fname] = NoneArray(len(self))
 
-
     def get_item(self, args):
         assert len(args) == 1
         return (self.time[args], dict((propname, self.series[propname][args]) for propname in self.series))
@@ -171,24 +161,19 @@ class NonScalarTimeSeries(TimeSeries):
             raise NotImplementedError("Bucketing is not yet implemented in the client for non-scalar timeseries")
         super().__init__(source, after, before, bucket, op)
 
-
     def fetch(self, properties=None):
         # NonScalarTimeSeries ignores any properties specified.  It only considers tiledb_index
         raw_data = self._pre_fetch()
         self.tiledb_indices = raw_data['tiledb_index']
 
-
     def fetch_data_block(self, args):
         if self.bucket is None:
             return self.source.client.fetch_non_scalar_slice(self.source.get_array(), self.tiledb_indices, args)
-        else:
-            raise ValueError('bucket not supported')
-
+        raise ValueError('bucket not supported')
 
     def get_item(self, args):
         assert len(args) > 0
         time = self.time[args[0]]
         if isinstance(args[0], slice) and len(time) == 0:
             return (time, np.array([], dtype=np.int32))
-        else:
-            return (time, self.fetch_data_block(args))
+        return (time, self.fetch_data_block(args))

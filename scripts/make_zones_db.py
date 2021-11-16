@@ -9,10 +9,10 @@
 # by ISTAT](https://www.istat.it/it/archivio/222527)
 # 2.  the geojson file of the areas of Cagliari provided by Andrea Pinna.
 
-## requirements
-# geojson
-# shapely
-# pyshp
+# Requirements:
+#   - geojson
+#   - shapely
+#   - pyshp
 
 import argparse
 import logging
@@ -24,6 +24,7 @@ import shapely.geometry
 
 ComuniShapeFile = "/home/ubuntu/shapes_comuni_istat_2020-01-01/Com01012020_g_WGS84"
 QuartieriGeoJsonFile = "/home/ubuntu/quartieri_cagliari_4326.geojson"
+
 
 def write_shapefile(writer, path):
     with shapefile.Reader(path) as f:

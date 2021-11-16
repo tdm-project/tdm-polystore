@@ -1,5 +1,4 @@
 from tdmq.app import create_app
-from prometheus_client.registry import CollectorRegistry
 
 
 def test_config():

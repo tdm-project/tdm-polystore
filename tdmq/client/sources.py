@@ -9,7 +9,6 @@ import numpy as np
 import tiledb
 from tdmq.client.timeseries import ScalarTimeSeries
 from tdmq.client.timeseries import NonScalarTimeSeries
-from tdmq.errors import UnsupportedFunctionality
 from tdmq.utils import timeit
 
 _logger = logging.getLogger(__name__)
@@ -119,9 +118,9 @@ class Source(abc.ABC):
         s = self.client.get_latest_source_activity(self.tdmq_id)
         return self.timeseries(after=s['time'], before=None)
 
-    ### Ingestion ###
-    ### Requires authentication
-    ###
+    # # Ingestion ###
+    # # Requires authentication
+    # #
     @abc.abstractmethod
     def ingest_one(self, t, data, slot=None, footprint=None):
         """
@@ -214,7 +213,6 @@ class NonScalarSource(Source):
         _logger.debug("NonScalarSource destructor")
         self.close_array()
 
-
     def close_array(self):
         if self._tiledb_array:
             _logger.debug("NonScalarSource: closing array")
@@ -222,7 +220,6 @@ class NonScalarSource(Source):
                 self._tiledb_array.close()
             finally:
                 self._tiledb_array = None
-
 
     def open_array(self, mode='r'):
         if mode not in ('r', 'w'):
@@ -238,7 +235,6 @@ class NonScalarSource(Source):
             self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
         return self._tiledb_array
 
-
     @contextmanager
     def array_context(self, mode='r'):
         ary = self.open_array(mode)
@@ -247,17 +243,14 @@ class NonScalarSource(Source):
         finally:
             self.close_array()
 
-
     def get_array(self):
         if not self._tiledb_array:
             raise RuntimeError("Array not open!")
         return self._tiledb_array
 
-
     def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
         self.open_array(mode='r')
         return NonScalarTimeSeries(self, after, before, bucket, op)
-
 
     def _format_record(self, t, slot, foot=None):
         record = {
@@ -273,7 +266,7 @@ class NonScalarSource(Source):
         s = self.client.get_latest_source_activity(self.tdmq_id)
         if s['time'] is None:
             _logger.debug("No activity found. Starting from beginning")
-            return 0 # first slot
+            return 0  # first slot
         if 'tiledb_index' not in s['data']:
             raise RuntimeError(f"Activity record collected for {self.tdmq_id} does not contain `tiledb_index`!")
         most_recent_slot = s['data']['tiledb_index']
@@ -304,7 +297,6 @@ class NonScalarSource(Source):
             ary[slot:slot + 1] = data
         _logger.debug("Registering record with tdmq")
         self.client.add_records([record])
-
 
     def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
         if initial_slot is None:
@@ -351,7 +343,6 @@ class NonScalarSource(Source):
             ary[initial_slot:(initial_slot + new_data.shape[0])] = struct
         _logger.debug("Registering %s records with tdmq", len(records))
         self.client.add_records(records)
-
 
     def consolidate(self, mode=None, config_dict=None, vacuum=True):
         """
@@ -411,6 +402,6 @@ class NonScalarSource(Source):
                 # mode already validated before consolidation
                 _specific_vacuum(mode)
             else:
-                #for m in valid_modes:  -> 'array_meta' vacuum mode fails in tests
+                # for m in valid_modes:  -> 'array_meta' vacuum mode fails in tests
                 for m in ('fragments', 'fragment_meta'):
                     _specific_vacuum(m)

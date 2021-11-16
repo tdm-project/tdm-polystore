@@ -132,6 +132,7 @@ def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_ap
         c.deregister_source(srcs[0])
         assert ve.code == 401
 
+
 def test_nonscalar_source_access_as_user(clean_storage, source_data, live_app):
     # first creates the source as admin
     c = Client(live_app.url(), auth_token=live_app.auth_token)
@@ -226,7 +227,7 @@ def test_consolidate(clean_storage, source_data, live_app, caplog):
         assert f"Executing {m} consolidation on array" in caplog.text
         assert f"Executing {m} vacuum on array" in caplog.text
     # We don't run array metadata vacuuming.  Fails in tests
-    assert f"Executing array_meta consolidation on array" in caplog.text
+    assert "Executing array_meta consolidation on array" in caplog.text
 
 
 def test_ingest_one(clean_storage, source_data, live_app):

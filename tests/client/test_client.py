@@ -82,7 +82,7 @@ def test_find_source_not_anonymized(clean_storage, db_data, source_data, live_ap
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     sources = c.find_sources(args={'public': False, 'anonymized': False})
     assert all(not s.public for s in sources)
-    assert all(s.id for s in sources) # when anonymizing the `id` is removed
+    assert all(s.id for s in sources)  # when anonymizing the `id` is removed
 
 
 def test_find_source_private_find_by_id(clean_storage, db_data, source_data, live_app):
@@ -123,8 +123,9 @@ def test_get_anonymized_source(clean_storage, db_data, source_data, live_app):
 
     with pytest.raises(HTTPError) as exc_info:
         c.get_source(tdmq_id, anonymized=False)
-    assert exc_info.value.response.status_code == 401 # unauthorized
+    assert exc_info.value.response.status_code == 401  # unauthorized
+
 
 def test_imports():
-    from tdmq.client import Source
-    from tdmq.client import TimeSeries
+    from tdmq.client import Source  # noqa: F401
+    from tdmq.client import TimeSeries  # noqa: F401

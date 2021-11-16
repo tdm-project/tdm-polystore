@@ -1,5 +1,5 @@
 
-ARG BASE_IMAGE=continuumio/miniconda3:4.9.2
+ARG BASE_IMAGE=continuumio/miniconda3:4.10.3
 FROM $BASE_IMAGE AS tdmq-client-conda-deps
 
 RUN apt-get update -q \

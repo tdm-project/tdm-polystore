@@ -19,10 +19,12 @@ import tdmq.db
 import tdmq.db_manager as db_manager
 from tdmq.app import create_app
 
+
 def _rand_str(length=6):
     if length < 1:
         raise ValueError(f"Length must be >= 1 (got {length})")
     return ''.join([random.choice(string.ascii_lowercase) for _ in range(length)])
+
 
 @pytest.fixture(autouse=True)
 def enable_all_loggers():
@@ -34,7 +36,7 @@ def enable_all_loggers():
             logger.disabled = False
 
 
-## Data fixtures
+# Data fixtures
 
 @pytest.fixture(scope="session")
 def local_zone_db():
@@ -97,7 +99,8 @@ def public_source_data(source_data):
 
     return dict(sources=sources, records=records, records_by_source=records_by_source)
 
-## DB fixtures
+# DB fixtures
+
 
 @pytest.fixture(scope="session")
 def db_connection_config():
@@ -121,7 +124,7 @@ def db(db_connection_config):
     try:
         yield connection
     finally:
-        logging.info(f"Tearing down DB connection)")
+        logging.info("Tearing down DB connection")
         connection.close()
         logging.info("Dropping test DB %s", db_connection_config['dbname'])
         db_manager.drop_db(db_connection_config)
@@ -158,7 +161,7 @@ def public_db_data(clean_db, public_source_data):
     return clean_db  # return the DB connection
 
 
-## Flask app fixtures
+# Flask app fixtures
 
 @pytest.fixture
 def app(db_connection_config, auth_token, local_zone_db):
@@ -202,8 +205,8 @@ def runner(app):
     return app.test_cli_runner()
 
 
+# Storage fixtures
 
-## Storage fixtures
 
 @pytest.fixture(scope="session", params=['hdfs', 's3'])
 def storage_type(request):
@@ -214,20 +217,18 @@ def storage_type(request):
 def storage_credentials(storage_type):
     if storage_type == "s3":
         return s3_credentials()
-    elif storage_type == "hdfs":
+    if storage_type == "hdfs":
         return hdfs_credentials()
-    else:
-        raise ValueError(f"Unrecognized storage type {storage_type}")
+    raise ValueError(f"Unrecognized storage type {storage_type}")
 
 
 @pytest.fixture(scope="session")
 def service_info(storage_type):
     if storage_type == "s3":
         return s3_service_info()
-    elif storage_type == "hdfs":
+    if storage_type == "hdfs":
         return hdfs_service_info()
-    else:
-        raise ValueError(f"Unrecognized storage type {storage_type}")
+    raise ValueError(f"Unrecognized storage type {storage_type}")
 
 
 def s3_credentials():
@@ -239,9 +240,9 @@ def s3_credentials():
 
 def s3_service_info():
     return {
-        'version' : '0.1',
-        'tiledb' : {
-            'storage.root' : 's3://test-bucket-{}/'.format(_rand_str(6)),
+        'version': '0.1',
+        'tiledb': {
+            'storage.root': 's3://test-bucket-{}/'.format(_rand_str(6)),
             'config': {
                 "vfs.s3.endpoint_override": "minio:9000",
                 "vfs.s3.scheme": "http",
@@ -249,7 +250,7 @@ def s3_service_info():
                 "vfs.s3.verify_ssl": "false",
                 "vfs.s3.use_virtual_addressing": "false",
                 "vfs.s3.use_multipart_upload": "false",
-                #"vfs.s3.logging_level": 'TRACE'
+                # "vfs.s3.logging_level": 'TRACE'
                 }
             }
         }
@@ -261,8 +262,8 @@ def hdfs_credentials():
 
 def hdfs_service_info():
     return {
-        'version' : '0.1',
-        'tiledb' : {
+        'version': '0.1',
+        'tiledb': {
             'storage.root': 'hdfs://namenode:8020/test-arrays-{}'.format(_rand_str(6)),
             'config': {},
             }
@@ -338,7 +339,7 @@ def clean_storage(clean_db, service_info_with_creds):
         raise ValueError(f"Unrecognized storage type {storage_root}")
 
 
-## Live app fixture
+# Live app fixture
 
 ############################################################
 
@@ -351,7 +352,7 @@ except ImportError:
     from urllib.request import urlopen
 
 
-class SubprocessLiveServer(object):
+class SubprocessLiveServer:
     """The helper class uses to manage live server. Handles creation and
     stopping application in a separate process.
 
