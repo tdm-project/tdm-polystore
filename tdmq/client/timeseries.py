@@ -44,7 +44,6 @@ class TimeSeries(abc.ABC):
         self._ensure_fetched()
         return self._time
 
-
     def _fetch_ts_and_set_time(self, sparse: bool = None):
         """
         Fetch timeseries from tdmq web service and set the self.time array; returns tdmq

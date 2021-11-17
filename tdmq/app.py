@@ -13,10 +13,10 @@ from flask import request
 from prometheus_client import Histogram
 from prometheus_client.utils import INF
 from prometheus_flask_exporter import PrometheusMetrics
-try:
-    from logging_tree.format import build_description
-except ImportError:
-    pass
+# try:
+#     from logging_tree.format import build_description
+# except ImportError:
+#     pass
 
 from tdmq.api import tdmq_bp
 from tdmq.db import add_db_cli, close_db

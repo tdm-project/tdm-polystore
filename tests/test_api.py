@@ -623,7 +623,7 @@ def test_get_timeseries_properties_sparse(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
-    q = f'fields=temperature'
+    q = 'fields=temperature'
     response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
     d = response.get_json()
     assert len(d['items']) == 4
@@ -638,7 +638,7 @@ def test_get_timeseries_properties_sparse_override(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
-    q = f'fields=temperature&sparse=false'
+    q = 'fields=temperature&sparse=false'
     response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
     d = response.get_json()
     assert len(d['items']) == 4
