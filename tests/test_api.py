@@ -666,6 +666,20 @@ def test_get_private_timeseries_unauthenticated(flask_client, clean_db, source_d
 
 
 @pytest.mark.timeseries
+def test_get_private_timeseries_to_be_anonymized(flask_client, db_data):
+    source_id = 'tdm/sensor_7'
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.get(f'/sources?id={source_id}&public=false')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    q = 'fields=temperature'
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}', headers=headers)
+    d = response.get_json()
+    assert d['sparse'] is False
+    assert len(d['items']) == 2
+    assert all('footprint' not in item for item in d['items'])
+
+
+@pytest.mark.timeseries
 def test_get_private_timeseries_authenticated(flask_client, clean_db, source_data):
     private_source = [ next(s for s in source_data['sources'] if not s.get('public')) ]
     headers = _create_auth_header(flask_client.auth_token)

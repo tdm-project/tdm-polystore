@@ -20,6 +20,6 @@
   {"time": "2019-05-02T12:00:00Z", "source": "tdm/tiledb_sensor_6", "data": { "tiledb_index":2 } },
   {"time": "2019-05-02T13:00:00Z", "source": "tdm/tiledb_sensor_6", "data": { "tiledb_index":3 } },
   {"time": "2019-05-02T10:50:00Z", "source": "tdm/sensor_7", "data": {"temperature": 20, "relativeHumidity": 0.42}},
-  {"time": "2019-05-02T10:50:00Z", "source": "tdm/sensor_7", "data": {"temperature": 20, "relativeHumidity": 0.42}}
+  {"time": "2019-05-02T10:50:00Z", "source": "tdm/sensor_7", "data": {"temperature": 20, "relativeHumidity": 0.42}, "footprint": {"type": "Point", "coordinates": [9.223, 30.004]}}
  ]
 }
