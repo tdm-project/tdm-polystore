@@ -133,8 +133,10 @@ jobs:
             docker tag "${ImageSlug}" "${FullImageSlug}:latest"
 
             echo "=== Pushing ${FullImageSlug}:${ImageTag} and ${FullImageSlug}:latest to CRS4 Harbor ==="
-            docker push "${FullImageSlug}:${ImageTag}"
-            docker push "${FullImageSlug}:latest"
+            # Don't let the build fail bacause pushing to CRS4 fails.
+            # Take this out once the problems with the repository are fixed.
+            docker push "${FullImageSlug}:${ImageTag}" || { echo "Failed to push image to CRS4"; }
+            docker push "${FullImageSlug}:latest" || { echo "Failed to push image to CRS4"; }
           done
       - name: Clean up working environment
         run: make clean
