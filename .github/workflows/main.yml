@@ -17,7 +17,9 @@ env:
   TERM: xterm
   # enable Docker push only if the required secrets are defined
   DOCKER_SECRETS_AVAILABLE: ${{ secrets.DOCKERHUB_USER != null && secrets.DOCKERHUB_TOKEN != null }}
-
+  CRS4_HARBOR_SECRETS_AVAILABLE: ${{ secrets.CRS4_HARBOR_USER != null && secrets.CRS4_HARBOR_TOKEN != null }}
+  DO_PUSH: ${{ github.event_name == 'push' &&
+               (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') }}
 jobs:
   # Verifies pep8, pyflakes and circular complexity
   flake8:
@@ -67,6 +69,15 @@ jobs:
           echo "ImageTag=${GITHUB_REF_NAME}-${BUILD_NUM}" >> $GITHUB_ENV
           echo "ImageOwner=tdmproject" >> $GITHUB_ENV
           echo "Images=tdmq-client-conda tdmq-client tdmq tdmqj tdmq-db" >> $GITHUB_ENV
+      - name: Pull old images
+        #  We pull old images to prime the image build process
+        #  (expecting pulling to be faster than compiling)
+        run: |
+          set -o nounset; set -o errexit
+          for image in ${Images}; do
+            ImageSlug="${ImageOwner}/${image}"
+            docker pull harbor.crs4.it/${ImageSlug}:latest || true
+          done
       - name: Build Docker images
         run: |
           make images
@@ -76,22 +87,23 @@ jobs:
       - name: Run tests
         run: |
           make run-tests
-      # DockerHub Login
-      # TODO refactor the if condition on the Login and tag/push steps into a single place.
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: >
-          github.event_name == 'push' &&
-          (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
-          env.DOCKER_SECRETS_AVAILABLE == 'true'
+        if: env.DO_PUSH == 'true' && env.DOCKER_SECRETS_AVAILABLE == 'true'
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to CRS4 Harbor
+        uses: docker/login-action@v1
+        if: env.DO_PUSH == 'true' && env.CRS4_HARBOR_SECRETS_AVAILABLE == 'true'
+        with:
+          registry: harbor.crs4.it
+          username: ${{ secrets.CRS4_HARBOR_USER }}
+          password: ${{ secrets.CRS4_HARBOR_TOKEN }}
       - name: Tag and push images
         if: >
-          github.event_name == 'push' &&
-          (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
-          env.DOCKER_SECRETS_AVAILABLE == 'true'
+          env.DO_PUSH == 'true' &&
+          (env.DOCKER_SECRETS_AVAILABLE == 'true' || env.CRS4_HARBOR_SECRETS_AVAILABLE == 'true')
         run: |
           set -o nounset; set -o errexit
           for image in ${Images}; do
@@ -104,9 +116,17 @@ jobs:
             docker tag "${ImageSlug}" "${FullImageName}"
             docker tag "${FullImageName}" "${ImageSlug}:latest"
 
-            echo "=== Pushing ${FullImageName} and ${ImageSlug}:latest ==="
-            docker push "${FullImageName}"
-            docker push "${ImageSlug}:latest"
+            if [[ ${DOCKER_SECRETS_AVAILABLE} == 'true' ]]; then
+              echo "=== Pushing ${FullImageName} and ${ImageSlug}:latest to DockerHub ==="
+              docker push "${FullImageName}"
+              docker push "${ImageSlug}:latest"
+            fi
+
+            if [[ ${CRS4_HARBOR_SECRETS_AVAILABLE} == 'true' ]]; then
+              echo "=== Pushing ${FullImageName} and ${ImageSlug}:latest to CRS4 Harbor ==="
+              docker push "harbor.crs4.it/${FullImageName}"
+              docker push "harbor.crs4.it/${ImageSlug}:latest"
+            fi
           done
       - name: Clean up working environment
         run: make clean
