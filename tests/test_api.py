@@ -534,9 +534,10 @@ def test_get_empty_timeseries(flask_client, app, db_data):
     response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
     _checkresp(response)
     d = response.get_json()
-    assert 'temperature' in d['data']
-    assert len(d['data'].keys()) == 1
-    assert d['data']['temperature'] == []
+    assert 'temperature' in d['fields']
+    assert len(d['fields']) == 3
+    assert d['sparse'] is False
+    assert d['items'] == []
 
 
 @pytest.mark.timeseries
@@ -551,18 +552,19 @@ def test_get_timeseries(flask_client, app, db_data):
     _checkresp(response)
     d = response.get_json()
 
-    for attr in ("tdmq_id", "default_footprint", "shape", "bucket", "coords", "data"):
+    for attr in ("tdmq_id", "default_footprint", "shape", "bucket", "fields", "sparse", "items"):
         assert attr in d
 
-    assert 'time' in d['coords']
-    assert 'footprint' in d['coords']
+    assert 'time' in d['fields']
+    assert 'footprint' in d['fields']
 
     assert d['tdmq_id'] == tdmq_id
     assert d['shape'] is None or len(d['shape']) == 0
+    assert d['sparse'] is True
     assert d['bucket'] is not None
     assert d['bucket']['op'] == op
     assert d['bucket']['interval'] == bucket
-    assert 'temperature' in d['data'] and 'relativeHumidity' in d['data']
+    assert 'temperature' in d['fields'] and 'relativeHumidity' in d['fields']
 
 
 @pytest.mark.timeseries
@@ -571,12 +573,77 @@ def test_get_timeseries_empty_properties(flask_client, app, db_data):
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
     response = flask_client.get(f'/sources/{tdmq_id}/timeseries')
+
     d = response.get_json()
-    assert d['coords']['footprint'] is None
-    assert d['data']['CO'] is None
-    assert d['data']['SO2'] is None
-    assert d['data']['temperature'] is not None
-    assert d['data']['relativeHumidity'] is not None
+    assert len(d['items']) == 4
+    assert d['sparse'] is True
+    assert isinstance(d['items'][0], dict)
+
+
+@pytest.mark.timeseries
+def test_get_timeseries_csv(flask_client, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?format=csv')
+
+    assert response.content_type == 'text/csv'
+    d = response.get_data(as_text=True)
+    lines = d.splitlines(keepends=False)
+    assert len(lines) == 5
+    table_heading = lines[0].split(',')
+    assert set(table_heading) > { 'time', 'footprint', 'temperature', 'relativeHumidity' }
+    table = [line.split(',') for line in lines[1:]]
+    assert all(len(row) == len(table_heading) for row in table)
+    # Take a controlledProperty for which this source does not provide data:  CO
+    # Verify that the None value gets represented in the CSV as an empty string
+    CO_index = table_heading.index('CO')
+    assert CO_index >= 0
+    assert table[0][CO_index] == ''
+    temp_index = table_heading.index('temperature')
+    assert temp_index >= 0
+    assert table[0][temp_index] == "20"
+
+
+@pytest.mark.timeseries
+def test_get_timeseries_multibatch(flask_client, app, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?batch_size=1')
+    assert response.is_streamed
+    d = response.get_json()
+    assert len(d['items']) == 4
+    assert d['sparse'] is True
+    assert isinstance(d['items'][0], dict)
+
+
+@pytest.mark.timeseries
+def test_get_timeseries_properties_sparse(flask_client, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    q = 'fields=temperature'
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
+    d = response.get_json()
+    assert len(d['items']) == 4
+    assert d['sparse'] is False
+    assert isinstance(d['items'][0], (list, tuple))
+    assert {'time', 'footprint', 'temperature'} == set(d['fields'])
+    assert len(d['items'][0]) == len(d['fields'])
+
+
+@pytest.mark.timeseries
+def test_get_timeseries_properties_sparse_override(flask_client, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+    q = 'fields=temperature&sparse=false'
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
+    d = response.get_json()
+    assert len(d['items']) == 4
+    assert d['sparse'] is False
+    assert isinstance(d['items'][0], (list, tuple))
 
 
 @pytest.mark.timeseries
@@ -592,7 +659,10 @@ def test_get_private_timeseries_unauthenticated(flask_client, clean_db, source_d
     d = response.get_json()
     assert d['tdmq_id'] == tdmq_id
     assert 'default_footprint' not in d
-    assert d['coords']['footprint'] is None
+    assert d['sparse'] is True
+    if d['items']:
+        assert d['fields'][1] == 'footprint'
+        assert d['items'][0].get('footprint') is None  # first row
 
 
 @pytest.mark.timeseries
@@ -608,7 +678,10 @@ def test_get_private_timeseries_authenticated(flask_client, clean_db, source_dat
     d = response.get_json()
     assert d['tdmq_id'] == tdmq_id
     assert 'default_footprint' not in d
-    assert d['coords']['footprint'] is None
+    assert d['sparse'] is True
+    if d['items']:
+        assert d['fields'][1] == 'footprint'
+        assert d['items'][0].get('footprint') is None  # first row
 
 
 @pytest.mark.timeseries
@@ -624,7 +697,10 @@ def test_get_private_timeseries_authenticated_no_private(flask_client, clean_db,
     d = response.get_json()
     assert d['tdmq_id'] == tdmq_id
     assert 'default_footprint' not in d
-    assert d['coords']['footprint'] is None
+    assert d['sparse'] is True
+    if d['items']:
+        assert d['fields'][1] == 'footprint'
+        assert d['items'][0].get('footprint') is None  # first row
 
 
 @pytest.mark.timeseries
@@ -640,7 +716,10 @@ def test_get_private_timeseries_authenticated_unanonymized(flask_client, clean_d
     d = response.get_json()
     assert d['tdmq_id'] == tdmq_id
     assert 'default_footprint' in d
-    assert d['default_footprint'] is not None
+    assert d['sparse'] is True
+    if d['items']:
+        assert d['fields'][1] == 'footprint'
+        assert d['items'][0].get('footprint') is not None  # first row
 
 
 @pytest.mark.sources

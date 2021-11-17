@@ -1,8 +1,10 @@
 import copy
+import json
 import logging
 from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
+from typing import List
 
 import werkzeug.exceptions as wex
 from flask import Blueprint, current_app, jsonify, request, url_for
@@ -180,7 +182,98 @@ def sources_delete(tdmq_id):
 
 
 @tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
+def timeseries_get_stream(tdmq_id):
+    rargs = request.args
+
+    anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized("Unauthorized request for unanonymized private data")
+
+    args = dict((k, rargs.get(k, None))
+                for k in ['after', 'before', 'bucket', 'fields', 'op'])
+    if args['bucket'] is not None:
+        args['bucket'] = timedelta(seconds=float(args['bucket']))
+    if args['fields'] is not None:
+        args['fields'] = args['fields'].split(',')
+    if rargs.get('sparse'):
+        sparse_format = str_to_bool(rargs['sparse'])
+    else:
+        # By default, use a dense format if only a subset of the fields is
+        # requested by the query.
+        sparse_format = not bool(args['fields'])
+
+    data_format = rargs.get('format', 'json')
+    if data_format not in ('json', 'csv'):
+        raise wex.BadRequest(f"Unknown/unsupported format {data_format}")
+
+    batch_size = int(rargs.get('batch_size', -1))
+    if batch_size <= 0:
+        batch_size = None
+    else:
+        logger.debug("GET requested batch_size of %s", batch_size)
+
+    result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, batch_size, args)
+
+    if data_format == 'json':
+        response = current_app.response_class(
+            generate_ts_json(result, sparse_format),
+            content_type='application/json')
+    else:
+        response = current_app.response_class(
+            generate_ts_csv(result), content_type='text/csv')
+        response.headers["Content-Disposition"] = f"attachment;filename={result.tdmq_id}.csv"
+    return response
+
+
+def generate_ts_json(resultset, sparse_format: bool):
+    def format_sparse_row(row: List) -> str:
+        assert len(row) == len(resultset.fields)
+        d = {field_name: value for field_name, value in zip(resultset.fields, row) if value is not None}
+        return json.dumps(d)
+
+    def format_dense_row(row: List) -> str:
+        return json.dumps(row)
+
+    row_format_fn = format_sparse_row if sparse_format else format_dense_row
+
+    logger.debug("Generating JSON timeseries output")
+    response_opening = \
+        f'{{"tdmq_id": {json.dumps(str(resultset.tdmq_id))},'\
+        f'"shape": {json.dumps(resultset.shape)},'\
+        f'"bucket": {json.dumps(resultset.bucket)},'\
+        f'"fields": {json.dumps(resultset.fields)},'\
+        f'"sparse": {json.dumps(sparse_format)},'
+    if resultset.default_footprint:
+        response_opening += f'"default_footprint": {json.dumps(resultset.default_footprint)},'
+    response_opening += '"items": ['
+    yield response_opening
+    first_batch = True
+    for batch in resultset:
+        logger.debug("Timeseries: sending %s records", len(batch))
+        if not first_batch:  # First batch does not need pre-pending the comma
+            yield ','
+        yield ','.join((row_format_fn(row) for row in batch))
+        first_batch = False
+    yield ']}'  # response closing
+
+
+def generate_ts_csv(resultset):
+    def format_row(row: List) -> str:
+        return ','.join( (str(v if v is not None else '') for v in row) )
+
+    logger.debug("Generating CSV timeseries output")
+    # header row
+    yield ','.join(resultset.fields) + "\n"
+    # content
+    for batch in resultset:
+        logger.debug("Timeseries: sending %s records", len(batch))
+        yield '\n'.join((format_row(row) for row in batch))
+
+
 def timeseries_get(tdmq_id):
+    """
+    Old implementation of GET /timeseries that retrieves and returns the entire query set at once.
+    """
     rargs = request.args
 
     anonymize_private = str_to_bool(rargs.get('anonymized', 'true'))

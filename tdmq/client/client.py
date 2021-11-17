@@ -3,6 +3,7 @@ import math
 import logging
 import os
 
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -80,6 +81,9 @@ class Client:
 
         return wrapper_requires_connection
 
+    def url_for(self, resource: str) -> str:
+        return f'{self.base_url}/{resource}'
+
     def connect(self):
         if self.connected:
             return
@@ -107,6 +111,12 @@ class Client:
         r = requests.get(f'{self.base_url}/{resource}', params=params, headers=self.headers)
         r.raise_for_status()
         return r.json()
+
+    @contextmanager
+    def _do_get_stream_ctx(self, resource, params=None):
+        with requests.get(f'{self.base_url}/{resource}', stream=True, params=params, headers=self.headers) as r:
+            r.raise_for_status()
+            yield r
 
     def _destroy_source(self, tdmq_id):
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers)
@@ -269,10 +279,26 @@ class Client:
         return self.__source_factory(res)
 
     @requires_connection
-    def get_timeseries(self, code, args):
+    def get_timeseries(self, code, args, sparse: bool = None):
         args = dict((k, v) for k, v in args.items() if v is not None)
+        if sparse is not None:
+            args['sparse'] = sparse
+        # for testing!  args['batch_size'] = 1
         _logger.debug('get_timeseries(%s, %s)', code, args)
-        return self._do_get(f'sources/{code}/timeseries', params=args)
+        with self._do_get_stream_ctx(f'sources/{code}/timeseries', params=args) as req:
+            return req.json()
+
+    @requires_connection
+    def export_timeseries(self, code, args, data_format: str = 'csv', chunk_size=16384):
+        if data_format != 'csv':
+            raise NotImplementedError("only CSV export is supported")
+        _logger.debug('export_timeseries(%s, %s, data_format=%s, chunk_size=%s)',
+                      code, args, data_format, chunk_size)
+        args = dict((k, v) for k, v in args.items() if v is not None)
+        args['format'] = data_format
+        with self._do_get_stream_ctx(f'sources/{code}/timeseries', params=args) as req:
+            for chunk in req.iter_content(chunk_size=chunk_size):
+                yield chunk
 
     @requires_connection
     def get_latest_source_activity(self, tdmq_id):

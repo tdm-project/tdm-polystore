@@ -104,8 +104,8 @@ class Source(abc.ABC):
             'comments ': self.comments,
             })
 
-    def get_timeseries(self, args):
-        return self.client.get_timeseries(self.tdmq_id, args)
+    def get_timeseries(self, args, sparse: bool = None):
+        return self.client.get_timeseries(self.tdmq_id, args, sparse)
 
     @abc.abstractmethod
     def timeseries(self, after, before, bucket=None, op=None, properties=None):

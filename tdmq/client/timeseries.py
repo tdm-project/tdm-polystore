@@ -7,15 +7,44 @@ import numpy as np
 class TimeSeries(abc.ABC):
 
     def __init__(self, source, after, before, bucket, op, properties=None):
-        self.source = source
-        self.after = after
-        self.before = before
-        self.bucket = bucket
-        self.op = op
-        self.time = []
-        self.fetch(properties)
+        self._source = source
+        self._after = after
+        self._before = before
+        self._bucket = bucket
+        self._op = op
+        self._time = None
+        self._properties = properties
 
-    def _pre_fetch(self, properties=None):
+    @property
+    def source(self):
+        return self._source
+
+    @property
+    def after(self):
+        return self._after
+
+    @property
+    def before(self):
+        return self._before
+
+    @property
+    def bucket(self):
+        return self._bucket
+
+    @property
+    def op(self):
+        return self._op
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def time(self):
+        self._ensure_fetched()
+        return self._time
+
+    def _fetch_ts_and_set_time(self, sparse: bool = None):
         """
         Fetch timeseries from tdmq web service and set the self.time array; returns tdmq
         timeseries data.
@@ -35,17 +64,27 @@ class TimeSeries(abc.ABC):
         args = {'after': self.after, 'before': self.before,
                 'bucket': self.bucket, 'op': self.op}
 
-        if properties:
-            args['fields'] = ','.join(properties)
+        if self.properties:
+            args['fields'] = ','.join(self.properties)
 
-        res = self.source.get_timeseries(args)
+        res = self.source.get_timeseries(args, sparse)
         # pylint: disable=protected-access
-        self.time = np.array([self.source.client._parse_timestamp(v) for v in res['coords']['time']])
+        assert res['fields'][0] == 'time'
+        if res['sparse']:
+            timestamps = (row['time'] for row in res['items'])
+        else:
+            timestamps = (row[0] for row in res['items'])
 
-        return res['data']
+        self._time = np.array([self.source.client._parse_timestamp(t) for t in timestamps])
+
+        return res
+
+    def _ensure_fetched(self):
+        if self._time is None:
+            self._fetch()
 
     @abc.abstractmethod
-    def fetch(self, properties=None):
+    def _fetch(self):
         pass
 
     @abc.abstractmethod
@@ -136,35 +175,98 @@ class ScalarTimeSeries(TimeSeries):
     """
 
     def __init__(self, source, after, before, bucket, op, properties=None):
-        self.series = None
+        self._series = None
         super().__init__(source, after, before, bucket, op, properties)
 
-    def fetch(self, properties=None):
-        data = self._pre_fetch(properties)
-        # convert the arrays returned by _pre_fetch into numpy arrays
-        self.series = dict()
-        for fname in data:
-            if data[fname] is not None:
-                self.series[fname] = np.array(data[fname])
+    @property
+    def series(self):
+        self._ensure_fetched()
+        return self._series
+
+    def _ensure_fetched(self):
+        if self._time is None or self._series is None:
+            self._fetch()
+
+    def _fetch(self):
+        api_response = self._fetch_ts_and_set_time()
+        if api_response['sparse']:
+            self._parse_sparse_response(api_response)
+        else:
+            self._parse_dense_response(api_response)
+
+    def _parse_sparse_response(self, api_response):
+        assert api_response['sparse']
+        # Sparse representation is a list of dictionaries.  In each dictionary,
+        # the fields are they keys.  We skip the first two fields
+        # (time and footprint) which are handled elsewhere.
+        self._series = dict()
+        for f in api_response['fields'][2:]:
+            # extract the value for the field. If the value was None on the
+            # server side, it was not sent -- so we cannot assume that the key
+            # will be in the dict.
+            field_data = [row.get(f) for row in api_response['items']]
+            # If all values are None, replace the array with a NoneArray;
+            # else we store the data in a numpy array.
+            if all(x is None for x in field_data):
+                self._series[f] = NoneArray(len(field_data))
             else:
-                self.series[fname] = NoneArray(len(self))
+                self._series[f] = np.array(field_data)
+
+    def _parse_dense_response(self, api_response):
+        assert not api_response['sparse']
+        # convert the arrays returned by _fetch_ts_and_set_time into numpy arrays
+        if len(api_response['items']) > 0:
+            transpose = list(zip(*api_response['items']))
+        else:
+            transpose = [[]] * len(api_response['fields'])
+
+        self._series = dict()
+        # iterate over fields, except for 'time' and 'footprint' (the first two)
+        for idx in range(2, len(api_response['fields'])):
+            field_name = api_response['fields'][idx]
+            if all(x is None for x in transpose[idx]):
+                self._series[field_name] = NoneArray(len(transpose[idx]))
+            else:
+                self._series[field_name] = np.array(transpose[idx])
 
     def get_item(self, args):
         assert len(args) == 1
         return (self.time[args], dict((propname, self.series[propname][args]) for propname in self.series))
 
+    def export(self, stream, data_format: str = 'csv') -> None:
+        if data_format != 'csv':
+            raise NotImplementedError("only CSV export is supported")
+        args = {'after': self.after, 'before': self.before,
+                'bucket': self.bucket, 'op': self.op}
+        if self.properties:
+            args['fields'] = ','.join(self.properties)
+        args['format'] = 'csv'
+
+        for chunk in self.source.client.export_timeseries(self.source.tdmq_id, args, data_format='csv'):
+            stream.write(chunk)
+
 
 class NonScalarTimeSeries(TimeSeries):
     def __init__(self, source, after, before, bucket, op):
-        self.tiledb_indices = None
+        self._tiledb_indices = None
         if bucket:
             raise NotImplementedError("Bucketing is not yet implemented in the client for non-scalar timeseries")
         super().__init__(source, after, before, bucket, op)
 
-    def fetch(self, properties=None):
+    @property
+    def tiledb_indices(self):
+        self._ensure_fetched()
+        return self._tiledb_indices
+
+    def _ensure_fetched(self):
+        if self._time is None or self._tiledb_indices is None:
+            self._fetch()
+
+    def _fetch(self):
         # NonScalarTimeSeries ignores any properties specified.  It only considers tiledb_index
-        raw_data = self._pre_fetch()
-        self.tiledb_indices = raw_data['tiledb_index']
+        api_response = self._fetch_ts_and_set_time(sparse=False)
+        assert api_response['fields'][2] == 'tiledb_index'
+        self._tiledb_indices = [row[2] for row in api_response['items']]
 
     def fetch_data_block(self, args):
         if self.bucket is None:
