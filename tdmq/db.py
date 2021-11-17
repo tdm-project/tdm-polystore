@@ -2,7 +2,7 @@
 import json
 import logging
 import uuid
-from typing import Any, Dict, Iterator, List
+from typing import Any, Dict, Iterator, List, Tuple
 
 import psycopg2.extras
 import psycopg2.sql as sql
@@ -583,7 +583,7 @@ def get_timeseries(tdmq_id, args=None):
 class TimeseriesResult:
     def __init__(self,
                  source_info: Dict[str, Any], is_public: bool,
-                 fields: List[str], batch_row_iterator: Iterator[List[List]]):
+                 fields: List[str], batch_row_iterator: Iterator[List[Tuple]]):
         self._source_info = source_info
         self._is_public = is_public
         self._fields = fields
