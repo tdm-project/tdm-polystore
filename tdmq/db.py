@@ -84,9 +84,8 @@ def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
     return result
 
 
-def query_db_batches(q, args=(), batch_size: int = None, cursor_factory=None):
-    if batch_size is None:
-        batch_size = 10000
+def query_db_batches(q, args=(), batch_size: int = 2500, cursor_factory=None):
+    assert batch_size > 0
     logger.debug("executing batch query with batch_size %s", batch_size)
     with get_db() as db:
         with db.cursor(cursor_factory=cursor_factory) as cur:
