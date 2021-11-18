@@ -205,9 +205,6 @@ class Source:
         if not public and 'roi' in query_args:
             cls._quantize_roi(query_args['roi'])
 
-        if match_attr:
-            query_args.update(match_attr)
-
         # Generally, queries that container "unsafe" search keys will be limited to
         # private sources.  However, we allow querying private sources by specific
         # external source id.
@@ -215,6 +212,10 @@ class Source:
                 cls.SafeDescriptionKeys >= match_attr.keys()):
             # can't do query on private sources because it uses unsafe attributes
             query_args['public'] = True
+
+        if match_attr:
+            # Dump both "query" and "match" arguments into the same dict for the DB query
+            query_args.update(match_attr)
 
         raw = db.list_sources(query_args)
         for source in raw:

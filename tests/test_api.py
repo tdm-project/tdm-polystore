@@ -351,6 +351,18 @@ def test_source_query_private_by_external_id(flask_client, db_data, source_data)
 
 
 @pytest.mark.sources
+def test_source_query_private_by_match_attr(flask_client, db_data):
+    response = flask_client.get(f'/sources?station_model=airRohr&public=false')
+    _checkresp(response)
+    array = response.get_json()
+    assert len(array) == 1
+    matched_source = array[0]
+    assert matched_source['external_id'] is None  # Would be'tdm/sensor_7', but it has been anonymized
+    assert matched_source['description']['station_model'] == 'airRohr'
+    assert matched_source['public'] is False
+
+
+@pytest.mark.sources
 def test_private_source_query_by_tdmq_id_unauthenticated(flask_client, db_data, source_data):
     from tdmq.db import _compute_tdmq_id
     private_source = next(s for s in source_data['sources'] if not s.get('public'))
