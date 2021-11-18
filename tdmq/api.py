@@ -120,6 +120,7 @@ def sources_get():
         if only_public:
             rargs['public'] = True
     else:
+        # If neither 'public' nor 'only_public' have been specified, default to public=True
         rargs['public'] = rargs.get('public', True)
 
     if 'roi' in rargs:
