@@ -118,10 +118,11 @@ jobs:
           registry: ${{ env.CRS4_REGISTRY }}
           username: ${{ secrets.CRS4_HARBOR_USER }}
           password: ${{ secrets.CRS4_HARBOR_TOKEN }}
-      - name: Tag and push images
+      - name: Tag and push images to CRS4
         if: env.DO_PUSH == 'true' && env.CRS4_HARBOR_SECRETS_AVAILABLE == 'true'
         run: |
           set -o nounset; set -o errexit
+          push_error=false
           for image in ${Images}; do
             # ImageSlug used here must match the image tag set by the
             # docker build command in the Makefile
@@ -135,8 +136,15 @@ jobs:
             echo "=== Pushing ${FullImageSlug}:${ImageTag} and ${FullImageSlug}:latest to CRS4 Harbor ==="
             # Don't let the build fail bacause pushing to CRS4 fails.
             # Take this out once the problems with the repository are fixed.
-            docker push "${FullImageSlug}:${ImageTag}" || { echo "Failed to push image to CRS4"; }
-            docker push "${FullImageSlug}:latest" || { echo "Failed to push image to CRS4"; }
+            docker push "${FullImageSlug}:${ImageTag}" || { echo "Failed to push image to CRS4"; push_error=true; }
+            sleep 3  #  Delaying pushing the next image a bit, just to see if it helps with the repository timeout problems
+            docker push "${FullImageSlug}:latest" || { echo "Failed to push image to CRS4";  push_error=true; }
+            sleep 3  #  Delaying pushing the next image a bit, just to see if it helps with the repository timeout problems
           done
+          if [[ "${push_error}" == 'false' ]]; then
+            echo "<<<<<< Successfully pushed all images to CRS4!! >>>>>>"
+          else
+            echo "Failed to push some images to CRS4 :-("
+          fi
       - name: Clean up working environment
         run: make clean
