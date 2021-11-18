@@ -352,7 +352,7 @@ def test_source_query_private_by_external_id(flask_client, db_data, source_data)
 
 @pytest.mark.sources
 def test_source_query_private_by_match_attr(flask_client, db_data):
-    response = flask_client.get(f'/sources?station_model=airRohr&public=false')
+    response = flask_client.get('/sources?station_model=airRohr&public=false')
     _checkresp(response)
     array = response.get_json()
     assert len(array) == 1
