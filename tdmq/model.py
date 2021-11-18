@@ -329,8 +329,9 @@ class Timeseries:
             # from the result by replacing it with nulls.  Otherwise, we leave
             # location data in the result
             if self._anonymize_private and not self._db_query_result.is_public:
-                for row in row_batch:
-                    row[1] = None
+                # The rows in the batch are tuples, so not modifyable.
+                # We create a new row_batch sequencing mapping row[1] to None for all rows.
+                row_batch = [ (row[0], None, *row[2:]) for row in row_batch ]
             return row_batch
 
     @classmethod
