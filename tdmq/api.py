@@ -207,11 +207,9 @@ def timeseries_get_stream(tdmq_id):
     if data_format not in ('json', 'csv'):
         raise wex.BadRequest(f"Unknown/unsupported format {data_format}")
 
-    batch_size = int(rargs.get('batch_size', -1))
-    if batch_size <= 0:
-        batch_size = None
-    else:
-        logger.debug("GET requested batch_size of %s", batch_size)
+    batch_size = int(rargs.get('batch_size', 2500))
+    assert batch_size > 0
+    logger.debug("GET using batch_size of %s", batch_size)
 
     result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, batch_size, args)
 
