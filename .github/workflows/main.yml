@@ -70,15 +70,10 @@ jobs:
           echo "ImageTag=${GITHUB_REF_NAME}-${BUILD_NUM}" >> $GITHUB_ENV
           echo "ImageOwner=tdmproject" >> $GITHUB_ENV
           echo "Images=tdmq-client-conda tdmq-client tdmq tdmqj tdmq-db" >> $GITHUB_ENV
-      - name: Pull old images
-        #  We pull old images to prime the image build process
-        #  (expecting pulling to be faster than compiling)
-        run: |
-          set -o nounset; set -o errexit
-          for image in ${Images}; do
-            ImageSlug="${ImageOwner}/${image}"
-            docker pull ${CRS4_REGISTRY}/${ImageSlug}:latest || true
-          done
+      - name: Docker Layer Caching
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
       - name: Build Docker images
         run: |
           make images
