@@ -40,15 +40,16 @@ def handle_http_exception(e):
     return jsonify(struct), e.code
 
 
-@tdmq_bp.app_errorhandler(tdmq.errors.QueryTooLargeException)
-def handle_query_too_large_exception(e):
+@tdmq_bp.app_errorhandler(tdmq.errors.TdmqError)
+def handle_tdmq_error(e):
     response_logger = logging.getLogger("response")
     response_logger.exception(e)
     struct = {
-        "error": "query_too_large",
-        "description": e.description
+        "error": e.title,
+        "code": e.status,
+        "description": e.detail
     }
-    return jsonify(struct), 413
+    return jsonify(struct), e.status
 
 
 def _request_authorized():
