@@ -23,9 +23,12 @@ if [[ "$CREATE_DB" == "true" ]]; then
   create_db
 fi
 
+GUNICORN_CONFIG_FILE="${GUNICORN_CONFIG:-gunicorn.conf.py}"
+GUNICORN_CMD_ARGS="${GUNICORN_CMD_ARGS:-}"
+
 if [[ "${DEV}" == "true" ]]; then
-    printf "DEV is ${DEV}. Starting container in development mode\n" >&2
-    printf "Do not run this configuration in production!\n" >&2
+    echo "DEV is ${DEV}. Starting container in development mode" >&2
+    echo "Do not run this configuration in production!" >&2
     set -x
     export FLASK_APP=/tdmq-dist/tdmq/wsgi
     export FLASK_ENV=development
@@ -33,5 +36,15 @@ if [[ "${DEV}" == "true" ]]; then
     export FLASK_RUN_HOST=0.0.0.0
     flask run "${@}"
 else
-    gunicorn -b 0.0.0.0:8000 --config "python:gunicorn.conf.py" "wsgi:get_wsgi_app()"
+    echo "Starting gunicorn." >&2
+    echo "Working directory: ${PWD}" >&2
+    if [[ -f "${GUNICORN_CONFIG_FILE}" ]]; then
+        echo "Using gunicorn configuration file ${GUNICORN_CONFIG_FILE}" >&2
+        GUNICORN_CMD_ARGS+=" --config ${GUNICORN_CONFIG_FILE} "
+    else
+        echo "No gunicorn configuration found (path ${GUNICORN_CONFIG_FILE} does not exist)" >&2
+    fi
+    echo "Running gunicorn with GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS}" >&2
+    export GUNICORN_CMD_ARGS
+    exec gunicorn -b 0.0.0.0:8000 "wsgi:get_wsgi_app()"
 fi
