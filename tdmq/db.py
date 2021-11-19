@@ -212,7 +212,7 @@ def list_sources(args=None, limit=None, offset=None):
     try:
         return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
     except psycopg2.OperationalError:
-        raise tdmq.errors.DBOperationalError
+        raise tdmq.errors.DBOperationalError()
 
 
 def get_sources(list_of_tdmq_ids):
@@ -337,7 +337,7 @@ def load_sources_conn(conn, data, validate=False, chunk_size=500):
             with conn.cursor() as cur:
                 psycopg2.extras.execute_values(cur, sqlstm, tuples, template=template, page_size=chunk_size)
     except psycopg2.errors.UniqueViolation as e:
-        logger.debug(e)
+        logger.info(e)
         raise tdmq.errors.DuplicateItemException(f"{e.pgerror}\n{e.diag.message_detail}")
 
     logger.debug('load_sources: done.')
