@@ -1,11 +1,8 @@
 
-#FROM timescale/timescaledb-postgis:1.7.4-pg11
-# To work around the pull rate limits on the official timescaledb repository
-# on dockerhub, we copy the tags that we use to our own mirror (on dockerhub).
-FROM tdmproject/timescaledb-postgis:1.7.4-pg11
+FROM timescale/timescaledb-postgis:2.3.0-pg11
 
 LABEL name="tdmq-db" \
-      container.version="cv0.2"
+      container.version="cv0.3"
 
 ENV START_DB=false
 
