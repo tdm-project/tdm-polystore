@@ -68,7 +68,7 @@ def test_get_entity_types_as_user(clean_storage, live_app):
     # if the item is missing we should get a StopIteration exception
 
 
-def test_find_source_only_public(clean_storage, db_data, source_data, live_app):
+def test_find_source_only_public(clean_storage, db_data, live_app):
     c = Client(live_app.url())
     sources = c.find_sources()
     n_public_sources = len(sources)
@@ -78,14 +78,33 @@ def test_find_source_only_public(clean_storage, db_data, source_data, live_app):
     assert len(sources) > n_public_sources
 
 
-def test_find_source_not_anonymized(clean_storage, db_data, source_data, live_app):
+def test_find_source_not_anonymized(clean_storage, db_data, live_app):
     c = Client(live_app.url(), auth_token=live_app.auth_token)
     sources = c.find_sources(args={'public': False, 'anonymized': False})
     assert all(not s.public for s in sources)
     assert all(s.id for s in sources)  # when anonymizing the `id` is removed
 
 
-def test_find_source_private_find_by_id(clean_storage, db_data, source_data, live_app):
+def test_find_source_kwargs(clean_storage, db_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    sources = c.find_sources(public=False, anonymized=False)
+    assert all(not s.public for s in sources)
+    assert all(s.id for s in sources)  # when anonymizing the `id` is r
+
+
+def test_find_source_mixes_args_and_kwargs(clean_storage, db_data, live_app):
+    c = Client(live_app.url(), auth_token=live_app.auth_token)
+    sources = c.find_sources(args={'public': False}, anonymized=False)
+    assert all(not s.public for s in sources)
+    assert all(s.id for s in sources)  # when anonymizing the `id` is r
+
+    # the kwargs should have precedence over args
+    sources = c.find_sources(args={'public': True}, public=False, anonymized=False)
+    assert all(not s.public for s in sources)
+    assert all(s.id for s in sources)  # when anonymizing the `id` is r
+
+
+def test_find_source_private_find_by_id(clean_storage, db_data, live_app):
     from tdmq.db import _compute_tdmq_id
     c = Client(live_app.url())
     private_src_id = 'tdm/sensor_7'
