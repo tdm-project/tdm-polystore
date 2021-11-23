@@ -6,12 +6,13 @@ import os
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import wraps
+from typing import Any, Dict, List
 
 import numpy as np
 import requests
 
 import tiledb
-from tdmq.client.sources import NonScalarSource, ScalarSource
+from tdmq.client.sources import Source, NonScalarSource, ScalarSource
 from tdmq.errors import (DuplicateItemException, TdmqError)
 
 # FIXME need to do this to patch a overzealous logging by urllib3
@@ -223,7 +224,7 @@ class Client:
         return ScalarSource(self, api_struct['tdmq_id'], api_struct)
 
     @requires_connection
-    def find_sources(self, args=None):
+    def find_sources(self, args: Dict[str, Any] = None, **kwargs) -> List[Source]:
         """
         Gets the list of sources filtered using the provided args dictionary.  With
         no parameters, it returns all the sources.  Multiple arguments are combined
@@ -270,6 +271,13 @@ class Client:
             WARNING: Any queries trying to match attributes not defined in this doc will be
             **limited to public sources**.
         """
+        if args:
+            if not isinstance(args, dict):
+                raise TypeError("'args' argument, if specified, must be a dict")
+            args = args.copy()
+            args.update(kwargs)
+        else:
+            args = kwargs
         return [ self.__source_factory(s) for s in self._do_get('sources', params=args) ]
 
     @requires_connection
