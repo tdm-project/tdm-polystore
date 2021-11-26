@@ -183,7 +183,7 @@ def sources_delete(tdmq_id):
     return ('', HTTPStatus.NO_CONTENT)
 
 
-@tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
+@tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries_stream')
 def timeseries_get_stream(tdmq_id):
     rargs = request.args
 
@@ -270,6 +270,7 @@ def generate_ts_csv(resultset):
         yield '\n'.join((format_row(row) for row in batch))
 
 
+@tdmq_bp.route('/sources/<uuid:tdmq_id>/timeseries')
 def timeseries_get(tdmq_id):
     """
     Old implementation of GET /timeseries that retrieves and returns the entire query set at once.

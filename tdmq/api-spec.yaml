@@ -303,7 +303,7 @@ paths:
                       $ref: '#/components/schemas/Timestamp'
 
 
-  /sources/{tdmq_source_id}/timeseries:
+  /sources/{tdmq_source_id}/timeseries_stream:
     get:
       summary: Get timeseries for source `tdmq_source_id`.
       description: >

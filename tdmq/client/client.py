@@ -293,7 +293,7 @@ class Client:
             args['sparse'] = sparse
         # for testing!  args['batch_size'] = 1
         _logger.debug('get_timeseries(%s, %s)', code, args)
-        with self._do_get_stream_ctx(f'sources/{code}/timeseries', params=args) as req:
+        with self._do_get_stream_ctx(f'sources/{code}/timeseries_stream', params=args) as req:
             return req.json()
 
     @requires_connection
@@ -304,7 +304,7 @@ class Client:
                       code, args, data_format, chunk_size)
         args = dict((k, v) for k, v in args.items() if v is not None)
         args['format'] = data_format
-        with self._do_get_stream_ctx(f'sources/{code}/timeseries', params=args) as req:
+        with self._do_get_stream_ctx(f'sources/{code}/timeseries_stream', params=args) as req:
             for chunk in req.iter_content(chunk_size=chunk_size):
                 yield chunk
 
