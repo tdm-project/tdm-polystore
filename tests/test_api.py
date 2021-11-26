@@ -563,7 +563,7 @@ def test_get_empty_timeseries(flask_client, app, db_data):
     tdmq_id = response.get_json()[0]['tdmq_id']
 
     # because of the time filter this time series is empty
-    q = f'fields=temperature&before=2000-01-01T00:00:00Z'
+    q = 'fields=temperature&before=2000-01-01T00:00:00Z'
     response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
     _checkresp(response)
     d = response.get_json()
