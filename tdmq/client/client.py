@@ -293,8 +293,13 @@ class Client:
             args['sparse'] = sparse
         # for testing!  args['batch_size'] = 1
         _logger.debug('get_timeseries(%s, %s)', code, args)
-        with self._do_get_stream_ctx(f'sources/{code}/timeseries_stream', params=args) as req:
-            return req.json()
+        try:
+            with self._do_get_stream_ctx(f'sources/{code}/timeseries_stream', params=args) as req:
+                return req.json()
+        except requests.exceptions.ChunkedEncodingError as e:
+            if '0 bytes read' in str(e).lower():
+                raise RuntimeError("Server took too long to respond.  Try reducing the size of the time series you're requesting")
+            raise
 
     @requires_connection
     def export_timeseries(self, code, args, data_format: str = 'csv', chunk_size=16384):
