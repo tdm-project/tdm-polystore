@@ -69,7 +69,7 @@ jobs:
         run: |
           echo "ImageTag=${GITHUB_REF_NAME}-${BUILD_NUM}" >> $GITHUB_ENV
           echo "ImageOwner=tdmproject" >> $GITHUB_ENV
-          echo "Images=tdmq-client-conda tdmq-client tdmq tdmqj tdmq-db" >> $GITHUB_ENV
+          echo "Images=tdmq-db tdmq tdmqj tdmq-client-conda tdmq-client" >> $GITHUB_ENV
       - name: Docker Layer Caching
         uses: satackey/action-docker-layer-caching@v0.0.11
         # Ignore the failure of a step and avoid terminating the job.
