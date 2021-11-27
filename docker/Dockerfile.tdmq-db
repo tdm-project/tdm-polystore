@@ -18,8 +18,21 @@ ENV TDMQ_DIST=/tdmq-dist
 
 # Create entrypoint script to initialize DB, run migrations, and start the DB only if START_DB is set.
 # We remove the 'exec "$@"' line from the original entrypoint script, then append the new portion.
+
+# sed -i -e "$a\\ninclude_dir = \'\${bitnami_extra_conf}\'\\n" "\${config_file}"\n\
 RUN cat /usr/local/bin/docker-entrypoint.sh | \
     sed -e 's%^\texec "$@"\s*$%\n\
+# have postgresql include the directory where the helm chart mounts\n\
+# the extended conf ConfigMap\n\
+local config_file="${PGDATA:-/var/lib/postgresql/data}/postgresql.conf"\n\
+local bitnami_extra_conf="/bitnami/postgresql/conf/conf.d/"\n\
+if [[ -f "${config_file}" \&\& -d "${bitnami_extra_conf}" \&\& \
+      -r "${bitnami_extra_conf}" \&\& -x "${bitnami_extra_conf}" ]]; then\n\
+  printf "patching ${config_file}\\n"\n\
+  sed -i -e "\\\$a\
+include_dir = '\''\${bitnami_extra_conf}'\''\
+" "${config_file}"\n\
+fi\n\
 if [[ "$1" = "postgres" ]]; then\n\
   export POSTGRES_USER="${POSTGRES_USER:-postgres}"\n\
   /usr/local/bin/run_migrations.sh\n\
