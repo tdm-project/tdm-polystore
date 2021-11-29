@@ -116,7 +116,6 @@ def configure_prometheus_exporter(app, prom_registry=None):
         os.environ['DEBUG_METRICS'] = 'true'
 
     if not metrics_class:
-        from prometheus_flask_exporter import PrometheusMetrics
         metrics_class = PrometheusMetrics
 
     metrics = metrics_class.for_app_factory(defaults_prefix='tdmq', registry=prom_registry)
