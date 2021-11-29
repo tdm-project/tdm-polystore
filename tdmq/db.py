@@ -538,7 +538,7 @@ def get_timeseries(tdmq_id, args=None):
             properties = [f for f in fields if f in properties]
             if fields != properties:
                 unknown_fields = ', '.join(set(fields).difference(properties))
-                raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
+                raise tdmq.errors.TdmqBadRequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
 
     query_template = sql.SQL("""
         SELECT {select_list}
@@ -555,7 +555,7 @@ def get_timeseries(tdmq_id, args=None):
         else:
             bucket_op = args['op']
             if bucket_op not in supported_bucket_ops:
-                raise tdmq.errors.RequestException(f"Unsupported bucketing operation '{bucket_op}'")
+                raise tdmq.errors.TdmqBadRequestException(f"Unsupported bucketing operation '{bucket_op}'")
 
         clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
     else:
@@ -644,7 +644,7 @@ def get_timeseries_result(tdmq_id, batch_size: int = None, **kwargs):
             properties = [f for f in fields if f in properties]
             if fields != properties:
                 unknown_fields = ', '.join(set(fields).difference(properties))
-                raise tdmq.errors.RequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
+                raise tdmq.errors.TdmqBadRequestException(f"The following field(s) requested for source do not exist: {unknown_fields}")
 
     query_template = sql.SQL("""
         SELECT {select_list}
@@ -661,7 +661,7 @@ def get_timeseries_result(tdmq_id, batch_size: int = None, **kwargs):
         else:
             bucket_op = kwargs['op']
             if bucket_op not in supported_bucket_ops:
-                raise tdmq.errors.RequestException(f"Unsupported bucketing operation '{bucket_op}'")
+                raise tdmq.errors.TdmqBadRequestException(f"Unsupported bucketing operation '{bucket_op}'")
 
         clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
     else:
