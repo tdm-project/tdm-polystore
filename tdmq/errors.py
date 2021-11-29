@@ -23,6 +23,7 @@ class TdmqError(Exception):
         s = f"[{self._status}] {self._title}"
         if self._detail:
             s += ": " + self._detail
+        return s
 
     __str__ = __repr__
 

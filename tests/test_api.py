@@ -557,6 +557,18 @@ def test_get_empty_timeseries_stream(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
+def test_get_timeseries_bad_field(flask_client, app, db_data):
+    source_id = 'tdm/sensor_1'
+    response = flask_client.get(f'/sources?id={source_id}')
+    tdmq_id = response.get_json()[0]['tdmq_id']
+
+    # because of the time filter this time series is empty
+    q = 'fields=bad_field'
+    response = flask_client.get(f'/sources/{tdmq_id}/timeseries?{q}')
+    assert response.status_code == 400
+
+
+@pytest.mark.timeseries
 def test_get_empty_timeseries(flask_client, app, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
