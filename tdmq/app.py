@@ -27,16 +27,6 @@ atexit.register(close_db)
 
 DEFAULT_PREFIX = '/api/v0.0'
 
-metrics = PrometheusMetrics.for_app_factory(defaults_prefix='tdmq')
-metrics.info('app_info', "TDMq service", version='not sure')
-
-metrics_response_size_bytes = Histogram(
-        'tdmq_response_size_bytes',
-        'Histogram of response sizes in bytes',
-        labelnames=('method', 'status', 'path'),
-        registry=metrics.registry,
-        buckets=(500, 1500, 3000, 6000, 12000, 24000, 48000, INF))
-
 
 def configure_logging(app):
     # Log configuration
@@ -104,9 +94,43 @@ def configure_logging(app):
     #     app.logger.debug("\n" + build_description())
 
 
-def configure_prometheus_exporter(app):
+def configure_prometheus_exporter(app, prom_registry=None):
+    # configure prometheus exporter
+    # must be configured after the routes are registered
+    metrics_class = None
+    if os.environ.get('FLASK_ENV') == 'production':
+        if 'PROMETHEUS_MULTIPROC_DIR' in os.environ or \
+           'prometheus_multiproc_dir' in os.environ:
+            from prometheus_flask_exporter.multiprocess import \
+                GunicornPrometheusMetrics
+            metrics_class = GunicornPrometheusMetrics
+        else:
+            app.logger.warning(
+                "Unable to start multiprocess prometheus exporter: \n"
+                "neither 'PROMETHEUS_MULTIPROC_DIR' nor 'PROMETHEUS_MULTIPROC_DIR' are set.\n"
+                "Note that some versions of prometheus-flask-exporter only\n"
+                "work with the lowercase variable name.  Use that one to be safe.")
+    else:
+        # Set the DEBUG_METRICS env var to also enable the
+        # prometheus metrics exporter when running in development mode
+        os.environ['DEBUG_METRICS'] = 'true'
+
+    if not metrics_class:
+        from prometheus_flask_exporter import PrometheusMetrics
+        metrics_class = PrometheusMetrics
+
+    metrics = metrics_class.for_app_factory(defaults_prefix='tdmq', registry=prom_registry)
+    metrics.info('app_info', "TDMq service", version='not sure')
+    metrics_response_size_bytes = Histogram(
+        'tdmq_response_size_bytes',
+        'Histogram of response sizes in bytes',
+        labelnames=('method', 'status', 'path'),
+        registry=prom_registry,
+        buckets=(500, 1500, 3000, 6000, 12000, 24000, 48000, INF))
+
     metrics.init_app(app)
     app.metrics = metrics
+    app.metrics.response_size_bytes = metrics_response_size_bytes
 
 
 class DefaultConfig:
@@ -164,7 +188,7 @@ class DefaultConfig:
     # "vfs.s3.verify_ssl" ["false"], "true"
 
 
-def create_app(test_config=None):
+def create_app(test_config=None, prom_registry=None):
     app = flask.Flask(__name__, instance_relative_config=True)
 
     app.config.from_object(DefaultConfig)
@@ -199,7 +223,7 @@ def create_app(test_config=None):
     app.register_blueprint(tdmq_bp, url_prefix=app.config['APP_PREFIX'])
 
     # prometheus exporter must be configured after the routes are registered
-    configure_prometheus_exporter(app)
+    configure_prometheus_exporter(app, prom_registry)
 
     @app.before_request
     def log_request():
@@ -235,7 +259,7 @@ def create_app(test_config=None):
     @app.after_request
     def record_response_metrics(response):
         if response.content_length is not None:
-            metrics_response_size_bytes.\
+            app.metrics.response_size_bytes.\
                 labels(method=request.method, status=response.status_code, path=request.path).\
                 observe(response.content_length)
         return response

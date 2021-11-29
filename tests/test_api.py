@@ -6,7 +6,9 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime
 
+import prometheus_client
 import pytest
+
 from tdmq.app import create_app
 from tdmq.model import Source
 
@@ -19,9 +21,8 @@ def _create_new_app_test_client(config=None):
         config = config.copy()
         config['TESTING'] = True
         config['LOG_LEVEL'] = 'DEBUG'
-        config['PROMETHEUS_REGISTRY'] = True
 
-    app = create_app(config)
+    app = create_app(config, prom_registry=prometheus_client.CollectorRegistry())
     with app.app_context():
         yield app.test_client()
 

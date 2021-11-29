@@ -36,15 +36,23 @@ if [[ "${DEV}" == "true" ]]; then
     export FLASK_RUN_HOST=0.0.0.0
     flask run "${@}"
 else
-    echo "Starting gunicorn." >&2
-    echo "Working directory: ${PWD}" >&2
-    if [[ -f "${GUNICORN_CONFIG_FILE}" ]]; then
-        echo "Using gunicorn configuration file ${GUNICORN_CONFIG_FILE}" >&2
-        GUNICORN_CMD_ARGS+=" --config ${GUNICORN_CONFIG_FILE} "
-    else
-        echo "No gunicorn configuration found (path ${GUNICORN_CONFIG_FILE} does not exist)" >&2
+    echo "Starting app under gunicorn." >&2
+    # export prometheus_multiproc_dir in lower case; older versions of
+    # prometheus-flask-exporter only check the lowercase variable name.
+    export prometheus_multiproc_dir=$(mktemp -d /tmp/tdmq_prometheus_multiproc_dir.XXXXXXXX)
+    echo "prometheus_multiproc_dir: ${prometheus_multiproc_dir}" >&2
+
+    if [[ -n ${GUNICORN_WORKERS:-} ]]; then
+      GUNICORN_CMD_ARGS="${GUNICORN_CMD_ARGS} --workers ${GUNICORN_WORKERS}"
     fi
+    if [[ -n ${GUNICORN_TIMEOUT} ]]; then
+      GUNICORN_CMD_ARGS="${GUNICORN_CMD_ARGS} --timeout ${GUNICORN_TIMEOUT}"
+    fi
+    if [[ -n ${GUNICORN_LOG_LEVEL} ]]; then
+      GUNICORN_CMD_ARGS="${GUNICORN_CMD_ARGS} --log-level ${GUNICORN_LOG_LEVEL}"
+    fi
+
     echo "Running gunicorn with GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS}" >&2
     export GUNICORN_CMD_ARGS
-    exec gunicorn -b 0.0.0.0:8000 "wsgi:get_wsgi_app()"
+    exec gunicorn -b 0.0.0.0:8000 --config "${GUNICORN_CONFIG_FILE}" "wsgi:get_wsgi_app()"
 fi

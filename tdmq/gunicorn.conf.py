@@ -1,9 +1,14 @@
 
 # Gunicorn configuration
 
-# timeout
-# Default: 30
-# Workers silent for more than this many seconds are killed and restarted.
-#
-# Keep this higher than the query timeout on the pgsql connection
-timeout = 60
+import os
+from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
+
+
+def when_ready(_):
+    metrics_port = int(os.environ.get('TDMQ_METRICS_PORT', 9100))
+    GunicornPrometheusMetrics.start_http_server_when_ready(metrics_port)
+
+
+def child_exit(_, worker):
+    GunicornPrometheusMetrics.mark_process_dead_on_child_exit(worker.pid)
