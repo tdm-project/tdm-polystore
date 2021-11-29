@@ -11,6 +11,7 @@ import tempfile
 import time
 from collections import defaultdict
 
+import prometheus_client
 import pytest
 import geojson
 import shapely.geometry as sg
@@ -166,19 +167,19 @@ def public_db_data(clean_db, public_source_data):
 @pytest.fixture
 def app(db_connection_config, auth_token, local_zone_db):
     """Create and configure a new app instance for each test."""
-    app = create_app({
-        'TESTING': True,
-        'DB_HOST': db_connection_config['host'],
-        'DB_PORT': db_connection_config['port'],
-        'DB_NAME': db_connection_config['dbname'],
-        'DB_USER': db_connection_config['user'],
-        'DB_PASSWORD': db_connection_config['password'],
-        'LOG_LEVEL': 'DEBUG',
-        'PROMETHEUS_REGISTRY': True,
-        'APP_PREFIX': '',
-        'AUTH_TOKEN': auth_token,
-        'LOC_ANONYMIZER_DB': local_zone_db
-    })
+    app = create_app(
+        test_config={
+            'TESTING': True,
+            'DB_HOST': db_connection_config['host'],
+            'DB_PORT': db_connection_config['port'],
+            'DB_NAME': db_connection_config['dbname'],
+            'DB_USER': db_connection_config['user'],
+            'DB_PASSWORD': db_connection_config['password'],
+            'LOG_LEVEL': 'DEBUG',
+            'APP_PREFIX': '',
+            'AUTH_TOKEN': auth_token,
+            'LOC_ANONYMIZER_DB': local_zone_db },
+        prom_registry=prometheus_client.CollectorRegistry())
 
     app.testing = True
     try:
@@ -501,7 +502,6 @@ DB_NAME = "{db_connection_config['dbname']}"
 DB_USER = "{db_connection_config['user']}"
 DB_PASSWORD = "{db_connection_config['password']}"
 LOG_LEVEL = "DEBUG"
-PROMETHEUS_REGISTRY = True
 TILEDB_VFS_ROOT = "{service_info['tiledb']['storage.root']}"
 TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
 TILEDB_VFS_CREDENTIALS = {storage_credentials}

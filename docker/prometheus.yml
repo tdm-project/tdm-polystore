@@ -13,7 +13,7 @@ scrape_configs:
 - job_name: tdmq
   static_configs:
   - targets:
-    - web:8000
+    - web:9100
 # alerting:
 #   alertmanagers:
 #   - kubernetes_sd_configs:

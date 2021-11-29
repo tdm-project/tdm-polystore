@@ -101,6 +101,8 @@ run-tests: start
 	# to activate its HDFS client.
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc \
 		fake_user.sh /bin/bash -c 'for varname in $${!HADOOP*}; do unset $${varname}; done; cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
+	# Test metrics export
+	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc /bin/bash -c "wget -O - -q http://web:9100/"
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c 'python3 $${TDMQ_DIST}/tests/quickstart_dense.py -f s3://quickdense/quickstart_array --log-level DEBUG'
 	docker run --rm --net docker_tdmq --user $$(id -u) --env-file docker/settings.conf --env TDMQ_AUTH_TOKEN= tdmproject/tdmqc-conda /usr/local/bin/tdmqc_run_tests -k "not hdfs"
