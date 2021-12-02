@@ -69,6 +69,7 @@ class Client:
         self.tiledb_ctx = None
         self.tiledb_vfs = None
         self.headers = {'Authorization': f'Bearer {auth_token}'} if auth_token is not None else {}
+        self.headers['Accept'] = 'application/json'
 
     def requires_connection(func):
         """
