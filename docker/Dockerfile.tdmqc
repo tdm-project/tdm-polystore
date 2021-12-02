@@ -84,7 +84,8 @@ RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
 RUN $PIP install --no-cache-dir \
         pytest==6.1 \
         pytest-flask==1.1 \
-        s3cmd==2.1
+        s3cmd==2.1 \
+        pdoc3
 
 # FIXME: This section is copied and pasted from the image build process for
 # tdmq-client.
