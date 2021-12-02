@@ -8,6 +8,7 @@ from typing import List
 
 import werkzeug.exceptions as wex
 from flask import Blueprint, current_app, jsonify, request, url_for
+from flask import render_template
 
 import tdmq.errors
 from .model import EntityType, EntityCategory, Source, Timeseries
@@ -325,6 +326,19 @@ def service_info_get():
         'version': '0.1'
     }
 
+    if request.headers.get('Authorization'):
+        oauth2_conf = {
+            'jwt_token': f"Authorization: {request.headers['Authorization']}"
+        }
+
+        if 'X-Auth-Request-User' in request.headers:
+            oauth2_conf['user_name'] = request.headers['X-Auth-Request-User']
+
+        if 'X-Auth-Request-Email' in request.headers:
+            oauth2_conf['user_email'] = request.headers['X-Auth-Request-Email']
+
+        response['oauth2'] = oauth2_conf
+
     if current_app.config.get('TILEDB_VFS_ROOT'):
         tiledb_conf = {
             'storage.root': current_app.config['TILEDB_VFS_ROOT']
@@ -340,4 +354,8 @@ def service_info_get():
             tiledb_conf['config'].update(current_app.config.get('TILEDB_VFS_CREDENTIALS'))
 
         response['tiledb'] = tiledb_conf
-    return jsonify(response)
+
+    if request.accept_mimetypes.accept_html:
+        return render_template('service_info.html', data=response)
+    else:
+        return jsonify(response)
