@@ -58,5 +58,10 @@ class InternalServerError(TdmqError):
         super().__init__("Internal server error", 500, msg)
 
 
+class UnauthorizedError(TdmqError):
+    def __init__(self, msg: str = None):
+        super().__init__("Unauthorized", 403, msg)
+
+
 class DBOperationalError(InternalServerError):
     pass
