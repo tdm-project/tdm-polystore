@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import wraps
 from typing import Any, Dict, List
+from urllib.parse import urlparse
 
 import numpy as np
 import requests
@@ -139,7 +140,8 @@ class Client:
             if "nginx" in response.headers.get("Server", "").lower():
                 # This looks like our oauth2 proxy
                 _logger.debug("Looks like our request was denied authorization by the TDMq oauth2 proxy")
-                sign_in_uri = self.base_url + "/oauth2/sign_in"
+                url_parts = urlparse(self.base_url)
+                sign_in_uri = f"{url_parts.scheme}://{url_parts.netloc}/oauth2/sign_in"
                 msg += f"\nPlease get an authentication token from {sign_in_uri}"
             _logger.error(msg)
             raise tdmq.errors.UnauthorizedError(msg, status=response.status_code)
