@@ -29,38 +29,43 @@ class TdmqError(Exception):
 
 
 class TdmqBadRequestException(TdmqError):
-    def __init__(self, msg: str = None):
-        super().__init__("Bad Request", 400, msg)
-
-
-class QueryTooLargeException(TdmqError):
-    def __init__(self, msg: str = None):
-        super().__init__("Query Result Too Large", 413, msg)
+    def __init__(self, msg: str = None, status: int = 400):
+        super().__init__("Bad Request", status, msg)
 
 
 class DuplicateItemException(TdmqError):
-    def __init__(self, msg: str = None):
-        super().__init__("Duplicate entity", 400, msg)
+    def __init__(self, msg: str = None, status: int = 400):
+        super().__init__("Duplicate entity", status, msg)
 
 
 class ItemNotFoundException(TdmqError):
-    def __init__(self, msg: str = None):
-        super().__init__("Item not found", 404, msg)
+    def __init__(self, msg: str = None, status: int = 404):
+        super().__init__("Item not found", status, msg)
 
 
-class UnsupportedFunctionality(TdmqError):
-    def __init__(self, msg: str = None):
-        super().__init__("Unsupported functionality", 501, msg)
-
-
-class InternalServerError(TdmqError):
-    def __init__(self, msg: str = None):
-        super().__init__("Internal server error", 500, msg)
+class QueryTooLargeException(TdmqError):
+    def __init__(self, msg: str = None, status: int = 413):
+        super().__init__("Query Result Too Large", status, msg)
 
 
 class UnauthorizedError(TdmqError):
-    def __init__(self, msg: str = None):
-        super().__init__("Unauthorized", 403, msg)
+    def __init__(self, msg: str = None, status: int = 401):
+        super().__init__("Unauthorized", status, msg)
+
+
+class ForbiddenError(TdmqError):
+    def __init__(self, msg: str = None, status: int = 403):
+        super().__init__("Forbidden", status, msg)
+
+
+class InternalServerError(TdmqError):
+    def __init__(self, msg: str = None, status: int = 500):
+        super().__init__("Internal server error", status, msg)
+
+
+class UnsupportedFunctionality(TdmqError):
+    def __init__(self, msg: str = None, status: int = 501):
+        super().__init__("Unsupported functionality", status, msg)
 
 
 class DBOperationalError(InternalServerError):

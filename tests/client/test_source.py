@@ -2,8 +2,8 @@
 from collections import Counter
 
 import pytest
-from requests.exceptions import HTTPError
 from tdmq.client import Client
+from tdmq.errors import ItemNotFoundException, UnauthorizedError
 
 
 def check_source(s, d):
@@ -64,18 +64,18 @@ def test_register_deregister_nonscalar_source_as_admin(clean_storage, public_sou
     assert tiledb.object_type(c._source_data_path(source.tdmq_id), ctx=c.tiledb_ctx) is not None
     c.deregister_source(source)
 
-    with pytest.raises(HTTPError) as exc_info:
+    with pytest.raises(ItemNotFoundException) as exc_info:
         c.get_source(source.tdmq_id)
-    assert exc_info.value.response.status_code == 404
+    assert exc_info.value.status == 404
     assert tiledb.object_type(c._source_data_path(source.tdmq_id), ctx=c.tiledb_ctx) is None
 
 
 def test_register_simple_source_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
 
-    with pytest.raises(HTTPError) as exc_info:
+    with pytest.raises(UnauthorizedError) as exc_info:
         _ = register_scalar_sources(c, public_source_data)
-    assert exc_info.value.response.status_code == 401
+    assert exc_info.value.status == 401
 
 
 def test_deregister_simple_source_as_user(clean_storage, public_source_data, live_app):
@@ -85,9 +85,9 @@ def test_deregister_simple_source_as_user(clean_storage, public_source_data, liv
 
     # then tries to deregister it with user client
     c = Client(live_app.url())
-    with pytest.raises(HTTPError) as exc_info:
+    with pytest.raises(UnauthorizedError) as exc_info:
         c.deregister_source(srcs[0])
-    assert exc_info.value.response.status_code == 401
+    assert exc_info.value.status == 401
 
 
 def test_select_source_by_id(clean_storage, public_source_data, live_app):

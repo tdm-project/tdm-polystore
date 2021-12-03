@@ -12,8 +12,8 @@ import numpy as np
 import requests
 
 import tiledb
+import tdmq.errors
 from tdmq.client.sources import Source, NonScalarSource, ScalarSource
-from tdmq.errors import (DuplicateItemException, TdmqError, UnauthorizedError)
 
 # FIXME need to do this to patch a overzealous logging by urllib3
 logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
@@ -92,6 +92,24 @@ class Client:
     def url_for(self, resource: str) -> str:
         return f'{self.base_url}/{resource}'
 
+    @staticmethod
+    def _raise_for_status(response: requests.Response) -> None:
+        if response.status_code < 400:
+            return
+        if response.status_code == 401 or response.status_code == 403:
+            raise tdmq.errors.UnauthorizedError(response.reason, response.status_code)
+        if response.status_code == 404:
+            raise tdmq.errors.ItemNotFoundException(response.reason)
+        if response.status_code == 413:
+            raise tdmq.errors.QueryTooLargeException(response.reason)
+        if response.status_code == 500:
+            raise tdmq.errors.InternalServerError(response.reason)
+        if response.status_code == 501:
+            raise tdmq.errors.UnsupportedFunctionality(response.reason)
+        if response.status_code >= 400 and response.status_code < 500:
+            raise tdmq.errors.TdmqBadRequestException(response.reason, response.status_code)
+        raise tdmq.errors.TdmqError(title="Server error", status=response.status_code, detail=response.reason)
+
     def connect(self):
         if self.connected:
             return
@@ -124,13 +142,13 @@ class Client:
                 sign_in_uri = self.base_url + "/oauth2/sign_in"
                 msg += f"\nPlease get an authentication token from {sign_in_uri}"
             _logger.error(msg)
-            raise UnauthorizedError(msg)
+            raise tdmq.errors.UnauthorizedError(msg, status=response.status_code)
 
     def _do_get(self, resource, params=None):
         r = requests.get(f'{self.base_url}/{resource}', params=params,
                          headers=self.headers, **self._request_opts)
         self._check_if_authorized(r)
-        r.raise_for_status()
+        self._raise_for_status(r)
         return r.json()
 
     @contextmanager
@@ -138,21 +156,21 @@ class Client:
         with requests.get(f'{self.base_url}/{resource}', stream=True, params=params,
                           headers=self.headers, **self._request_opts) as r:
             self._check_if_authorized(r)
-            r.raise_for_status()
+            self._raise_for_status(r)
             yield r
 
     def _do_post(self, resource: str, json_obj) -> requests.Response:
         r = requests.post(resource, json=json_obj, headers=self.headers,
-                         **self._request_opts)
+                          **self._request_opts)
         self._check_if_authorized(r)
-        r.raise_for_status()
+        self._raise_for_status(r)
         return r
 
     def _destroy_source(self, tdmq_id):
         r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers,
-                           **self._request_opts)
+                            **self._request_opts)
         self._check_if_authorized(r)
-        r.raise_for_status()
+        self._raise_for_status(r)
         array_name = self._source_data_path(tdmq_id)
         if tiledb.object_type(self._source_data_path(tdmq_id), ctx=self.tiledb_ctx) == 'array':
             tiledb.remove(array_name, ctx=self.tiledb_ctx)
@@ -231,7 +249,7 @@ class Client:
                 _logger.exception(e)
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
                 self._destroy_source(tdmq_id)
-                raise TdmqError(f"Error registering {definition.get('id', '(id unavailable)')}. {e}")
+                raise tdmq.errors.TdmqError(f"Error registering {definition.get('id', '(id unavailable)')}. {e}")
         return self.get_source(tdmq_id)
 
     @requires_connection
@@ -377,7 +395,7 @@ class Client:
         array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
         if tiledb.object_type(array_name, self.tiledb_ctx) is not None:
-            raise DuplicateItemException(f'duplicate object with path {array_name}')
+            raise tdmq.errors.DuplicateItemException(f'duplicate object with path {array_name}')
         assert len(shape) > 0 and n_slots > 0
 
         attr_defaults = dict(dtype=np.float32, filters=tiledb.FilterList([tiledb.ZstdFilter()]))

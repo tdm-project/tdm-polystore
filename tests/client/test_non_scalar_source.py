@@ -6,9 +6,9 @@ from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
-from requests.exceptions import HTTPError
 from tdmq.client import Client
 from tdmq.client.sources import NonScalarSource
+from tdmq.errors import UnauthorizedError
 
 from test_source import is_scalar, register_sources
 
@@ -117,9 +117,9 @@ def test_nonscalar_source_register_deregister_as_admin(clean_storage, source_dat
 
 def test_nonscalar_source_register_as_user(clean_storage, source_data, live_app):
     c = Client(live_app.url())
-    with pytest.raises(HTTPError) as ve:
+    with pytest.raises(UnauthorizedError) as ve:
         register_nonscalar_sources(c, source_data)
-        assert ve.code == 401
+        assert ve.status == 401
 
 
 def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_app):
@@ -128,9 +128,9 @@ def test_nonscalar_source_deregister_as_user(clean_storage, source_data, live_ap
     srcs = register_nonscalar_sources(c, source_data)
 
     c = Client(live_app.url())
-    with pytest.raises(HTTPError) as ve:
+    with pytest.raises(UnauthorizedError) as ve:
         c.deregister_source(srcs[0])
-        assert ve.code == 401
+        assert ve.status == 401
 
 
 def test_nonscalar_source_access_as_user(clean_storage, source_data, live_app):
