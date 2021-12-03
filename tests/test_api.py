@@ -933,6 +933,16 @@ def test_entity_categories_method_not_allowed(flask_client):
 
 
 @pytest.mark.config
+def test_get_index(flask_client):
+    resp = flask_client.get('/')
+    _checkresp(resp)
+    info = resp.json
+    # assert that the response looks like /service_info
+    assert info.get('version') is not None
+    assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
+
+
+@pytest.mark.config
 def test_get_service_info(flask_client):
     resp = flask_client.get('/service_info')
     _checkresp(resp)

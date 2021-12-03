@@ -76,11 +76,6 @@ def auth_required(f):
     return decorated_function
 
 
-@tdmq_bp.route('/')
-def index():
-    return 'The URL for this page is {}'.format(url_for('tdmq.index'))
-
-
 @tdmq_bp.route('/entity_types')
 def entity_types_get():
     types = EntityType.get_entity_types()
@@ -320,6 +315,7 @@ def records_post():
     return jsonify({"loaded": n})
 
 
+@tdmq_bp.route('/')
 @tdmq_bp.route('/service_info')
 def service_info_get():
     response = {
