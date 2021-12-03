@@ -55,7 +55,7 @@ class Client:
             ts = ts.astimezone(timezone.utc)
         return ts.strftime(cls.TDMQ_DT_FMT)
 
-    def __init__(self, tdmq_base_url=None, auth_token=None):
+    def __init__(self, tdmq_base_url=None, auth_token=None, verify_ssl=None):
         self.base_url = (tdmq_base_url or
                          os.getenv('TDMQ_BASE_URL') or
                          self.DEFAULT_TDMQ_BASE_URL)
@@ -68,6 +68,9 @@ class Client:
         self.tiledb_storage_root = None
         self.tiledb_ctx = None
         self.tiledb_vfs = None
+        self._request_opts = dict()
+        if not verify_ssl:  # either None or False
+            self._request_opts['verify'] = False
 
         self.headers = {"User-Agent": "TDMq client/unknown"}
         if auth_token is not None:
@@ -113,31 +116,41 @@ class Client:
         _logger.info("Client connected to TDMQ service at %s", self.base_url)
 
     def _check_if_authorized(self, response: requests.Response) -> None:
-        if response.status_code == 403:
-            msg = f"Request not authorized ({response.status} {response.reason})"
+        if response.status_code in (401, 403):
+            msg = f"Request not authorized ({response.status_code} {response.reason})"
             if "nginx" in response.headers.get("Server", "").lower():
                 # This looks like our oauth2 proxy
                 _logger.debug("Looks like our request was denied authorization by the TDMq oauth2 proxy")
                 sign_in_uri = self.base_url + "/oauth2/sign_in"
-                msg += f"\n\nPlease get an authentication token from {sign_in_uri}"
+                msg += f"\nPlease get an authentication token from {sign_in_uri}"
             _logger.error(msg)
             raise UnauthorizedError(msg)
 
     def _do_get(self, resource, params=None):
-        r = requests.get(f'{self.base_url}/{resource}', params=params, headers=self.headers)
+        r = requests.get(f'{self.base_url}/{resource}', params=params,
+                         headers=self.headers, **self._request_opts)
         self._check_if_authorized(r)
         r.raise_for_status()
         return r.json()
 
     @contextmanager
     def _do_get_stream_ctx(self, resource, params=None):
-        with requests.get(f'{self.base_url}/{resource}', stream=True, params=params, headers=self.headers) as r:
+        with requests.get(f'{self.base_url}/{resource}', stream=True, params=params,
+                          headers=self.headers, **self._request_opts) as r:
             self._check_if_authorized(r)
             r.raise_for_status()
             yield r
 
+    def _do_post(self, resource: str, json_obj) -> requests.Response:
+        r = requests.post(resource, json=json_obj, headers=self.headers,
+                         **self._request_opts)
+        self._check_if_authorized(r)
+        r.raise_for_status()
+        return r
+
     def _destroy_source(self, tdmq_id):
-        r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers)
+        r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers,
+                           **self._request_opts)
         self._check_if_authorized(r)
         r.raise_for_status()
         array_name = self._source_data_path(tdmq_id)
@@ -202,9 +215,7 @@ class Client:
                                      "Valid keys are {' and '.join(known_configs)}")
 
         _logger.debug("POSTing request to create new source with id '%s'", definition['id'])
-        r = requests.post(f'{self.base_url}/sources', json=[definition], headers=self.headers)
-        self._check_if_authorized(r)
-        r.raise_for_status()
+        r = self._do_post(f'{self.base_url}/sources', json_obj=[definition])
         tdmq_id = r.json()[0]
         _logger.debug("POST successful. Registered source with tdmq_id %s", tdmq_id)
         if len(definition.get('shape', [])) > 0:
@@ -224,10 +235,8 @@ class Client:
         return self.get_source(tdmq_id)
 
     @requires_connection
-    def add_records(self, records):
-        r = requests.post(f'{self.base_url}/records', json=records, headers=self.headers)
-        self._check_if_authorized(r)
-        r.raise_for_status()
+    def add_records(self, records) -> None:
+        self._do_post(f'{self.base_url}/records', json_obj=records)
 
     @requires_connection
     def get_entity_categories(self):
