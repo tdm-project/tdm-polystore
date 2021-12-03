@@ -7,7 +7,7 @@ from http import HTTPStatus
 from typing import List
 
 import werkzeug.exceptions as wex
-from flask import Blueprint, current_app, jsonify, request, url_for
+from flask import Blueprint, current_app, jsonify, request
 from flask import render_template
 
 import tdmq.errors
@@ -322,6 +322,13 @@ def service_info_get():
         'version': '0.1'
     }
 
+    # Check whether the client is inside or outside the local network.  We do
+    # this by checking whether the Host to which the request was addressed is in
+    # the domain configured as "EXTERNAL_HOST_DOMAIN" (if it was configured).
+    external_client = current_app.config.get('EXTERNAL_HOST_DOMAIN') and \
+        request.headers.get('Host', '').endswith(current_app.config.get('EXTERNAL_HOST_DOMAIN'))
+    response['client-origin'] = 'external' if external_client else 'internal'
+
     if request.headers.get('Authorization'):
         oauth2_conf = {
             'jwt_token': f"Authorization: {request.headers['Authorization']}"
@@ -335,23 +342,22 @@ def service_info_get():
 
         response['oauth2'] = oauth2_conf
 
-    if current_app.config.get('TILEDB_VFS_ROOT'):
-        tiledb_conf = {
-            'storage.root': current_app.config['TILEDB_VFS_ROOT']
+    if external_client and current_app.config.get('TILEDB_EXTERNAL_VFS'):
+        vfs_config = current_app.config['TILEDB_EXTERNAL_VFS']
+    else:
+        vfs_config = current_app.config.get('TILEDB_INTERNAL_VFS')
+
+    if vfs_config is not None:
+        response_tiledb_conf = {
+            'storage.root': vfs_config['storage.root'],
+            'config': copy.deepcopy(vfs_config['config'])
         }
 
-        if 'TILEDB_VFS_CONFIG' in current_app.config:
-            tiledb_conf['config'] = current_app.config.get('TILEDB_VFS_CONFIG')
+        if _request_authorized():
+            response_tiledb_conf['config'].update(vfs_config.get('credentials', {}))
 
-        if 'TILEDB_VFS_CREDENTIALS' in current_app.config and _request_authorized():
-            # We're recycling the configuration object in the response.  Copy
-            # it before merging in the credentials to avoid modifying it.
-            tiledb_conf['config'] = copy.deepcopy(tiledb_conf['config'])
-            tiledb_conf['config'].update(current_app.config.get('TILEDB_VFS_CREDENTIALS'))
-
-        response['tiledb'] = tiledb_conf
+        response['tiledb'] = response_tiledb_conf
 
     if request.accept_mimetypes.accept_html:
         return render_template('service_info.html', data=response)
-    else:
-        return jsonify(response)
+    return jsonify(response)
