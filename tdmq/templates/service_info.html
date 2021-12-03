@@ -91,7 +91,7 @@
     function copyTokenToClipboard() {
       var jwt_token = document.getElementById("jwt_token");
 
-      jwt_token = jwt_token.textContent;
+      jwt_token = jwt_token.textContent.substring(22);
 
       navigator.clipboard.writeText(jwt_token);
 

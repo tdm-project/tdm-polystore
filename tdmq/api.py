@@ -326,9 +326,9 @@ def service_info_get():
         'version': '0.1'
     }
 
-    if request.headers.get('X-Forwarded-Access-Token'):
+    if request.headers.get('Authorization'):
         oauth2_conf = {
-            'jwt_token': request.headers['X-Forwarded-Access-Token']
+            'jwt_token': f"Authorization: {request.headers['Authorization']}"
         }
 
         if 'X-Forwarded-User' in request.headers:
