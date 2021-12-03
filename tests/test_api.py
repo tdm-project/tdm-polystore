@@ -472,6 +472,7 @@ def test_source_get_latest_activity_not_found(flask_client, public_db_data):
     assert response.status_code == 404
 
 
+@pytest.mark.sources
 def test_source_get_ensure_safe_attributes(flask_client, public_db_data):
     source_id = 'tdm/tiledb_sensor_6'
     response = flask_client.get(f'/sources?id={source_id}')
@@ -886,7 +887,7 @@ def test_get_private_timeseries_authenticated_unanonymized(flask_client, clean_d
 
 
 @pytest.mark.sources
-def test_search_for_private_sources(flask_client, app, db_data):
+def test_search_for_private_sources(flask_client, db_data):
     source_id = 'tdm/sensor_7'
     response = flask_client.get(f'/sources?id={source_id}')
     _checkresp(response)
@@ -894,7 +895,7 @@ def test_search_for_private_sources(flask_client, app, db_data):
 
 
 @pytest.mark.sources
-def test_search_sources_by_attr(flask_client, app, db_data, public_source_data):
+def test_search_sources_by_attr(flask_client, db_data, public_source_data):
     external_id = "tdm/sensor_3"
     source = next(s for s in public_source_data['sources']
                   if s.get('id') == external_id)
