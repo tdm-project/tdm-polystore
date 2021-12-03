@@ -1,7 +1,11 @@
 
+
 import pytest
+
+from pytest_mock import MockerFixture
 from requests.exceptions import HTTPError
 from tdmq.client import Client
+from tdmq.errors import UnauthorizedError
 
 
 def test_strip_trailing_slash_from_url():
@@ -10,6 +14,20 @@ def test_strip_trailing_slash_from_url():
     assert c.base_url == some_url
     c = Client(some_url + '/')
     assert c.base_url == some_url
+
+
+def test_unauthorized(mocker: MockerFixture) -> None:
+    mock_api_response = mocker.MagicMock(
+        status_code=403,
+        reason="Unauthorized",
+        headers={"Server": "nginx"})
+    p = mocker.patch("requests.get", autospec=True)
+    p.return_value = mock_api_response
+    c = Client()
+    with pytest.raises(UnauthorizedError) as exc_info:
+        c.connect()
+    assert exc_info.value.status == 403  # unauthorized
+    assert "please get an authentication token from" in exc_info.value.detail.lower()
 
 
 def test_connect(clean_storage, live_app):
