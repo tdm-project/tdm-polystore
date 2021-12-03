@@ -35,15 +35,19 @@
                 <dl class="row">
                   {% for _key, _value in data.oauth2.items() %}
                   <dt class="col-sm-3">{{ _key }}</dt>
-		  <dd id={{ _key }} class="col-sm-9"><code>{{ _value }}</code></dd>
-		  {% if _key == 'jwt_token' %}
-		  <button onclick="copyTokenToClipboard() "type="button" class="btn btn-primary btn-sm mx-auto" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy the token on the clipboard">
-                    Copy
-                  </button>
-		  <div class="alert alert-success d-none" role="alert" id="copied-alert">
-                    <strong>Success!</strong> The token has been copied to the clipboard.
-                  </div>
-                  {% endif %}
+		  <dd id={{ _key }} class="col-sm-9">
+                    <code>{{ _value }}</code>
+		    {% if _key == 'jwt_token' %}
+		    <div class="d-grid">
+		      <button onclick="copyTokenToClipboard() "type="button" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy the token on the clipboard">
+                        Copy
+                      </button>
+		    </div>
+		    <div class="alert alert-success d-none" role="alert" id="copied-alert">
+                      <strong>Success!</strong> The token has been copied to the clipboard.
+                    </div>
+                    {% endif %}
+		  </dd>
                   {% endfor %}
                 </dl>
               </div>
@@ -87,7 +91,7 @@
     function copyTokenToClipboard() {
       var jwt_token = document.getElementById("jwt_token");
 
-      jwt_token = jwt_token.textContent.substring(22);
+      jwt_token = jwt_token.textContent;
 
       navigator.clipboard.writeText(jwt_token);
 

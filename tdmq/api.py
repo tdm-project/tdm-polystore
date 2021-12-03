@@ -326,16 +326,16 @@ def service_info_get():
         'version': '0.1'
     }
 
-    if request.headers.get('Authorization'):
+    if request.headers.get('X-Forwarded-Access-Token'):
         oauth2_conf = {
-            'jwt_token': f"Authorization: {request.headers['Authorization']}"
+            'jwt_token': request.headers['X-Forwarded-Access-Token']
         }
 
-        if 'X-Auth-Request-User' in request.headers:
-            oauth2_conf['user_name'] = request.headers['X-Auth-Request-User']
+        if 'X-Forwarded-User' in request.headers:
+            oauth2_conf['user_name'] = request.headers['X-Forwarded-User']
 
-        if 'X-Auth-Request-Email' in request.headers:
-            oauth2_conf['user_email'] = request.headers['X-Auth-Request-Email']
+        if 'X-Forwarded-Email' in request.headers:
+            oauth2_conf['user_email'] = request.headers['X-Forwarded-Email']
 
         response['oauth2'] = oauth2_conf
 
