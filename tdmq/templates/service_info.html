@@ -35,8 +35,8 @@
                 <dl class="row">
                   {% for _key, _value in data.oauth2.items() %}
                   <dt class="col-sm-3">{{ _key }}</dt>
-		  <dd id={{ _key }} class="col-sm-9">
-                    <code>{{ _value }}</code>
+		  <dd class="col-sm-9">
+                    <code id={{ _key }}>{{ _value }}</code>
 		    {% if _key == 'jwt_token' %}
 		    <div class="d-grid">
 		      <button onclick="copyTokenToClipboard() "type="button" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy the token on the clipboard">
