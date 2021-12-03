@@ -5,9 +5,9 @@ from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
-import requests
 
 from tdmq.client import Client
+from tdmq.errors import UnauthorizedError
 
 pytestmark = pytest.mark.timeseries
 
@@ -129,9 +129,9 @@ def test_create_timeseries_range_as_user(clean_storage, clean_db, live_app):
     hums = [i / N for i in range(N)]
 
     for t, tv, th in zip(times, temps, hums):
-        with pytest.raises(requests.exceptions.HTTPError) as he:
+        with pytest.raises(UnauthorizedError) as he:
             s.ingest_one(t, {'temperature': tv, 'humidity': th})
-            assert he.status_code == '401'
+            assert he.status == '401'
 
 
 def test_check_timeseries_range_as_user(clean_storage, clean_db, live_app):

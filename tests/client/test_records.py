@@ -4,8 +4,8 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import pytest
 import pytz
-from requests.exceptions import HTTPError
 from tdmq.client import Client
+from tdmq.errors import UnauthorizedError
 
 from test_source import register_scalar_sources
 
@@ -48,10 +48,10 @@ def test_add_scalar_records_as_user(clean_storage, public_source_data, live_app)
     c = Client(live_app.url())
     by_source = public_source_data['records_by_source']
     for s in c.find_sources():
-        with pytest.raises(HTTPError) as ve:
+        with pytest.raises(UnauthorizedError) as ve:
             t = datetime.strptime(by_source[s.id][0]['time'], c.TDMQ_DT_FMT_NO_MICRO)
             s.ingest_one(t, by_source[s.id][0]['data'])
-            assert ve.code == 401
+            assert ve.status == 401
 
 
 def test_add_scalar_record_as_admin(clean_storage, public_source_data, live_app):
@@ -73,11 +73,11 @@ def test_add_scalar_record_as_user(clean_storage, public_source_data, live_app):
     c = Client(live_app.url())
     by_source = public_source_data['records_by_source']
     for s in c.find_sources():
-        with pytest.raises(HTTPError) as ve:
+        with pytest.raises(UnauthorizedError) as ve:
             for r in by_source[s.id]:
                 t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
                 s.ingest_one(t, r['data'])
-            assert ve.code == 401
+            assert ve.status == 401
 
 
 def test_ingest_scalar_record_as_admin(clean_storage, public_source_data, live_app):
@@ -107,9 +107,9 @@ def test_ingest_scalar_record_as_user(clean_storage, public_source_data, live_ap
             except ValueError:
                 t = datetime.strptime(r['time'], c.TDMQ_DT_FMT_NO_MICRO)
             data = r['data']
-            with pytest.raises(HTTPError) as ve:
+            with pytest.raises(UnauthorizedError) as ve:
                 s.ingest(t, data)
-                assert ve.code == 401
+                assert ve.status == 401
 
 
 def test_ingest_scalar_record_timezone(clean_storage, public_source_data, live_app):

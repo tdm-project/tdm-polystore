@@ -3,7 +3,6 @@
 import pytest
 
 from pytest_mock import MockerFixture
-from requests.exceptions import HTTPError
 from tdmq.client import Client
 from tdmq.errors import UnauthorizedError
 
@@ -158,9 +157,9 @@ def test_get_anonymized_source(clean_storage, db_data, source_data, live_app):
     src = c.get_source(tdmq_id)
     assert src.alias is None
 
-    with pytest.raises(HTTPError) as exc_info:
+    with pytest.raises(UnauthorizedError) as exc_info:
         c.get_source(tdmq_id, anonymized=False)
-    assert exc_info.value.response.status_code == 401  # unauthorized
+    assert exc_info.value.status == 401  # unauthorized
 
 
 def test_imports():

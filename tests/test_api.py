@@ -472,6 +472,7 @@ def test_source_get_latest_activity_not_found(flask_client, public_db_data):
     assert response.status_code == 404
 
 
+@pytest.mark.sources
 def test_source_get_ensure_safe_attributes(flask_client, public_db_data):
     source_id = 'tdm/tiledb_sensor_6'
     response = flask_client.get(f'/sources?id={source_id}')
@@ -886,7 +887,7 @@ def test_get_private_timeseries_authenticated_unanonymized(flask_client, clean_d
 
 
 @pytest.mark.sources
-def test_search_for_private_sources(flask_client, app, db_data):
+def test_search_for_private_sources(flask_client, db_data):
     source_id = 'tdm/sensor_7'
     response = flask_client.get(f'/sources?id={source_id}')
     _checkresp(response)
@@ -894,7 +895,7 @@ def test_search_for_private_sources(flask_client, app, db_data):
 
 
 @pytest.mark.sources
-def test_search_sources_by_attr(flask_client, app, db_data, public_source_data):
+def test_search_sources_by_attr(flask_client, db_data, public_source_data):
     external_id = "tdm/sensor_3"
     source = next(s for s in public_source_data['sources']
                   if s.get('id') == external_id)
@@ -933,6 +934,16 @@ def test_entity_categories_method_not_allowed(flask_client):
 
 
 @pytest.mark.config
+def test_get_index(flask_client):
+    resp = flask_client.get('/')
+    _checkresp(resp)
+    info = resp.json
+    # assert that the response looks like /service_info
+    assert info.get('version') is not None
+    assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
+
+
+@pytest.mark.config
 def test_get_service_info(flask_client):
     resp = flask_client.get('/service_info')
     _checkresp(resp)
@@ -955,14 +966,16 @@ def test_get_service_info_authenticated(flask_client):
                             headers=_create_auth_header(flask_client.auth_token))
     _checkresp(resp)
     info = resp.json
-    assert info.get('version') is not None
+    assert 'version' in info
     assert re.fullmatch(r'(\d+\.){1,2}\d+', info['version'])
+    assert info['version'] == '0.1'
+    assert info['client-origin'] == 'internal'
     assert 'tiledb' in info
     assert 'vfs.s3.aws_access_key_id' in info['tiledb']['config']
     assert 'vfs.s3.aws_secret_access_key' in info['tiledb']['config']
+
     # Request again without authentication
     resp = flask_client.get('/service_info')
-    _checkresp(resp)
     info = resp.json
     assert 'tiledb' in info
     assert 'vfs.s3.aws_access_key_id' not in info['tiledb']['config']
@@ -970,13 +983,55 @@ def test_get_service_info_authenticated(flask_client):
 
 
 @pytest.mark.config
-def test_app_config_tiledb(local_zone_db):
+def test_check_config_validation():
+    config = {
+        # missing mandatory key storage.root
+        'TILEDB_INTERNAL_VFS': {}
+    }
+    with pytest.raises(ValueError):
+        with _create_new_app_test_client(config):
+            pass
+
+    config = {
+        # missing mandatory key storage.root
+        'TILEDB_EXTERNAL_VFS': {}
+    }
+    with pytest.raises(ValueError):
+        with _create_new_app_test_client(config):
+            pass
+
+    config = {
+        'TILEDB_INTERNAL_VFS': {
+            'storage.root': 'my-place',
+            'some illegal key': 'string'
+        }
+    }
+    with pytest.raises(ValueError):
+        with _create_new_app_test_client(config):
+            pass
+
+    config = {
+        'TILEDB_INTERNAL_VFS': {
+            'storage.root': 'my-place',
+        },
+        # obsolete key
+        'TILEDB_VFS_ROOT': 'my-place'
+    }
+    with pytest.raises(ValueError):
+        with _create_new_app_test_client(config):
+            pass
+
+
+@pytest.mark.config
+def test_app_config_tiledb():
     hdfs_root = 'hdfs://someserver:8020/'
     k, v = 'vfs.hdfs.property', 'pippo'
     config = {
-        'TILEDB_VFS_ROOT': hdfs_root,
-        'TILEDB_VFS_CONFIG': {k: v},
-        'APP_PREFIX': '',
+        'TILEDB_INTERNAL_VFS': {
+            'storage.root': hdfs_root,
+            'config': {k: v}
+        },
+        'APP_PREFIX': ''
     }
 
     with _create_new_app_test_client(config) as client:
@@ -989,9 +1044,9 @@ def test_app_config_tiledb(local_zone_db):
 
 
 @pytest.mark.config
-def test_app_config_no_tiledb(local_zone_db):
+def test_app_config_no_tiledb():
     config = {
-        'TILEDB_VFS_ROOT': None,
+        'TILEDB_INTERNAL_VFS': None,
         'APP_PREFIX': '',
     }
 
@@ -1003,24 +1058,41 @@ def test_app_config_no_tiledb(local_zone_db):
 
 
 @pytest.mark.config
-def test_app_config_from_file(local_zone_db, monkeypatch):
+def test_app_config_from_file(monkeypatch):
     vfs_root = 's3://mybucket/'
-    cfg = f"TILEDB_VFS_ROOT = '{vfs_root}'\n" \
-        "TILEDB_VFS_CONFIG = { 'vfs.s3.property': 'bla' }\n" \
-        "APP_PREFIX = ''\n"
-
+    cfg = f"""
+TILEDB_INTERNAL_VFS = {{
+    'storage.root': '{vfs_root}',
+    'config': {{ 'vfs.s3.property': 'internal' }}
+}}
+TILEDB_EXTERNAL_VFS = {{
+    'storage.root': '{vfs_root}',
+    'config': {{ 'vfs.s3.property': 'external' }}
+}}
+EXTERNAL_HOST_DOMAIN = 'jicsardegna.it'
+APP_PREFIX = ''
+"""
     with tempfile.NamedTemporaryFile(mode='w') as f:
         f.write(cfg)
         f.flush()
 
         monkeypatch.setenv('TDMQ_FLASK_CONFIG', f.name)
         with _create_new_app_test_client() as client:
+            # Check reply without setting Host header
             resp = client.get('/service_info')
             _checkresp(resp)
             info = resp.json
             assert 'tiledb' in info
             assert info['tiledb']['storage.root'] == vfs_root
-            assert info['tiledb']['config']['vfs.s3.property'] == 'bla'
+            assert info['tiledb']['config']['vfs.s3.property'] == 'internal'
+
+            resp = client.get('/service_info', headers={'Host': 'my-internal-domain.cluster'})
+            info = resp.json
+            assert info['tiledb']['config']['vfs.s3.property'] == 'internal'
+
+            resp = client.get('/service_info', headers={'Host': 'tdmq.jicsardegna.it'})
+            info = resp.json
+            assert info['tiledb']['config']['vfs.s3.property'] == 'external'
 
 
 def test_convert_roi():
