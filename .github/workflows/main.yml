@@ -76,7 +76,11 @@ jobs:
         continue-on-error: true
       - name: Build Docker images
         run: |
-          make images
+          # According to docs, the Github runner should have 2 cores, so
+          # that's our default number of parallel jobs
+          # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+          num_processors=$(nproc)
+          make -j $((2 * ${num_processors:-2} )) images
       - name: Start testing services
         run: |
           make start
