@@ -129,7 +129,7 @@ class Client:
             _logger.debug("\t tiledb_config:\n%s", self.tiledb_ctx.config())
             if self.tiledb_storage_root.startswith("s3:"):
                 if not self.tiledb_vfs.is_bucket(self.tiledb_storage_root):
-                    raise RuntimeError(f"The storage root bucket {self.tiledb_storage_root} does not exist!")
+                    raise RuntimeError(f"The storage root bucket {self.tiledb_storage_root} is not accessible or does not exist!")
 
         self.connected = True
         _logger.info("Client connected to TDMQ service at %s", self.base_url)
