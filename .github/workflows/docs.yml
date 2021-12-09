@@ -1,0 +1,48 @@
+name: Publish docs
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches:
+      - master
+      - develop  # FIXME: temporary
+
+env:
+  TERM: xterm
+jobs:
+  pdoc:
+    name: Generate and publish html documentation
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+    steps:
+      - name: check the value of github.workspace and runner.temp
+        run: |
+          echo "github.workspace = ${{ github.workspace }}"
+          echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
+          echo "runner.temp = ${{ runner.temp }}"
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Set up Python v${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pdoc
+        run: pip install pdoc3
+      - name: Create html
+        run: pdoc --html --output-dir "${GITHUB_WORKSPACE}/code-docs" tdmq
+      - name: Setup assets
+        run: |
+          mkdir public
+          mv code-docs public/
+      - name: Publish docs
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          # https://github.com/marketplace/actions/github-pages-action
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          keep_files: true # keep existing files in gh-pages branch
+          enable_jekyll: true # Make sure this is enabled or the action will be default turn off Jekyll
