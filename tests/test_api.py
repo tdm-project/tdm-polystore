@@ -1069,7 +1069,7 @@ TILEDB_EXTERNAL_VFS = {{
     'storage.root': '{vfs_root}',
     'config': {{ 'vfs.s3.property': 'external' }}
 }}
-EXTERNAL_HOST_DOMAIN = 'jicsardegna.it'
+EXTERNAL_HOST_DOMAIN = 'example.com'
 APP_PREFIX = ''
 """
     with tempfile.NamedTemporaryFile(mode='w') as f:
@@ -1090,7 +1090,7 @@ APP_PREFIX = ''
             info = resp.json
             assert info['tiledb']['config']['vfs.s3.property'] == 'internal'
 
-            resp = client.get('/service_info', headers={'Host': 'tdmq.jicsardegna.it'})
+            resp = client.get('/service_info', headers={'Host': 'tdmq.example.com'})
             info = resp.json
             assert info['tiledb']['config']['vfs.s3.property'] == 'external'
 
