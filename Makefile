@@ -100,7 +100,7 @@ run-tests: start
 	# We first unset all environment variables HADOOP* to avoid having tiledb try
 	# to activate its HDFS client.
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc \
-		fake_user.sh /bin/bash -c 'for varname in $${!HADOOP*}; do unset $${varname}; done; cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
+		fake_user.sh /bin/bash -c 'cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
 	# Test metrics export
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc /bin/bash -c "wget -O - -q http://web:9100/"
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T tdmqj /bin/bash -c "python3 -c 'import tdmq, matplotlib'"
