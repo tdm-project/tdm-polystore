@@ -145,18 +145,36 @@ class DefaultConfig:
 
     LOG_LEVEL = "INFO"
 
-    TILEDB_VFS_ROOT = "s3://tdm-public/"
-    TILEDB_VFS_CONFIG = {
-        "vfs.s3.endpoint_override": "minio:9000",
-        "vfs.s3.scheme": "http",
-        "vfs.s3.region": "",
-        "vfs.s3.verify_ssl": "false",
-        "vfs.s3.use_virtual_addressing": "false",
-        "vfs.s3.use_multipart_upload": "true",
+    TILEDB_INTERNAL_VFS = {
+        'storage.root': "s3://tdm-public/",
+        'config': {
+            "vfs.s3.endpoint_override": "minio:9000",
+            "vfs.s3.scheme": "http",
+            "vfs.s3.region": "",
+            "vfs.s3.verify_ssl": "false",
+            "vfs.s3.use_virtual_addressing": "false",
+            "vfs.s3.use_multipart_upload": "true",
+        },
+        'credentials': {
+            "vfs.s3.aws_access_key_id": "tdm-user",
+            "vfs.s3.aws_secret_access_key": "tdm-user-s3",
+        }
     }
-    TILEDB_VFS_CREDENTIALS = {
-        "vfs.s3.aws_access_key_id": "tdm-user",
-        "vfs.s3.aws_secret_access_key": "tdm-user-s3",
+
+    TILEDB_EXTERNAL_VFS = {
+        'storage.root': "s3://tdm-public/",
+        'config': {
+            "vfs.s3.endpoint_override": "minio:9000",
+            "vfs.s3.scheme": "http",
+            "vfs.s3.region": "",
+            "vfs.s3.verify_ssl": "false",
+            "vfs.s3.use_virtual_addressing": "false",
+            "vfs.s3.use_multipart_upload": "true",
+        },
+        'credentials': {
+            "vfs.s3.aws_access_key_id": "tdm-user",
+            "vfs.s3.aws_secret_access_key": "tdm-user-s3",
+        }
     }
 
     AUTH_TOKEN = secrets.token_urlsafe(32)
@@ -187,6 +205,23 @@ class DefaultConfig:
     # "vfs.s3.verify_ssl" ["false"], "true"
 
 
+def _validate_config(config) -> None:
+    for key in ('TILEDB_INTERNAL_VFS', 'TILEDB_EXTERNAL_VFS'):
+        vfs = config.get(key)
+        if vfs is None:
+            break
+        if 'storage.root' not in vfs:
+            raise ValueError(f"'storage.root' key missing from {key} configuration")
+        vfs_keys = set(vfs.keys())
+        legal_keys = { 'storage.root', 'config', 'credentials' }
+        if not legal_keys >= vfs_keys:
+            raise ValueError(f"Found invalid VFS configuration keys {','.join(vfs_keys - legal_keys)}")
+
+    if any(x in config for x in ('TILEDB_VFS_ROOT', 'TILEDB_VFS_CONFIG', 'TILEDB_VFS_CREDENTIALS')):
+        raise ValueError("Configuration error.  The keys 'TILEDB_VFS_ROOT', 'TILEDB_VFS_CONFIG', "
+                         "and 'TILEDB_VFS_CREDENTIALS' are no longer supported")
+
+
 def create_app(test_config=None, prom_registry=None):
     app = flask.Flask(__name__, instance_relative_config=True)
 
@@ -196,6 +231,8 @@ def create_app(test_config=None, prom_registry=None):
         app.config.from_mapping(test_config)
     elif 'TDMQ_FLASK_CONFIG' in os.environ:
         app.config.from_envvar('TDMQ_FLASK_CONFIG')
+
+    _validate_config(app.config)
 
     # Strip any trailing slashes from the prefix
     app.config['APP_PREFIX'] = app.config['APP_PREFIX'].rstrip('/')

@@ -97,8 +97,9 @@ stop: docker/docker-compose.base.yml docker/docker-compose.testing.yml docker/do
 run-tests: start
 	$(info Running all tests except for those on HDFS storage)
 	# Run tests that don't use the hdfs fixture
-	# We first unset all environment variables HADOOP* to avoid having tiledb try
-	# to activate its HDFS client.
+	# No HDFS variables must be defined in the environment, otherwise as of
+	# version 0.11.0 tiledb will try to activate its HDFS client if it is
+	# installed in the image.
 	docker-compose -f docker/docker-compose.base.yml -f docker/docker-compose.testing.yml exec -T --user $$(id -u) tdmqc \
 		fake_user.sh /bin/bash -c 'for varname in $${!HADOOP*}; do unset $${varname}; done; cd $${TDMQ_DIST} && pytest -v tests -k "not hdfs"'
 	# Test metrics export

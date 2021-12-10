@@ -1,29 +1,19 @@
 #!/bin/bash
 
-export PYTHONPATH="${TDMQ_DIST}"
-
-function run_tests() {
-  tdmqc_run_tests
-
-  exit_code=$?
-
-  printf "======================================================================\n" >&2
-
-  if [[ $exit_code != 0 ]]; then
-    printf "Tests FAILED!\n" >&2
-  else
-    printf "Tests ran successfully!\n" >&2
-  fi
-
-  printf "======================================================================\n" >&2
-  return $exit_code
-}
+## main ##
+if [[ -z "${DONT_UNSET_HADOOP_VARS:-}" ]]; then
+    echo 'Unsetting HADOOP_* env vars' >&2
+    for varname in ${!HADOOP*}; do
+        unset "${varname}"
+    done
+else
+    echo 'The following HADOOP_* variables are set:' "${!HADOOP*}" >&2
+fi
 
 if [[ $# -ge 1 ]]; then
-    printf "Executing command: ${@}\n" >&2
+    echo "Executing command:" "${@}" >&2
     exec "${@}"
 else
-    run_tests
     printf "Hanging around to keep container alive.  Kill me to exit\n" >&2
     tail -f /dev/null
 fi

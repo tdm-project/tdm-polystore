@@ -178,7 +178,9 @@ def app(db_connection_config, auth_token, local_zone_db):
             'LOG_LEVEL': 'DEBUG',
             'APP_PREFIX': '',
             'AUTH_TOKEN': auth_token,
-            'LOC_ANONYMIZER_DB': local_zone_db },
+            'LOC_ANONYMIZER_DB': local_zone_db,
+            'EXTERNAL_HOST_DOMAIN': 'jicsardegna.it',
+        },
         prom_registry=prometheus_client.CollectorRegistry())
 
     app.testing = True
@@ -502,9 +504,12 @@ DB_NAME = "{db_connection_config['dbname']}"
 DB_USER = "{db_connection_config['user']}"
 DB_PASSWORD = "{db_connection_config['password']}"
 LOG_LEVEL = "DEBUG"
-TILEDB_VFS_ROOT = "{service_info['tiledb']['storage.root']}"
-TILEDB_VFS_CONFIG = {service_info['tiledb']['config']}
-TILEDB_VFS_CREDENTIALS = {storage_credentials}
+EXTERNAL_HOST_DOMAIN = None
+TILEDB_INTERNAL_VFS = {{
+    'storage.root': "{service_info['tiledb']['storage.root']}",
+    'config': {service_info['tiledb']['config']},
+    'credentials': {storage_credentials}
+}}
 APP_PREFIX = ''
 AUTH_TOKEN = '{auth_token}'
 LOC_ANONYMIZER_DB = '{local_zone_db}'

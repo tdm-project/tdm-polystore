@@ -7,7 +7,8 @@ from http import HTTPStatus
 from typing import List
 
 import werkzeug.exceptions as wex
-from flask import Blueprint, current_app, jsonify, request, url_for
+from flask import Blueprint, current_app, jsonify, request
+from flask import render_template
 
 import tdmq.errors
 from .model import EntityType, EntityCategory, Source, Timeseries
@@ -32,7 +33,10 @@ ERROR_CODES = {
 @tdmq_bp.app_errorhandler(wex.HTTPException)
 def handle_http_exception(e):
     response_logger = logging.getLogger("response")
-    response_logger.exception(e)
+    if e.code >= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         "error": ERROR_CODES.get(e.code),
         "description": e.description
@@ -43,7 +47,10 @@ def handle_http_exception(e):
 @tdmq_bp.app_errorhandler(tdmq.errors.TdmqError)
 def handle_tdmq_error(e):
     response_logger = logging.getLogger("response")
-    response_logger.exception(e)
+    if e.status >= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         "error": e.title,
         "code": e.status,
@@ -73,11 +80,6 @@ def auth_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
-
-
-@tdmq_bp.route('/')
-def index():
-    return 'The URL for this page is {}'.format(url_for('tdmq.index'))
 
 
 @tdmq_bp.route('/entity_types')
@@ -157,10 +159,7 @@ def sources_get():
 @auth_required
 def sources_post():
     data = request.json
-    try:
-        tdmq_ids = Source.store_new(data)
-    except tdmq.errors.DuplicateItemException:
-        raise wex.Conflict()
+    tdmq_ids = Source.store_new(data)
     return jsonify(tdmq_ids)
 
 
@@ -306,11 +305,12 @@ def source_activity_latest(tdmq_id):
 @auth_required
 def records_post():
     def validate_record(record):
-        if not all(k in record for k in ('time', 'data')) or \
-           not any(k in record for k in ('tdmq_id', 'source')):
+        if not all(record.get(k) for k in ('time', 'data')) or \
+           not any(record.get(k) for k in ('tdmq_id', 'source')):
             raise wex.BadRequest(
-                "Missing fields in request.  "
-                "Mandatory fields: 'time', 'data', ('tdmq_id' or 'source')")
+                "Missing fields in POSTed timeseries record.  "
+                "Mandatory fields: 'time', 'data', ('tdmq_id' or 'source').  "
+                f"Received keys: {record.keys()}")
 
     data = request.json
     for record in data:
@@ -319,25 +319,49 @@ def records_post():
     return jsonify({"loaded": n})
 
 
+@tdmq_bp.route('/')
 @tdmq_bp.route('/service_info')
 def service_info_get():
     response = {
         'version': '0.1'
     }
 
-    if current_app.config.get('TILEDB_VFS_ROOT'):
-        tiledb_conf = {
-            'storage.root': current_app.config['TILEDB_VFS_ROOT']
+    # Check whether the client is inside or outside the local network.  We do
+    # this by checking whether the Host to which the request was addressed is in
+    # the domain configured as "EXTERNAL_HOST_DOMAIN" (if it was configured).
+    external_client = current_app.config.get('EXTERNAL_HOST_DOMAIN') and \
+        request.headers.get('Host', '').endswith(current_app.config.get('EXTERNAL_HOST_DOMAIN'))
+    response['client-origin'] = 'external' if external_client else 'internal'
+
+    if request.headers.get('Authorization'):
+        oauth2_conf = {
+            'jwt_token': f"Authorization: {request.headers['Authorization']}"
         }
 
-        if 'TILEDB_VFS_CONFIG' in current_app.config:
-            tiledb_conf['config'] = current_app.config.get('TILEDB_VFS_CONFIG')
+        if 'X-Forwarded-User' in request.headers:
+            oauth2_conf['user_name'] = request.headers['X-Forwarded-User']
 
-        if 'TILEDB_VFS_CREDENTIALS' in current_app.config and _request_authorized():
-            # We're recycling the configuration object in the response.  Copy
-            # it before merging in the credentials to avoid modifying it.
-            tiledb_conf['config'] = copy.deepcopy(tiledb_conf['config'])
-            tiledb_conf['config'].update(current_app.config.get('TILEDB_VFS_CREDENTIALS'))
+        if 'X-Forwarded-Email' in request.headers:
+            oauth2_conf['user_email'] = request.headers['X-Forwarded-Email']
 
-        response['tiledb'] = tiledb_conf
+        response['oauth2'] = oauth2_conf
+
+    if external_client and current_app.config.get('TILEDB_EXTERNAL_VFS'):
+        vfs_config = current_app.config['TILEDB_EXTERNAL_VFS']
+    else:
+        vfs_config = current_app.config.get('TILEDB_INTERNAL_VFS')
+
+    if vfs_config is not None:
+        response_tiledb_conf = {
+            'storage.root': vfs_config['storage.root'],
+            'config': copy.deepcopy(vfs_config['config'])
+        }
+
+        if _request_authorized():
+            response_tiledb_conf['config'].update(vfs_config.get('credentials', {}))
+
+        response['tiledb'] = response_tiledb_conf
+
+    if request.accept_mimetypes.accept_html:
+        return render_template('service_info.html', data=response)
     return jsonify(response)

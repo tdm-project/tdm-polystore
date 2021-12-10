@@ -65,9 +65,17 @@ RUN /bin/bash -c "$PIP install --no-cache-dir -r <(sed -e 's/tiledb-py/tiledb/' 
 FROM tdmq-client-deps AS tdmq-client
 
 COPY --chown=root tdmq_scripts.sh /usr/local/lib/
-COPY --chown=root fake_user.sh tdmqc_run_tests /usr/local/bin/
+COPY --chown=root fake_user.sh tdmqc_run_tests tdmqc-entrypoint.sh /usr/local/bin/
 RUN chmod 644 /usr/local/lib/tdmq_scripts.sh \
- && chmod 755 /usr/local/bin/*
+ && chmod 755 /usr/local/bin/fake_user.sh \
+              /usr/local/bin/tdmqc_run_tests \
+              /usr/local/bin/tdmqc-entrypoint.sh
+
+# Override the entrypoint from the base hadoop image.  This likely breaks
+# the hadoop client, but makes things easier for us now since we're no
+# longer using HDFS.
+ENTRYPOINT [ "/usr/local/bin/tdmqc-entrypoint.sh" ]
+CMD ["/bin/bash"]
 
 COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
 RUN cd "${TDMQ_DIST}" \
@@ -75,6 +83,11 @@ RUN cd "${TDMQ_DIST}" \
  && find . -type d -print0 | xargs -0 chmod a+rx
 
 RUN cd "${TDMQ_DIST}" && $PIP install .
+
+RUN useradd -m -s /bin/bash -d /home/tdm tdm
+USER tdm
+WORKDIR /home/tdm
+
 
 #################################################
 FROM tdmq-client-deps AS tdmqc
@@ -84,7 +97,8 @@ RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
 RUN $PIP install --no-cache-dir \
         pytest==6.1 \
         pytest-flask==1.1 \
-        s3cmd==2.1
+        s3cmd==2.1 \
+        pdoc3
 
 # FIXME: This section is copied and pasted from the image build process for
 # tdmq-client.

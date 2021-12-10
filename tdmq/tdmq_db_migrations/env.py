@@ -1,9 +1,10 @@
 from __future__ import with_statement
 
+from logging.config import fileConfig
+
 from alembic import context
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from logging.config import fileConfig
 
 import tdmq.db_manager as db_manager
 

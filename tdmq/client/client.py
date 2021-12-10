@@ -7,13 +7,14 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import wraps
 from typing import Any, Dict, List
+from urllib.parse import urlparse
 
 import numpy as np
 import requests
 
 import tiledb
+import tdmq.errors
 from tdmq.client.sources import Source, NonScalarSource, ScalarSource
-from tdmq.errors import (DuplicateItemException, TdmqError)
 
 # FIXME need to do this to patch a overzealous logging by urllib3
 logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
@@ -55,7 +56,7 @@ class Client:
             ts = ts.astimezone(timezone.utc)
         return ts.strftime(cls.TDMQ_DT_FMT)
 
-    def __init__(self, tdmq_base_url=None, auth_token=None):
+    def __init__(self, tdmq_base_url=None, auth_token=None, verify_ssl=None):
         self.base_url = (tdmq_base_url or
                          os.getenv('TDMQ_BASE_URL') or
                          self.DEFAULT_TDMQ_BASE_URL)
@@ -68,7 +69,14 @@ class Client:
         self.tiledb_storage_root = None
         self.tiledb_ctx = None
         self.tiledb_vfs = None
-        self.headers = {'Authorization': f'Bearer {auth_token}'} if auth_token is not None else {}
+        self._request_opts = dict()
+        if not verify_ssl:  # either None or False
+            self._request_opts['verify'] = False
+
+        self.headers = {"User-Agent": "TDMq client/unknown"}
+        if auth_token is not None:
+            self.headers["Authorization"] = f"Bearer {auth_token}"
+        self.headers["Accept"] = "application/json"
 
     def requires_connection(func):
         """
@@ -84,6 +92,24 @@ class Client:
 
     def url_for(self, resource: str) -> str:
         return f'{self.base_url}/{resource}'
+
+    @staticmethod
+    def _raise_for_status(response: requests.Response) -> None:
+        if response.status_code < 400:
+            return
+        if response.status_code == 401 or response.status_code == 403:
+            raise tdmq.errors.UnauthorizedError(response.reason, response.status_code)
+        if response.status_code == 404:
+            raise tdmq.errors.ItemNotFoundException(response.reason)
+        if response.status_code == 413:
+            raise tdmq.errors.QueryTooLargeException(response.reason)
+        if response.status_code == 500:
+            raise tdmq.errors.InternalServerError(response.reason)
+        if response.status_code == 501:
+            raise tdmq.errors.UnsupportedFunctionality(response.reason)
+        if response.status_code >= 400 and response.status_code < 500:
+            raise tdmq.errors.TdmqBadRequestException(response.reason, response.status_code)
+        raise tdmq.errors.TdmqError(title="Server error", status=response.status_code, detail=response.reason)
 
     def connect(self):
         if self.connected:
@@ -103,25 +129,50 @@ class Client:
             _logger.debug("\t tiledb_config:\n%s", self.tiledb_ctx.config())
             if self.tiledb_storage_root.startswith("s3:"):
                 if not self.tiledb_vfs.is_bucket(self.tiledb_storage_root):
-                    raise RuntimeError(f"The storage root bucket {self.tiledb_storage_root} does not exist!")
+                    raise RuntimeError(f"The storage root bucket {self.tiledb_storage_root} is not accessible or does not exist!")
 
         self.connected = True
         _logger.info("Client connected to TDMQ service at %s", self.base_url)
 
+    def _check_if_authorized(self, response: requests.Response) -> None:
+        if response.status_code in (401, 403):
+            msg = f"Request not authorized ({response.status_code} {response.reason})"
+            if "nginx" in response.headers.get("Server", "").lower():
+                # This looks like our oauth2 proxy
+                _logger.debug("Looks like our request was denied authorization by the TDMq oauth2 proxy")
+                url_parts = urlparse(self.base_url)
+                sign_in_uri = f"{url_parts.scheme}://{url_parts.netloc}/oauth2/sign_in"
+                msg += f"\nPlease get an authentication token from {sign_in_uri}"
+            _logger.error(msg)
+            raise tdmq.errors.UnauthorizedError(msg, status=response.status_code)
+
     def _do_get(self, resource, params=None):
-        r = requests.get(f'{self.base_url}/{resource}', params=params, headers=self.headers)
-        r.raise_for_status()
+        r = requests.get(f'{self.base_url}/{resource}', params=params,
+                         headers=self.headers, **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
         return r.json()
 
     @contextmanager
     def _do_get_stream_ctx(self, resource, params=None):
-        with requests.get(f'{self.base_url}/{resource}', stream=True, params=params, headers=self.headers) as r:
-            r.raise_for_status()
+        with requests.get(f'{self.base_url}/{resource}', stream=True, params=params,
+                          headers=self.headers, **self._request_opts) as r:
+            self._check_if_authorized(r)
+            self._raise_for_status(r)
             yield r
 
+    def _do_post(self, resource: str, json_obj) -> requests.Response:
+        r = requests.post(resource, json=json_obj, headers=self.headers,
+                          **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
+        return r
+
     def _destroy_source(self, tdmq_id):
-        r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers)
-        r.raise_for_status()
+        r = requests.delete(f'{self.base_url}/sources/{tdmq_id}', headers=self.headers,
+                            **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
         array_name = self._source_data_path(tdmq_id)
         if tiledb.object_type(self._source_data_path(tdmq_id), ctx=self.tiledb_ctx) == 'array':
             tiledb.remove(array_name, ctx=self.tiledb_ctx)
@@ -184,8 +235,7 @@ class Client:
                                      "Valid keys are {' and '.join(known_configs)}")
 
         _logger.debug("POSTing request to create new source with id '%s'", definition['id'])
-        r = requests.post(f'{self.base_url}/sources', json=[definition], headers=self.headers)
-        r.raise_for_status()
+        r = self._do_post(f'{self.base_url}/sources', json_obj=[definition])
         tdmq_id = r.json()[0]
         _logger.debug("POST successful. Registered source with tdmq_id %s", tdmq_id)
         if len(definition.get('shape', [])) > 0:
@@ -201,13 +251,12 @@ class Client:
                 _logger.exception(e)
                 _logger.error('Failure in creating tiledb array: %s, cleaning up', e)
                 self._destroy_source(tdmq_id)
-                raise TdmqError(f"Error registering {definition.get('id', '(id unavailable)')}. {e}")
+                raise tdmq.errors.TdmqError(f"Error registering {definition.get('id', '(id unavailable)')}. {e}")
         return self.get_source(tdmq_id)
 
     @requires_connection
-    def add_records(self, records):
-        r = requests.post(f'{self.base_url}/records', json=records, headers=self.headers)
-        r.raise_for_status()
+    def add_records(self, records) -> None:
+        self._do_post(f'{self.base_url}/records', json_obj=records)
 
     @requires_connection
     def get_entity_categories(self):
@@ -348,7 +397,7 @@ class Client:
         array_name = self._source_data_path(tdmq_id)
         _logger.debug('attempting creation of %s', array_name)
         if tiledb.object_type(array_name, self.tiledb_ctx) is not None:
-            raise DuplicateItemException(f'duplicate object with path {array_name}')
+            raise tdmq.errors.DuplicateItemException(f'duplicate object with path {array_name}')
         assert len(shape) > 0 and n_slots > 0
 
         attr_defaults = dict(dtype=np.float32, filters=tiledb.FilterList([tiledb.ZstdFilter()]))
