@@ -13,7 +13,10 @@ class TimeSeries(abc.ABC):
         self._bucket = bucket
         self._op = op
         self._time = None
-        self._properties = properties
+        if isinstance(properties, str):
+            self._properties = [properties]
+        else:
+            self._properties = properties
 
     @property
     def source(self):
