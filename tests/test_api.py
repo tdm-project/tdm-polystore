@@ -176,7 +176,9 @@ def test_source_create_duplicate(flask_client, db_data):
     _checkresp(response)
     response = flask_client.post('/sources', json=source_data, headers=headers)
     assert response.status == '409 CONFLICT'
-    assert ("error", "duplicated_resource") in response.get_json().items()
+    obj = response.get_json()
+    for k in ("error", "code", "description"):
+        assert obj.get(k), f"missing key {k}"
 
 
 @pytest.mark.sources
@@ -224,7 +226,7 @@ def test_sources_get_no_args(flask_client, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_get_by_roi_private_shifted_out(flask_client, app, db_data, source_data):
+def test_sources_get_by_roi_private_shifted_out(flask_client, db_data, source_data):
     # The anonymization process can bump a source outside of the roi by shifting
     # its coordinates
     geom = 'circle((8.99, 39.15), 1000)'  # right over the private source_7
@@ -286,7 +288,7 @@ def test_sources_get_active_after(flask_client, db_data, public_source_data):
 
 
 @pytest.mark.sources
-def test_sources_get_active_before(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_before(flask_client, db_data, public_source_data):
     before = '2019-05-02T11:00:00Z'
     q = f'before={before}'
     response = flask_client.get(f'/sources?{q}')
@@ -298,7 +300,7 @@ def test_sources_get_active_before(flask_client, app, db_data, public_source_dat
 
 
 @pytest.mark.sources
-def test_sources_get_active_after_geom(flask_client, app, db_data, public_source_data):
+def test_sources_get_active_after_geom(flask_client, db_data, public_source_data):
     geom = 'circle((8.93, 39.0), 10000)'  # point is near the town of Pula
     after = '2019-05-02T11:00:22Z'
     q = f'roi={geom}&after={after}'
@@ -330,7 +332,7 @@ def test_sources_get_incompatible_query_attributes(flask_client):
 
 
 @pytest.mark.sources
-def test_source_query_by_external_id(flask_client, app, db_data, public_source_data):
+def test_source_query_by_external_id(flask_client, db_data, public_source_data):
     external_source_id = public_source_data['sources'][0]['id']
     response_with_id = flask_client.get(f'/sources?id={external_source_id}')
     item_with_id = response_with_id.get_json()[0]
@@ -488,7 +490,7 @@ def test_source_get_ensure_safe_attributes(flask_client, public_db_data):
 
 
 @pytest.mark.timeseries
-def test_timeseries_method_not_allowed(flask_client):
+def test_timeseries_method_not_allowed(flask_client, clean_db):
     # Test the records endpoint
     for method in ('delete', 'put', 'get'):
         response = getattr(flask_client, method)('/records')
@@ -508,7 +510,7 @@ def test_timeseries_method_not_allowed(flask_client):
 
 
 @pytest.mark.timeseries
-def test_create_timeseries(flask_client, db_data):
+def test_create_timeseries(flask_client, clean_db):
     _create_source(flask_client)
     timeseries_data = [{
         "time": "2019-05-02T10:50:00Z",
@@ -524,7 +526,23 @@ def test_create_timeseries(flask_client, db_data):
 
 
 @pytest.mark.timeseries
-def test_create_timeseries_unauthorized(flask_client, app, db_data):
+def test_post_bad_timeseries_no_timestamp(flask_client, clean_db):
+    _create_source(flask_client)
+    timeseries_data = [{
+        "time": "",
+        "source": "st1",
+        "data": {"temperature": 20}
+    }]
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.post(
+        '/records', json=timeseries_data, headers=headers)
+    assert response.status_code == 400
+    obj = response.get_json()
+    assert obj['description']
+
+
+@pytest.mark.timeseries
+def test_create_timeseries_unauthorized(flask_client):
     _create_source(flask_client)
     timeseries_data = [{
         "source": "s1",
@@ -542,7 +560,7 @@ def test_create_timeseries_unauthorized(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_empty_timeseries_stream(flask_client, app, db_data):
+def test_get_empty_timeseries_stream(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -559,7 +577,7 @@ def test_get_empty_timeseries_stream(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_timeseries_bad_field(flask_client, app, db_data):
+def test_get_timeseries_bad_field(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -571,7 +589,7 @@ def test_get_timeseries_bad_field(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_empty_timeseries(flask_client, app, db_data):
+def test_get_empty_timeseries(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -587,7 +605,7 @@ def test_get_empty_timeseries(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_timeseries_stream(flask_client, app, db_data):
+def test_get_timeseries_stream(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -614,7 +632,7 @@ def test_get_timeseries_stream(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_timeseries(flask_client, app, db_data):
+def test_get_timeseries(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -640,7 +658,7 @@ def test_get_timeseries(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_timeseries_stream_empty_properties(flask_client, app, db_data):
+def test_get_timeseries_stream_empty_properties(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -653,7 +671,7 @@ def test_get_timeseries_stream_empty_properties(flask_client, app, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_timeseries_empty_properties(flask_client, app, db_data):
+def test_get_timeseries_empty_properties(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']
@@ -692,7 +710,7 @@ def test_get_timeseries_stream_csv(flask_client, db_data):
 
 
 @pytest.mark.timeseries
-def test_get_timeseries_stream_multibatch(flask_client, app, db_data):
+def test_get_timeseries_stream_multibatch(flask_client, db_data):
     source_id = 'tdm/sensor_1'
     response = flask_client.get(f'/sources?id={source_id}')
     tdmq_id = response.get_json()[0]['tdmq_id']

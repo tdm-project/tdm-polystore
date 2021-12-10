@@ -337,8 +337,9 @@ def load_sources_conn(conn, data, validate=False, chunk_size=500):
             with conn.cursor() as cur:
                 psycopg2.extras.execute_values(cur, sqlstm, tuples, template=template, page_size=chunk_size)
     except psycopg2.errors.UniqueViolation as e:
-        logger.info(e)
-        raise tdmq.errors.DuplicateItemException(f"{e.pgerror}\n{e.diag.message_detail}")
+        logger.debug(e.pgerror)
+        logger.debug(e.diag.message_detail)
+        raise tdmq.errors.DuplicateItemException(f"Duplicate source id: {e.pgerror}")
 
     logger.debug('load_sources: done.')
     return [t[0] for t in tuples]

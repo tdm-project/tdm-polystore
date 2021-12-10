@@ -5,11 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Generator, Iterable, List
 
+import psycopg2.errors as pgerrors
 import pyproj
 import shapely.geometry as sg
 from shapely.ops import transform as shapely_transform
 
 import tdmq.db as db
+from .errors import TdmqBadRequestException
 from .loc_anonymizer import loc_anonymizer
 
 logger = logging.getLogger(__name__)
@@ -235,7 +237,10 @@ class Source:
 class Timeseries:
     @staticmethod
     def store_new_records(data: Iterable[dict]) -> int:
-        return db.load_records(data)
+        try:
+            return db.load_records(data)
+        except pgerrors.DataError as e:
+            raise TdmqBadRequestException(e.pgerror)
 
     @staticmethod
     def _restructure_timeseries(rows: List[list], properties: List[str]) -> Dict[str, Any]:
