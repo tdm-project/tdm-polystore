@@ -238,3 +238,7 @@ def test_timeseries_properties_subset(clean_storage, db_data, live_app):
     ts = s.timeseries(properties=['temperature'])
     assert len(ts.series.keys()) == 1
     assert 'temperature' in ts.series.keys()
+    # should also work correctly if we specify a string as a single property name
+    ts = s.timeseries(properties='temperature')
+    assert len(ts.series.keys()) == 1
+    assert 'temperature' in ts.series.keys()
