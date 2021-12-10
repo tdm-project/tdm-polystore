@@ -33,7 +33,10 @@ ERROR_CODES = {
 @tdmq_bp.app_errorhandler(wex.HTTPException)
 def handle_http_exception(e):
     response_logger = logging.getLogger("response")
-    response_logger.exception(e)
+    if e.code >= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         "error": ERROR_CODES.get(e.code),
         "description": e.description
@@ -44,7 +47,10 @@ def handle_http_exception(e):
 @tdmq_bp.app_errorhandler(tdmq.errors.TdmqError)
 def handle_tdmq_error(e):
     response_logger = logging.getLogger("response")
-    response_logger.exception(e)
+    if e.status >= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         "error": e.title,
         "code": e.status,
