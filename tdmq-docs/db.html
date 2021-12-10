@@ -1,0 +1,1800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tdmq.db API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tdmq.db</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import json
+import logging
+import uuid
+from typing import Any, Dict, Iterator, List, Tuple
+
+import psycopg2.extras
+import psycopg2.sql as sql
+from psycopg2.sql import SQL
+
+import tdmq.db_manager
+import tdmq.errors
+
+logger = logging.getLogger(__name__)
+
+# need to register_uuid to enable psycopg2&#39;s conversion from Python UUID
+# type to PgSQL
+psycopg2.extras.register_uuid()
+
+NAMESPACE_TDMQ = uuid.UUID(&#39;6cb10168-c65b-48fa-af9b-a3ca6d03156d&#39;)
+
+# Module-level variable to cache the DB connection
+_db_connection = None
+
+
+def _compute_tdmq_id(external_id):
+    return uuid.uuid5(NAMESPACE_TDMQ, external_id)
+
+
+def get_db():
+    &#34;&#34;&#34;
+    Requires active application context.
+
+    Connect to the application&#39;s configured database. The connection
+    is unique for each request and will be reused if this is called
+    again.
+    &#34;&#34;&#34;
+    global _db_connection
+    if _db_connection and _db_connection.closed != 0:
+        logger.warning(&#34;DB connection found unexpectedly closed.  Recreating it&#34;)
+        _db_connection = None
+
+    if not _db_connection:
+        import flask
+        query_timeout = flask.current_app.config.get(&#39;DB_MAX_QUERY_TIME&#39;, 50000)
+        logger.info(&#34;Setting database query timeout to %s&#34;, query_timeout)
+        db_settings = {
+            &#39;user&#39;: flask.current_app.config[&#39;DB_USER&#39;],
+            &#39;password&#39;: flask.current_app.config[&#39;DB_PASSWORD&#39;],
+            &#39;host&#39;: flask.current_app.config[&#39;DB_HOST&#39;],
+            &#39;dbname&#39;: flask.current_app.config[&#39;DB_NAME&#39;],
+            # abort queries after query_timeout milliseconds
+            &#39;options&#39;: f&#39;-c statement_timeout={query_timeout}&#39;
+        }
+        logger.info(&#34;Creating DB connection&#34;)
+        _db_connection = tdmq.db_manager.db_connect(db_settings)
+    return _db_connection
+
+
+def close_db():
+    &#34;&#34;&#34;
+    If a connection to the database exists, close it.
+    &#34;&#34;&#34;
+    global _db_connection
+    if _db_connection is not None:
+        logger.info(&#34;Destroying DB connection&#34;)
+        _db_connection.close()
+        _db_connection = None
+
+
+def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
+    with get_db() as db:
+        try:
+            with db.cursor(cursor_factory=cursor_factory) as cur:
+                cur.execute(q, tuple(args))
+                result = cur.fetchall() if fetch else None
+        except psycopg2.extensions.QueryCanceledError:
+            raise tdmq.errors.QueryTooLargeException(
+                &#34;Query too large.  Use the appropriate arguments to reduce the result set&#34;)
+
+    if one:
+        return result[0] if result else None
+    # else
+    return result
+
+
+def query_db_batches(q, args=(), batch_size: int = 2500, cursor_factory=None):
+    assert batch_size &gt; 0
+    logger.debug(&#34;executing batch query with batch_size %s&#34;, batch_size)
+    with get_db() as db:
+        with db.cursor(cursor_factory=cursor_factory) as cur:
+            cur.execute(q, tuple(args))
+            while True:
+                batch = cur.fetchmany(batch_size)
+                if not batch:
+                    break
+                yield batch
+
+
+def list_sources(args=None, limit=None, offset=None):
+    &#34;&#34;&#34;
+    Possible args:
+        &#39;id&#39;
+        &#39;entity_category&#39;
+        &#39;entity_type&#39;
+        &#39;tdmq_id&#39;
+        &#39;controlledProperties&#39;
+        &#39;after&#39;
+        &#39;before&#39;
+        &#39;roi&#39;
+        &#39;public&#39;
+
+    All applied conditions must match for an element to be returned.
+
+    controlledProperties: value is an array, or None.  All specified
+                          elements must be in the controlledProperties of the source.
+
+    after and before:  specify temporal interal.  Specify any combination of the two.
+
+    roi: value is GeoJSON with `center` and `radius`.  Tests on source.default_footprint.
+
+    All other arguments are tested for equality.
+    &#34;&#34;&#34;
+    if args is None:
+        args = {}
+    else:
+        args = args.copy()
+
+    select = SQL(&#34;&#34;&#34;
+        SELECT
+            tdmq_id,
+            external_id,
+            ST_AsGeoJSON(ST_Transform(default_footprint, 4326))::json
+                as default_footprint,
+            stationary,
+            entity_category,
+            entity_type,
+            description,
+            registration_time,
+            public
+        FROM source&#34;&#34;&#34;)
+
+    where = []
+
+    # where clauses
+    def add_where_lit(column, condition, literal):
+        where.append(SQL(&#34; &#34;).join((SQL(column), SQL(condition), sql.Literal(literal))))
+
+    if &#39;id&#39; in args:
+        add_where_lit(&#39;source.external_id&#39;, &#39;=&#39;, args.pop(&#39;id&#39;))
+    if &#39;entity_category&#39; in args:
+        add_where_lit(&#39;source.entity_category&#39;, &#39;=&#39;, args.pop(&#39;entity_category&#39;))
+    if &#39;entity_type&#39; in args:
+        add_where_lit(&#39;source.entity_type&#39;, &#39;=&#39;, args.pop(&#39;entity_type&#39;))
+    if &#39;tdmq_id&#39; in args:
+        add_where_lit(&#39;source.tdmq_id&#39;, &#39;=&#39;, args.pop(&#39;tdmq_id&#39;))
+    if &#39;stationary&#39; in args:
+        add_where_lit(&#39;source.stationary&#39;, &#39;is&#39;, args.pop(&#39;stationary&#39;))
+    if &#39;public&#39; in args:
+        add_where_lit(&#39;source.public&#39;, &#39;is&#39;, args.pop(&#39;public&#39;))
+    if &#39;controlledProperties&#39; in args:
+        # require that all these exist in the controlledProperties array
+        # This is the PgSQL operator: ?&amp;  text[]   Do all of these array strings exist as top-level keys?
+        required_properties = args.pop(&#39;controlledProperties&#39;)
+        assert isinstance(required_properties, list)
+        where.append(
+            SQL(&#34;source.description-&gt;&#39;controlledProperties&#39; ?&amp; array[ {} ]&#34;).format(
+                SQL(&#39;, &#39;).join([sql.Literal(p) for p in required_properties])))
+    if &#39;roi&#39; in args:
+        fp = args.pop(&#39;roi&#39;)
+        where.append(SQL(
+            &#34;&#34;&#34;
+            ST_DWithin(
+                source.default_footprint,
+                ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON({}), 4326), 3003),
+            {})&#34;&#34;&#34;).format(
+                sql.Literal(json.dumps(fp[&#39;center&#39;])),
+                sql.Literal(fp[&#39;radius&#39;])))
+
+    if args.keys() &amp; {&#39;after&#39;, &#39;before&#39;}:  # actually, for mobile sensors we&#39;ll also have to add &#39;footprint&#39;
+        in_subquery = SQL(&#34;&#34;&#34;
+          source.tdmq_id IN (
+            SELECT record.source_id
+            FROM record
+            WHERE {}
+          )&#34;&#34;&#34;)
+        interval = []
+        if &#39;after&#39; in args:
+            interval.append(SQL(&#34;record.time &gt;= {}&#34;).format(sql.Literal(args.pop(&#39;after&#39;))))
+        if &#39;before&#39; in args:
+            interval.append(SQL(&#34;record.time &lt; {}&#34;).format(sql.Literal(args.pop(&#39;before&#39;))))
+
+        where.append(in_subquery.format(SQL(&#34; AND &#34;).join(interval)))
+
+    if args:  # not empty, so we have additional filtering attributes to apply to description
+        logger.debug(&#34;Left over args for JSON query: %s&#34;, args)
+        for k, v in args.items():
+            term = {&#34;description&#34;: {k: v}}
+            where.append(SQL(&#39;source.description @&gt; {}::jsonb&#39;).format(sql.Literal(json.dumps(term))))
+
+    query = select
+    if where:
+        query += SQL(&#39; WHERE &#39;) + SQL(&#39; AND &#39;).join(where)
+
+    if limit or offset:
+        query += SQL(&#39; ORDER BY source.tdmq_id &#39;)
+        if limit is not None:
+            query += SQL(&#39; LIMIT &#39;) + sql.Literal(limit)
+        if offset is not None:
+            query += SQL(&#39; OFFSET &#39;) + sql.Literal(offset)
+
+    try:
+        return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
+    except psycopg2.OperationalError:
+        raise tdmq.errors.DBOperationalError()
+
+
+def get_sources(list_of_tdmq_ids):
+    &#34;&#34;&#34;
+    Get the sources details for all the sources with tdmq_id in `list_of_tdmq_ids`.
+    &#34;&#34;&#34;
+
+    q = sql.SQL(&#34;&#34;&#34;
+        SELECT
+            tdmq_id,
+            external_id,
+            ST_AsGeoJSON(ST_Transform(default_footprint, 4326))::json
+                as default_footprint,
+            stationary,
+            entity_category,
+            entity_type,
+            description,
+            registration_time,
+            public
+        FROM source
+        WHERE tdmq_id = ANY(%s)&#34;&#34;&#34;)
+
+    args = (list_of_tdmq_ids,)
+    return query_db_all(q, args=args, cursor_factory=psycopg2.extras.RealDictCursor)
+
+
+def delete_sources(list_of_tdmq_ids):
+    query = sql.SQL(&#34;&#34;&#34;
+        DELETE FROM source
+        WHERE tdmq_id = ANY(%s)
+    &#34;&#34;&#34;)
+
+    query_db_all(query, args=(list_of_tdmq_ids,), fetch=False)
+    return list_of_tdmq_ids
+
+
+def list_entity_categories(category_start=None):
+    q = sql.SQL(&#34;&#34;&#34;
+      SELECT entity_category
+      FROM entity_category&#34;&#34;&#34;)
+
+    if category_start:
+        starts_with = sql.SQL(&#34;starts_with(lower(entity_category), {})&#34;).format(sql.Literal(category_start.lower()))
+        q = q + sql.SQL(&#34; WHERE &#34;) + starts_with
+
+    return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)
+
+
+def list_entity_types(category_start=None, type_start=None):
+    q = sql.SQL(&#34;&#34;&#34;
+      SELECT
+        entity_category,
+        entity_type,
+        schema
+      FROM entity_type&#34;&#34;&#34;)
+
+    where = []
+
+    if category_start:
+        where.append(sql.SQL(&#34;starts_with(lower(entity_category), {})&#34;).format(sql.Literal(category_start.lower())))
+    if type_start:
+        where.append(sql.SQL(&#34;starts_with(lower(entity_type), {})&#34;).format(sql.Literal(type_start.lower())))
+
+    if where:
+        q = q + sql.SQL(&#34; WHERE &#34;) + sql.SQL(&#39; AND &#39;).join(where)
+
+    return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)
+
+
+def dump_table(conn, tname, path, itersize=100000):
+    query = sql.SQL(&#39;SELECT row_to_json({0}) from {0}&#39;).format(
+        sql.Identifier(tname)
+    )
+    first = True
+    counter = 0
+    with open(path, &#39;w&#39;) as f:
+        f.write(&#39;{&#34;%s&#34;: [\n&#39; % tname)
+        with conn:
+            with conn.cursor(&#39;dump_cursor&#39;) as cur:
+                cur.itersize = itersize
+                cur.execute(query)
+                for r in cur:
+                    if first:
+                        first = False
+                    else:
+                        f.write(&#39;,\n&#39;)
+                    f.write(json.dumps(r[0]))
+                    counter += 1
+        f.write(&#39;]}\n&#39;)
+    return counter
+
+
+def load_sources(data, validate=False, chunk_size=500):
+    return load_sources_conn(get_db(), data, validate, chunk_size)
+
+
+def load_sources_conn(conn, data, validate=False, chunk_size=500):
+    &#34;&#34;&#34;
+    Load sensors objects.
+
+    Return the list of UUIDs assigned to each object.
+    &#34;&#34;&#34;
+    def gen_source_tuple(d):
+        tdmq_id = _compute_tdmq_id(d[&#39;id&#39;])
+        external_id = d[&#39;id&#39;]
+        entity_type = d[&#39;entity_type&#39;]
+        entity_cat = d[&#39;entity_category&#39;]
+        footprint = d[&#39;default_footprint&#39;]
+        stationary = d.get(&#39;stationary&#39;, True)
+        public = d.get(&#39;public&#39;, False)
+        return (tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d), public)
+
+    logger.debug(&#39;load_sources: start loading %d sources&#39;, len(data))
+    tuples = [gen_source_tuple(t) for t in data]
+    sqlstm = &#34;&#34;&#34;
+             INSERT INTO source
+             (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description, public)
+             VALUES %s&#34;&#34;&#34;
+    template = &#34;(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s, %s)&#34;
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                psycopg2.extras.execute_values(cur, sqlstm, tuples, template=template, page_size=chunk_size)
+    except psycopg2.errors.UniqueViolation as e:
+        logger.info(e)
+        raise tdmq.errors.DuplicateItemException(f&#34;{e.pgerror}\n{e.diag.message_detail}&#34;)
+
+    logger.debug(&#39;load_sources: done.&#39;)
+    return [t[0] for t in tuples]
+
+
+def load_records(records, validate=False, chunk_size=500):
+    return load_records_conn(get_db(), records, validate, chunk_size)
+
+
+def load_records_conn(conn, records, validate=False, chunk_size=500):
+    &#34;&#34;&#34;
+    Load records.
+
+    Return the number of loaded objects.
+
+    {&#34;time&#34;: &#34;2019-02-21T11:32:08Z&#34;,
+     &#34;source&#34;: &#34;sensor_0&#34;,
+     &#34;data&#34;: {&#34;prop1&#34;: 0.333}},
+    {&#34;time&#34;: &#34;2019-02-21T11:34:08Z&#34;,
+     &#34;source&#34;: &#34;sensor_1&#34;,
+     &#34;data&#34;: {&#34;reference&#34;: &#34;hdfs://xxxx&#34;, &#34;index&#34;: 22}},
+    {&#34;time&#34;: &#34;2019-02-21T12:14:01Z&#34;,
+     &#34;source&#34;: &#34;sensor_3&#34;,
+     &#34;footprint&#34;: {&#34;type&#34;: &#34;Point&#34;, &#34;coordinates&#34;: [9.222, 30.003]},
+     &#34;data&#34;: {&#34;something&#34;: 42 }
+    &#34;&#34;&#34;
+    def get_required_internal_source_id_map(cursor, data):
+        external_ids = tuple(set(d[&#39;source&#39;] for d in data if &#39;tdmq_id&#39; not in d))
+        if external_ids:
+            #  If we get a lot of external_ids, using the IN clause might not be so efficient
+            q = &#34;SELECT external_id, tdmq_id FROM source WHERE external_id IN %s&#34;
+            cursor.execute(q, (external_ids,))
+            # The following `fetchall` and transforming the result to a dict is also at risk
+            # of explosion
+            map_external_to_tdm_id = dict(cur.fetchall())  # creates a mapping external_ids -&gt; tdmq_id
+        else:
+            map_external_to_tdm_id = dict()
+
+        return map_external_to_tdm_id
+
+    def gen_record_tuple(d, id_to_tdmq_id):
+        s_time = d[&#39;time&#39;]
+        tdmq_id = d[&#39;tdmq_id&#39;] if &#39;tdmq_id&#39; in d else id_to_tdmq_id[d[&#39;source&#39;]]
+        footprint = json.dumps(d.get(&#39;footprint&#39;)) if d.get(&#39;footprint&#39;) else None
+
+        return (s_time, tdmq_id, footprint, psycopg2.extras.Json(d[&#39;data&#39;]))
+
+    sql = &#34;INSERT INTO record (time, source_id, footprint, data) VALUES %s&#34;
+    template = &#34;(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s)&#34;
+    with conn:
+        with conn.cursor() as cur:
+            id_to_tdmq_id = get_required_internal_source_id_map(cur, records)
+            tuples = [gen_record_tuple(t, id_to_tdmq_id) for t in records]
+            logger.debug(&#39;load_records: start loading %d records&#39;, len(records))
+            psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
+
+    logger.debug(&#39;load_records: done.&#39;)
+    return len(records)
+
+
+loader = {}
+loader[&#39;sources&#39;] = load_sources
+loader[&#39;records&#39;] = load_records
+
+
+def load_file(filename):
+    &#34;&#34;&#34;Load objects from a json file.&#34;&#34;&#34;
+    logger.debug(&#39;load_file: start&#39;)
+    stats = {}
+
+    with open(filename) as f:
+        data = json.load(f)
+
+    for k in loader.keys():
+        if k in data:
+            rval = loader[k](data[k])
+            try:
+                n = len(rval)
+            except TypeError:
+                n = rval  # records
+            stats[k] = n
+    logger.debug(&#39;load_file: done.&#39;)
+    return stats
+
+
+def dump_field(field, path):
+    &#34;&#34;&#34;Dump all record of field to file path&#34;&#34;&#34;
+    conn = get_db()
+    return dump_table(conn, field, path, itersize=100000)
+
+
+supported_bucket_ops = {
+    &#34;avg&#34;,
+    &#34;count_records&#34;,
+    &#34;count_values&#34;,
+    &#34;max&#34;,
+    &#34;min&#34;,
+    &#34;sum&#34;,
+    &#34;stddev&#34;,
+    &#34;stddev_pop&#34;,
+    &#34;stddev_samp&#34;,
+    &#34;string_agg&#34;,
+    &#34;variance&#34;,
+    &#34;var_pop&#34;,
+    &#34;var_samp&#34;
+}
+
+
+def get_source_info(tdmq_id):
+    q = sql.SQL(&#34;&#34;&#34;
+        SELECT
+            source.description,
+            source.public
+        FROM source
+        WHERE tdmq_id = %s&#34;&#34;&#34;)
+    row = query_db_all(q, args=(tdmq_id,), one=True)
+    if row is None:
+        raise tdmq.errors.ItemNotFoundException(f&#34;tdmq_id {tdmq_id} not found in DB&#34;)
+
+    return dict(description=row[0], public=row[1])
+
+
+def _timeseries_select(properties):
+    select_list = [sql.SQL(&#34;EXTRACT(epoch FROM record.time), record.footprint&#34;)]
+    # select_list.append( sql.SQL(&#34;record.time, record.footprint&#34;) )
+    select_list.extend(
+        [sql.SQL(&#34;data-&gt;{} AS {}&#34;).format(sql.Literal(field), sql.Identifier(field))
+         for field in properties])
+
+    grouping_clause = sql.SQL(&#34; ORDER BY record.time ASC &#34;)
+
+    return dict(select_list=sql.SQL(&#34;, &#34;).join(select_list), grouping_clause=grouping_clause)
+
+
+def _bucketed_timeseries_select(properties, bucket_interval, bucket_op):
+    select_list = []
+    # select_list.append( sql.SQL(&#34;time_bucket({}, record.time) AS time_bucket&#34;).format(sql.Literal(bucket_interval)) )
+    select_list.append(sql.SQL(&#34;EXTRACT(epoch FROM time_bucket({}, record.time)) AS time_bucket&#34;).format(sql.Literal(bucket_interval)))
+    select_list.append(sql.SQL(&#34;ST_AsGeoJSON(ST_Transform(ST_Collect(record.footprint), 4326))::json AS footprint_centroid&#34;))
+
+    if bucket_op == &#39;string_agg&#39;:
+        operation_args = &#34;(data-&gt;&gt;{}), &#39;,&#39;&#34;
+    elif bucket_op == &#39;jsonb_agg&#39;:
+        operation_args = &#34;(data-&gt;{})&#34;
+    else:
+        operation_args = &#34;( NULLIF (data-&gt;{}, &#39;\&#34;\&#34;&#39;) )::real&#34;
+
+    access_template = &#34;{}( &#34; + operation_args + &#34; ) AS {}&#34;
+
+    select_list.extend(
+        [sql.SQL(access_template).format(
+            sql.Identifier(bucket_op),
+            sql.Literal(field),
+            sql.Identifier(f&#34;{bucket_op}_{field}&#34;))
+         for field in properties])
+
+    grouping_clause = sql.SQL(&#34;&#34;&#34;
+        GROUP BY time_bucket
+        ORDER BY time_bucket ASC&#34;&#34;&#34;)
+
+    return dict(select_list=sql.SQL(&#34;, &#34;).join(select_list), grouping_clause=grouping_clause)
+
+
+# TODO:  change args to **kwargs
+def get_timeseries(tdmq_id, args=None):
+    &#34;&#34;&#34;
+     :query after: consider only sensors reporting strictly after
+                   this time, e.g., &#39;2019-02-21T11:03:25Z&#39;
+
+     :query before: consider only sensors reporting strictly before
+                    this time, e.g., &#39;2019-02-22T11:03:25Z&#39;
+
+     :query bucket: time bucket for data aggregation, e.g., &#39;20 min&#39;
+
+     :query op: aggregation operation on data contained in bucket. One of the
+                values in supported_bucket_ops
+
+     :query fields: list of controlledProperties from the source,
+                    or nothing to select all of them.
+
+     :returns: array of arrays: time, footprint, field+
+               Fields are in the same order as specified in args.
+    &#34;&#34;&#34;
+
+    info = get_source_info(tdmq_id)
+    description = info[&#39;description&#39;]
+    source_is_private = not info.get(&#39;public&#39;, False)
+    logger.debug(&#34;get_timeseries for source %s&#34;, tdmq_id)
+
+    if description.get(&#39;shape&#39;):
+        properties = [&#39;tiledb_index&#39;]
+    else:
+        properties = description[&#39;controlledProperties&#39;]
+        if args and args.get(&#39;fields&#39;, []):
+            fields = args[&#39;fields&#39;]
+            # keep the order specified in fields
+            properties = [f for f in fields if f in properties]
+            if fields != properties:
+                unknown_fields = &#39;, &#39;.join(set(fields).difference(properties))
+                raise tdmq.errors.TdmqBadRequestException(f&#34;The following field(s) requested for source do not exist: {unknown_fields}&#34;)
+
+    query_template = sql.SQL(&#34;&#34;&#34;
+        SELECT {select_list}
+        FROM record
+        WHERE
+        {where_clause}
+        {grouping_clause}&#34;&#34;&#34;)
+
+    if args and args.get(&#39;bucket&#39;):
+        bucket_interval = args[&#39;bucket&#39;]
+
+        if description.get(&#39;shape&#39;):
+            bucket_op = &#39;jsonb_agg&#39;
+        else:
+            bucket_op = args[&#39;op&#39;]
+            if bucket_op not in supported_bucket_ops:
+                raise tdmq.errors.TdmqBadRequestException(f&#34;Unsupported bucketing operation &#39;{bucket_op}&#39;&#34;)
+
+        clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
+    else:
+        bucket_op = None
+        clauses = _timeseries_select(properties)
+
+    where = [sql.SQL(&#34;source_id = {}&#34;).format(sql.Literal(tdmq_id))]
+    if args and args.get(&#39;after&#39;):
+        where.append(sql.SQL(&#34;record.time &gt;= {}&#34;).format(sql.Literal(args[&#39;after&#39;])))
+    if args and args.get(&#39;before&#39;):
+        where.append(sql.SQL(&#34;record.time &lt; {}&#34;).format(sql.Literal(args[&#39;before&#39;])))
+
+    clauses[&#39;where_clause&#39;] = sql.SQL(&#34; AND &#34;).join(where)
+
+    query = query_template.format(**clauses)
+    rows = query_db_all(query)
+
+    return dict(source_info=description,
+                public=(not source_is_private),
+                properties=properties,
+                rows=rows)
+
+
+class TimeseriesResult:
+    def __init__(self,
+                 source_info: Dict[str, Any], is_public: bool,
+                 fields: List[str], batch_row_iterator: Iterator[List[Tuple]]):
+        self._source_info = source_info
+        self._is_public = is_public
+        self._fields = fields
+        self._batch_row_iter = batch_row_iterator
+
+    @property
+    def source_info(self):
+        return self._source_info
+
+    @property
+    def is_public(self):
+        return self._is_public
+
+    @property
+    def fields(self):
+        return self._fields
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return next(self._batch_row_iter)
+
+
+def get_timeseries_result(tdmq_id, batch_size: int = None, **kwargs):
+    &#34;&#34;&#34;
+    Just like get_timeseries, but allows fetching results by batches.
+
+     :query after: consider only sensors reporting strictly after
+                   this time, e.g., &#39;2019-02-21T11:03:25Z&#39;
+
+     :query before: consider only sensors reporting strictly before
+                    this time, e.g., &#39;2019-02-22T11:03:25Z&#39;
+
+     :query bucket: time bucket for data aggregation, e.g., &#39;20 min&#39;
+
+     :query op: aggregation operation on data contained in bucket. One of the
+                values in supported_bucket_ops
+
+     :query fields: list of controlledProperties from the source,
+                    or nothing to select all of them.
+
+     :returns: array of arrays: time, footprint, field+
+               Fields are in the same order as specified in args.
+    &#34;&#34;&#34;
+    assert batch_size is None or batch_size &gt; 0
+    info = get_source_info(tdmq_id)
+    description = info[&#39;description&#39;]
+    source_is_private = not info.get(&#39;public&#39;, False)
+    logger.debug(&#34;get_timeseries_batches for source %s&#34;, tdmq_id)
+
+    if description.get(&#39;shape&#39;):
+        properties = [&#39;tiledb_index&#39;]
+    else:
+        properties = description[&#39;controlledProperties&#39;]
+        if kwargs.get(&#39;fields&#39;):
+            fields = kwargs[&#39;fields&#39;]
+            # keep the order specified in fields
+            properties = [f for f in fields if f in properties]
+            if fields != properties:
+                unknown_fields = &#39;, &#39;.join(set(fields).difference(properties))
+                raise tdmq.errors.TdmqBadRequestException(f&#34;The following field(s) requested for source do not exist: {unknown_fields}&#34;)
+
+    query_template = sql.SQL(&#34;&#34;&#34;
+        SELECT {select_list}
+        FROM record
+        WHERE
+        {where_clause}
+        {grouping_clause}&#34;&#34;&#34;)
+
+    if kwargs.get(&#39;bucket&#39;):
+        bucket_interval = kwargs[&#39;bucket&#39;]
+
+        if description.get(&#39;shape&#39;):
+            bucket_op = &#39;jsonb_agg&#39;
+        else:
+            bucket_op = kwargs[&#39;op&#39;]
+            if bucket_op not in supported_bucket_ops:
+                raise tdmq.errors.TdmqBadRequestException(f&#34;Unsupported bucketing operation &#39;{bucket_op}&#39;&#34;)
+
+        clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
+    else:
+        bucket_op = None
+        clauses = _timeseries_select(properties)
+
+    where = [sql.SQL(&#34;source_id = {}&#34;).format(sql.Literal(tdmq_id))]
+    if kwargs and kwargs.get(&#39;after&#39;):
+        where.append(sql.SQL(&#34;record.time &gt;= {}&#34;).format(sql.Literal(kwargs[&#39;after&#39;])))
+    if kwargs and kwargs.get(&#39;before&#39;):
+        where.append(sql.SQL(&#34;record.time &lt; {}&#34;).format(sql.Literal(kwargs[&#39;before&#39;])))
+
+    clauses[&#39;where_clause&#39;] = sql.SQL(&#34; AND &#34;).join(where)
+
+    query = query_template.format(**clauses)
+
+    return TimeseriesResult(
+        source_info=description,
+        is_public=(not source_is_private),
+        fields=[&#39;time&#39;, &#39;footprint&#39;] + properties,
+        batch_row_iterator=query_db_batches(query, batch_size=batch_size))
+
+
+def get_latest_activity(tdmq_id):
+    &#34;&#34;&#34;
+    Returns a dict { &#39;time&#39;: timestamp, &#39;data&#39;: [ record data objects ] }
+    &#34;&#34;&#34;
+    query_template = sql.SQL(&#34;&#34;&#34;
+        SELECT EXTRACT(epoch from r.time) as time, jsonb_agg(r.data) as data
+        FROM record r
+        WHERE
+            r.source_id = {source_id}
+            AND
+            r.time = (SELECT MAX(record.time) FROM record WHERE source_id = {source_id})
+        GROUP BY r.time;
+        &#34;&#34;&#34;)
+
+    query = query_template.format(source_id=sql.Literal(tdmq_id))
+    struct = query_db_all(query, one=True, cursor_factory=psycopg2.extras.RealDictCursor)
+    if struct is None:
+        return None
+    return struct
+
+
+def add_db_cli(app):
+    import flask
+    import click
+    db_cli = flask.cli.AppGroup(&#39;db&#39;)
+
+    def conn_params():
+        return {
+            &#39;host&#39;: flask.current_app.config.get(&#39;DB_HOST&#39;),
+            &#39;port&#39;: flask.current_app.config.get(&#39;DB_PORT&#39;),
+            &#39;user&#39;: flask.current_app.config[&#39;DB_USER&#39;],
+            &#39;password&#39;: flask.current_app.config[&#39;DB_PASSWORD&#39;],
+            &#39;dbname&#39;: flask.current_app.config[&#39;DB_NAME&#39;]
+        }
+
+    @db_cli.command(&#39;init&#39;)
+    @click.option(&#39;--drop&#39;, default=False, is_flag=True)
+    def db_init(drop):
+        click.echo(&#39;Starting initialization process.&#39;)
+        tdmq.db_manager.create_db(conn_params(), drop)
+        click.echo(&#39;Initialized the database.&#39;)
+
+    @db_cli.command(&#39;load&#39;)
+    @click.argument(&#39;filename&#39;, type=click.Path(exists=True))
+    def db_load(filename):
+        path = click.format_filename(filename)
+        msg = &#39;Loading from {}.&#39;.format(path)
+        click.echo(msg)
+        stats = load_file(path)
+        click.echo(&#39;Loaded {}&#39;.format(str(stats)))
+
+    @db_cli.command(&#39;dump&#39;)
+    @click.argument(&#39;field&#39;)
+    @click.argument(&#39;filename&#39;, type=click.Path(exists=False))
+    def db_dump(field, filename):
+        msg = &#39;Dumping {} to {}.&#39;.format(field, filename)
+        path = click.format_filename(filename)
+        click.echo(msg)
+        n = dump_field(field, path)
+        click.echo(&#39;Dumped {} records&#39;.format(n))
+
+    app.cli.add_command(db_cli)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="tdmq.db.add_db_cli"><code class="name flex">
+<span>def <span class="ident">add_db_cli</span></span>(<span>app)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_db_cli(app):
+    import flask
+    import click
+    db_cli = flask.cli.AppGroup(&#39;db&#39;)
+
+    def conn_params():
+        return {
+            &#39;host&#39;: flask.current_app.config.get(&#39;DB_HOST&#39;),
+            &#39;port&#39;: flask.current_app.config.get(&#39;DB_PORT&#39;),
+            &#39;user&#39;: flask.current_app.config[&#39;DB_USER&#39;],
+            &#39;password&#39;: flask.current_app.config[&#39;DB_PASSWORD&#39;],
+            &#39;dbname&#39;: flask.current_app.config[&#39;DB_NAME&#39;]
+        }
+
+    @db_cli.command(&#39;init&#39;)
+    @click.option(&#39;--drop&#39;, default=False, is_flag=True)
+    def db_init(drop):
+        click.echo(&#39;Starting initialization process.&#39;)
+        tdmq.db_manager.create_db(conn_params(), drop)
+        click.echo(&#39;Initialized the database.&#39;)
+
+    @db_cli.command(&#39;load&#39;)
+    @click.argument(&#39;filename&#39;, type=click.Path(exists=True))
+    def db_load(filename):
+        path = click.format_filename(filename)
+        msg = &#39;Loading from {}.&#39;.format(path)
+        click.echo(msg)
+        stats = load_file(path)
+        click.echo(&#39;Loaded {}&#39;.format(str(stats)))
+
+    @db_cli.command(&#39;dump&#39;)
+    @click.argument(&#39;field&#39;)
+    @click.argument(&#39;filename&#39;, type=click.Path(exists=False))
+    def db_dump(field, filename):
+        msg = &#39;Dumping {} to {}.&#39;.format(field, filename)
+        path = click.format_filename(filename)
+        click.echo(msg)
+        n = dump_field(field, path)
+        click.echo(&#39;Dumped {} records&#39;.format(n))
+
+    app.cli.add_command(db_cli)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.close_db"><code class="name flex">
+<span>def <span class="ident">close_db</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>If a connection to the database exists, close it.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_db():
+    &#34;&#34;&#34;
+    If a connection to the database exists, close it.
+    &#34;&#34;&#34;
+    global _db_connection
+    if _db_connection is not None:
+        logger.info(&#34;Destroying DB connection&#34;)
+        _db_connection.close()
+        _db_connection = None</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.delete_sources"><code class="name flex">
+<span>def <span class="ident">delete_sources</span></span>(<span>list_of_tdmq_ids)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete_sources(list_of_tdmq_ids):
+    query = sql.SQL(&#34;&#34;&#34;
+        DELETE FROM source
+        WHERE tdmq_id = ANY(%s)
+    &#34;&#34;&#34;)
+
+    query_db_all(query, args=(list_of_tdmq_ids,), fetch=False)
+    return list_of_tdmq_ids</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.dump_field"><code class="name flex">
+<span>def <span class="ident">dump_field</span></span>(<span>field, path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dump all record of field to file path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dump_field(field, path):
+    &#34;&#34;&#34;Dump all record of field to file path&#34;&#34;&#34;
+    conn = get_db()
+    return dump_table(conn, field, path, itersize=100000)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.dump_table"><code class="name flex">
+<span>def <span class="ident">dump_table</span></span>(<span>conn, tname, path, itersize=100000)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dump_table(conn, tname, path, itersize=100000):
+    query = sql.SQL(&#39;SELECT row_to_json({0}) from {0}&#39;).format(
+        sql.Identifier(tname)
+    )
+    first = True
+    counter = 0
+    with open(path, &#39;w&#39;) as f:
+        f.write(&#39;{&#34;%s&#34;: [\n&#39; % tname)
+        with conn:
+            with conn.cursor(&#39;dump_cursor&#39;) as cur:
+                cur.itersize = itersize
+                cur.execute(query)
+                for r in cur:
+                    if first:
+                        first = False
+                    else:
+                        f.write(&#39;,\n&#39;)
+                    f.write(json.dumps(r[0]))
+                    counter += 1
+        f.write(&#39;]}\n&#39;)
+    return counter</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.get_db"><code class="name flex">
+<span>def <span class="ident">get_db</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Requires active application context.</p>
+<p>Connect to the application's configured database. The connection
+is unique for each request and will be reused if this is called
+again.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_db():
+    &#34;&#34;&#34;
+    Requires active application context.
+
+    Connect to the application&#39;s configured database. The connection
+    is unique for each request and will be reused if this is called
+    again.
+    &#34;&#34;&#34;
+    global _db_connection
+    if _db_connection and _db_connection.closed != 0:
+        logger.warning(&#34;DB connection found unexpectedly closed.  Recreating it&#34;)
+        _db_connection = None
+
+    if not _db_connection:
+        import flask
+        query_timeout = flask.current_app.config.get(&#39;DB_MAX_QUERY_TIME&#39;, 50000)
+        logger.info(&#34;Setting database query timeout to %s&#34;, query_timeout)
+        db_settings = {
+            &#39;user&#39;: flask.current_app.config[&#39;DB_USER&#39;],
+            &#39;password&#39;: flask.current_app.config[&#39;DB_PASSWORD&#39;],
+            &#39;host&#39;: flask.current_app.config[&#39;DB_HOST&#39;],
+            &#39;dbname&#39;: flask.current_app.config[&#39;DB_NAME&#39;],
+            # abort queries after query_timeout milliseconds
+            &#39;options&#39;: f&#39;-c statement_timeout={query_timeout}&#39;
+        }
+        logger.info(&#34;Creating DB connection&#34;)
+        _db_connection = tdmq.db_manager.db_connect(db_settings)
+    return _db_connection</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.get_latest_activity"><code class="name flex">
+<span>def <span class="ident">get_latest_activity</span></span>(<span>tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a dict { 'time': timestamp, 'data': [ record data objects ] }</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_latest_activity(tdmq_id):
+    &#34;&#34;&#34;
+    Returns a dict { &#39;time&#39;: timestamp, &#39;data&#39;: [ record data objects ] }
+    &#34;&#34;&#34;
+    query_template = sql.SQL(&#34;&#34;&#34;
+        SELECT EXTRACT(epoch from r.time) as time, jsonb_agg(r.data) as data
+        FROM record r
+        WHERE
+            r.source_id = {source_id}
+            AND
+            r.time = (SELECT MAX(record.time) FROM record WHERE source_id = {source_id})
+        GROUP BY r.time;
+        &#34;&#34;&#34;)
+
+    query = query_template.format(source_id=sql.Literal(tdmq_id))
+    struct = query_db_all(query, one=True, cursor_factory=psycopg2.extras.RealDictCursor)
+    if struct is None:
+        return None
+    return struct</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.get_source_info"><code class="name flex">
+<span>def <span class="ident">get_source_info</span></span>(<span>tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_source_info(tdmq_id):
+    q = sql.SQL(&#34;&#34;&#34;
+        SELECT
+            source.description,
+            source.public
+        FROM source
+        WHERE tdmq_id = %s&#34;&#34;&#34;)
+    row = query_db_all(q, args=(tdmq_id,), one=True)
+    if row is None:
+        raise tdmq.errors.ItemNotFoundException(f&#34;tdmq_id {tdmq_id} not found in DB&#34;)
+
+    return dict(description=row[0], public=row[1])</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.get_sources"><code class="name flex">
+<span>def <span class="ident">get_sources</span></span>(<span>list_of_tdmq_ids)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the sources details for all the sources with tdmq_id in <code>list_of_tdmq_ids</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_sources(list_of_tdmq_ids):
+    &#34;&#34;&#34;
+    Get the sources details for all the sources with tdmq_id in `list_of_tdmq_ids`.
+    &#34;&#34;&#34;
+
+    q = sql.SQL(&#34;&#34;&#34;
+        SELECT
+            tdmq_id,
+            external_id,
+            ST_AsGeoJSON(ST_Transform(default_footprint, 4326))::json
+                as default_footprint,
+            stationary,
+            entity_category,
+            entity_type,
+            description,
+            registration_time,
+            public
+        FROM source
+        WHERE tdmq_id = ANY(%s)&#34;&#34;&#34;)
+
+    args = (list_of_tdmq_ids,)
+    return query_db_all(q, args=args, cursor_factory=psycopg2.extras.RealDictCursor)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.get_timeseries"><code class="name flex">
+<span>def <span class="ident">get_timeseries</span></span>(<span>tdmq_id, args=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>:query after: consider only sensors reporting strictly after
+this time, e.g., '2019-02-21T11:03:25Z'</p>
+<p>:query before: consider only sensors reporting strictly before
+this time, e.g., '2019-02-22T11:03:25Z'</p>
+<p>:query bucket: time bucket for data aggregation, e.g., '20 min'</p>
+<p>:query op: aggregation operation on data contained in bucket. One of the
+values in supported_bucket_ops</p>
+<p>:query fields: list of controlledProperties from the source,
+or nothing to select all of them.</p>
+<p>:returns: array of arrays: time, footprint, field+
+Fields are in the same order as specified in args.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_timeseries(tdmq_id, args=None):
+    &#34;&#34;&#34;
+     :query after: consider only sensors reporting strictly after
+                   this time, e.g., &#39;2019-02-21T11:03:25Z&#39;
+
+     :query before: consider only sensors reporting strictly before
+                    this time, e.g., &#39;2019-02-22T11:03:25Z&#39;
+
+     :query bucket: time bucket for data aggregation, e.g., &#39;20 min&#39;
+
+     :query op: aggregation operation on data contained in bucket. One of the
+                values in supported_bucket_ops
+
+     :query fields: list of controlledProperties from the source,
+                    or nothing to select all of them.
+
+     :returns: array of arrays: time, footprint, field+
+               Fields are in the same order as specified in args.
+    &#34;&#34;&#34;
+
+    info = get_source_info(tdmq_id)
+    description = info[&#39;description&#39;]
+    source_is_private = not info.get(&#39;public&#39;, False)
+    logger.debug(&#34;get_timeseries for source %s&#34;, tdmq_id)
+
+    if description.get(&#39;shape&#39;):
+        properties = [&#39;tiledb_index&#39;]
+    else:
+        properties = description[&#39;controlledProperties&#39;]
+        if args and args.get(&#39;fields&#39;, []):
+            fields = args[&#39;fields&#39;]
+            # keep the order specified in fields
+            properties = [f for f in fields if f in properties]
+            if fields != properties:
+                unknown_fields = &#39;, &#39;.join(set(fields).difference(properties))
+                raise tdmq.errors.TdmqBadRequestException(f&#34;The following field(s) requested for source do not exist: {unknown_fields}&#34;)
+
+    query_template = sql.SQL(&#34;&#34;&#34;
+        SELECT {select_list}
+        FROM record
+        WHERE
+        {where_clause}
+        {grouping_clause}&#34;&#34;&#34;)
+
+    if args and args.get(&#39;bucket&#39;):
+        bucket_interval = args[&#39;bucket&#39;]
+
+        if description.get(&#39;shape&#39;):
+            bucket_op = &#39;jsonb_agg&#39;
+        else:
+            bucket_op = args[&#39;op&#39;]
+            if bucket_op not in supported_bucket_ops:
+                raise tdmq.errors.TdmqBadRequestException(f&#34;Unsupported bucketing operation &#39;{bucket_op}&#39;&#34;)
+
+        clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
+    else:
+        bucket_op = None
+        clauses = _timeseries_select(properties)
+
+    where = [sql.SQL(&#34;source_id = {}&#34;).format(sql.Literal(tdmq_id))]
+    if args and args.get(&#39;after&#39;):
+        where.append(sql.SQL(&#34;record.time &gt;= {}&#34;).format(sql.Literal(args[&#39;after&#39;])))
+    if args and args.get(&#39;before&#39;):
+        where.append(sql.SQL(&#34;record.time &lt; {}&#34;).format(sql.Literal(args[&#39;before&#39;])))
+
+    clauses[&#39;where_clause&#39;] = sql.SQL(&#34; AND &#34;).join(where)
+
+    query = query_template.format(**clauses)
+    rows = query_db_all(query)
+
+    return dict(source_info=description,
+                public=(not source_is_private),
+                properties=properties,
+                rows=rows)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.get_timeseries_result"><code class="name flex">
+<span>def <span class="ident">get_timeseries_result</span></span>(<span>tdmq_id, batch_size: int = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Just like get_timeseries, but allows fetching results by batches.</p>
+<p>:query after: consider only sensors reporting strictly after
+this time, e.g., '2019-02-21T11:03:25Z'</p>
+<p>:query before: consider only sensors reporting strictly before
+this time, e.g., '2019-02-22T11:03:25Z'</p>
+<p>:query bucket: time bucket for data aggregation, e.g., '20 min'</p>
+<p>:query op: aggregation operation on data contained in bucket. One of the
+values in supported_bucket_ops</p>
+<p>:query fields: list of controlledProperties from the source,
+or nothing to select all of them.</p>
+<p>:returns: array of arrays: time, footprint, field+
+Fields are in the same order as specified in args.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_timeseries_result(tdmq_id, batch_size: int = None, **kwargs):
+    &#34;&#34;&#34;
+    Just like get_timeseries, but allows fetching results by batches.
+
+     :query after: consider only sensors reporting strictly after
+                   this time, e.g., &#39;2019-02-21T11:03:25Z&#39;
+
+     :query before: consider only sensors reporting strictly before
+                    this time, e.g., &#39;2019-02-22T11:03:25Z&#39;
+
+     :query bucket: time bucket for data aggregation, e.g., &#39;20 min&#39;
+
+     :query op: aggregation operation on data contained in bucket. One of the
+                values in supported_bucket_ops
+
+     :query fields: list of controlledProperties from the source,
+                    or nothing to select all of them.
+
+     :returns: array of arrays: time, footprint, field+
+               Fields are in the same order as specified in args.
+    &#34;&#34;&#34;
+    assert batch_size is None or batch_size &gt; 0
+    info = get_source_info(tdmq_id)
+    description = info[&#39;description&#39;]
+    source_is_private = not info.get(&#39;public&#39;, False)
+    logger.debug(&#34;get_timeseries_batches for source %s&#34;, tdmq_id)
+
+    if description.get(&#39;shape&#39;):
+        properties = [&#39;tiledb_index&#39;]
+    else:
+        properties = description[&#39;controlledProperties&#39;]
+        if kwargs.get(&#39;fields&#39;):
+            fields = kwargs[&#39;fields&#39;]
+            # keep the order specified in fields
+            properties = [f for f in fields if f in properties]
+            if fields != properties:
+                unknown_fields = &#39;, &#39;.join(set(fields).difference(properties))
+                raise tdmq.errors.TdmqBadRequestException(f&#34;The following field(s) requested for source do not exist: {unknown_fields}&#34;)
+
+    query_template = sql.SQL(&#34;&#34;&#34;
+        SELECT {select_list}
+        FROM record
+        WHERE
+        {where_clause}
+        {grouping_clause}&#34;&#34;&#34;)
+
+    if kwargs.get(&#39;bucket&#39;):
+        bucket_interval = kwargs[&#39;bucket&#39;]
+
+        if description.get(&#39;shape&#39;):
+            bucket_op = &#39;jsonb_agg&#39;
+        else:
+            bucket_op = kwargs[&#39;op&#39;]
+            if bucket_op not in supported_bucket_ops:
+                raise tdmq.errors.TdmqBadRequestException(f&#34;Unsupported bucketing operation &#39;{bucket_op}&#39;&#34;)
+
+        clauses = _bucketed_timeseries_select(properties, bucket_interval, bucket_op)
+    else:
+        bucket_op = None
+        clauses = _timeseries_select(properties)
+
+    where = [sql.SQL(&#34;source_id = {}&#34;).format(sql.Literal(tdmq_id))]
+    if kwargs and kwargs.get(&#39;after&#39;):
+        where.append(sql.SQL(&#34;record.time &gt;= {}&#34;).format(sql.Literal(kwargs[&#39;after&#39;])))
+    if kwargs and kwargs.get(&#39;before&#39;):
+        where.append(sql.SQL(&#34;record.time &lt; {}&#34;).format(sql.Literal(kwargs[&#39;before&#39;])))
+
+    clauses[&#39;where_clause&#39;] = sql.SQL(&#34; AND &#34;).join(where)
+
+    query = query_template.format(**clauses)
+
+    return TimeseriesResult(
+        source_info=description,
+        is_public=(not source_is_private),
+        fields=[&#39;time&#39;, &#39;footprint&#39;] + properties,
+        batch_row_iterator=query_db_batches(query, batch_size=batch_size))</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.list_entity_categories"><code class="name flex">
+<span>def <span class="ident">list_entity_categories</span></span>(<span>category_start=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_entity_categories(category_start=None):
+    q = sql.SQL(&#34;&#34;&#34;
+      SELECT entity_category
+      FROM entity_category&#34;&#34;&#34;)
+
+    if category_start:
+        starts_with = sql.SQL(&#34;starts_with(lower(entity_category), {})&#34;).format(sql.Literal(category_start.lower()))
+        q = q + sql.SQL(&#34; WHERE &#34;) + starts_with
+
+    return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.list_entity_types"><code class="name flex">
+<span>def <span class="ident">list_entity_types</span></span>(<span>category_start=None, type_start=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_entity_types(category_start=None, type_start=None):
+    q = sql.SQL(&#34;&#34;&#34;
+      SELECT
+        entity_category,
+        entity_type,
+        schema
+      FROM entity_type&#34;&#34;&#34;)
+
+    where = []
+
+    if category_start:
+        where.append(sql.SQL(&#34;starts_with(lower(entity_category), {})&#34;).format(sql.Literal(category_start.lower())))
+    if type_start:
+        where.append(sql.SQL(&#34;starts_with(lower(entity_type), {})&#34;).format(sql.Literal(type_start.lower())))
+
+    if where:
+        q = q + sql.SQL(&#34; WHERE &#34;) + sql.SQL(&#39; AND &#39;).join(where)
+
+    return query_db_all(q, cursor_factory=psycopg2.extras.RealDictCursor)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.list_sources"><code class="name flex">
+<span>def <span class="ident">list_sources</span></span>(<span>args=None, limit=None, offset=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Possible args:
+'id'
+'entity_category'
+'entity_type'
+'tdmq_id'
+'controlledProperties'
+'after'
+'before'
+'roi'
+'public'</p>
+<p>All applied conditions must match for an element to be returned.</p>
+<p>controlledProperties: value is an array, or None.
+All specified
+elements must be in the controlledProperties of the source.</p>
+<p>after and before:
+specify temporal interal.
+Specify any combination of the two.</p>
+<p>roi: value is GeoJSON with <code>center</code> and <code>radius</code>.
+Tests on source.default_footprint.</p>
+<p>All other arguments are tested for equality.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_sources(args=None, limit=None, offset=None):
+    &#34;&#34;&#34;
+    Possible args:
+        &#39;id&#39;
+        &#39;entity_category&#39;
+        &#39;entity_type&#39;
+        &#39;tdmq_id&#39;
+        &#39;controlledProperties&#39;
+        &#39;after&#39;
+        &#39;before&#39;
+        &#39;roi&#39;
+        &#39;public&#39;
+
+    All applied conditions must match for an element to be returned.
+
+    controlledProperties: value is an array, or None.  All specified
+                          elements must be in the controlledProperties of the source.
+
+    after and before:  specify temporal interal.  Specify any combination of the two.
+
+    roi: value is GeoJSON with `center` and `radius`.  Tests on source.default_footprint.
+
+    All other arguments are tested for equality.
+    &#34;&#34;&#34;
+    if args is None:
+        args = {}
+    else:
+        args = args.copy()
+
+    select = SQL(&#34;&#34;&#34;
+        SELECT
+            tdmq_id,
+            external_id,
+            ST_AsGeoJSON(ST_Transform(default_footprint, 4326))::json
+                as default_footprint,
+            stationary,
+            entity_category,
+            entity_type,
+            description,
+            registration_time,
+            public
+        FROM source&#34;&#34;&#34;)
+
+    where = []
+
+    # where clauses
+    def add_where_lit(column, condition, literal):
+        where.append(SQL(&#34; &#34;).join((SQL(column), SQL(condition), sql.Literal(literal))))
+
+    if &#39;id&#39; in args:
+        add_where_lit(&#39;source.external_id&#39;, &#39;=&#39;, args.pop(&#39;id&#39;))
+    if &#39;entity_category&#39; in args:
+        add_where_lit(&#39;source.entity_category&#39;, &#39;=&#39;, args.pop(&#39;entity_category&#39;))
+    if &#39;entity_type&#39; in args:
+        add_where_lit(&#39;source.entity_type&#39;, &#39;=&#39;, args.pop(&#39;entity_type&#39;))
+    if &#39;tdmq_id&#39; in args:
+        add_where_lit(&#39;source.tdmq_id&#39;, &#39;=&#39;, args.pop(&#39;tdmq_id&#39;))
+    if &#39;stationary&#39; in args:
+        add_where_lit(&#39;source.stationary&#39;, &#39;is&#39;, args.pop(&#39;stationary&#39;))
+    if &#39;public&#39; in args:
+        add_where_lit(&#39;source.public&#39;, &#39;is&#39;, args.pop(&#39;public&#39;))
+    if &#39;controlledProperties&#39; in args:
+        # require that all these exist in the controlledProperties array
+        # This is the PgSQL operator: ?&amp;  text[]   Do all of these array strings exist as top-level keys?
+        required_properties = args.pop(&#39;controlledProperties&#39;)
+        assert isinstance(required_properties, list)
+        where.append(
+            SQL(&#34;source.description-&gt;&#39;controlledProperties&#39; ?&amp; array[ {} ]&#34;).format(
+                SQL(&#39;, &#39;).join([sql.Literal(p) for p in required_properties])))
+    if &#39;roi&#39; in args:
+        fp = args.pop(&#39;roi&#39;)
+        where.append(SQL(
+            &#34;&#34;&#34;
+            ST_DWithin(
+                source.default_footprint,
+                ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON({}), 4326), 3003),
+            {})&#34;&#34;&#34;).format(
+                sql.Literal(json.dumps(fp[&#39;center&#39;])),
+                sql.Literal(fp[&#39;radius&#39;])))
+
+    if args.keys() &amp; {&#39;after&#39;, &#39;before&#39;}:  # actually, for mobile sensors we&#39;ll also have to add &#39;footprint&#39;
+        in_subquery = SQL(&#34;&#34;&#34;
+          source.tdmq_id IN (
+            SELECT record.source_id
+            FROM record
+            WHERE {}
+          )&#34;&#34;&#34;)
+        interval = []
+        if &#39;after&#39; in args:
+            interval.append(SQL(&#34;record.time &gt;= {}&#34;).format(sql.Literal(args.pop(&#39;after&#39;))))
+        if &#39;before&#39; in args:
+            interval.append(SQL(&#34;record.time &lt; {}&#34;).format(sql.Literal(args.pop(&#39;before&#39;))))
+
+        where.append(in_subquery.format(SQL(&#34; AND &#34;).join(interval)))
+
+    if args:  # not empty, so we have additional filtering attributes to apply to description
+        logger.debug(&#34;Left over args for JSON query: %s&#34;, args)
+        for k, v in args.items():
+            term = {&#34;description&#34;: {k: v}}
+            where.append(SQL(&#39;source.description @&gt; {}::jsonb&#39;).format(sql.Literal(json.dumps(term))))
+
+    query = select
+    if where:
+        query += SQL(&#39; WHERE &#39;) + SQL(&#39; AND &#39;).join(where)
+
+    if limit or offset:
+        query += SQL(&#39; ORDER BY source.tdmq_id &#39;)
+        if limit is not None:
+            query += SQL(&#39; LIMIT &#39;) + sql.Literal(limit)
+        if offset is not None:
+            query += SQL(&#39; OFFSET &#39;) + sql.Literal(offset)
+
+    try:
+        return query_db_all(query, cursor_factory=psycopg2.extras.RealDictCursor)
+    except psycopg2.OperationalError:
+        raise tdmq.errors.DBOperationalError()</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.load_file"><code class="name flex">
+<span>def <span class="ident">load_file</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load objects from a json file.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_file(filename):
+    &#34;&#34;&#34;Load objects from a json file.&#34;&#34;&#34;
+    logger.debug(&#39;load_file: start&#39;)
+    stats = {}
+
+    with open(filename) as f:
+        data = json.load(f)
+
+    for k in loader.keys():
+        if k in data:
+            rval = loader[k](data[k])
+            try:
+                n = len(rval)
+            except TypeError:
+                n = rval  # records
+            stats[k] = n
+    logger.debug(&#39;load_file: done.&#39;)
+    return stats</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.load_records"><code class="name flex">
+<span>def <span class="ident">load_records</span></span>(<span>records, validate=False, chunk_size=500)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_records(records, validate=False, chunk_size=500):
+    return load_records_conn(get_db(), records, validate, chunk_size)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.load_records_conn"><code class="name flex">
+<span>def <span class="ident">load_records_conn</span></span>(<span>conn, records, validate=False, chunk_size=500)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load records.</p>
+<p>Return the number of loaded objects.</p>
+<p>{"time": "2019-02-21T11:32:08Z",
+"source": "sensor_0",
+"data": {"prop1": 0.333}},
+{"time": "2019-02-21T11:34:08Z",
+"source": "sensor_1",
+"data": {"reference": "hdfs://xxxx", "index": 22}},
+{"time": "2019-02-21T12:14:01Z",
+"source": "sensor_3",
+"footprint": {"type": "Point", "coordinates": [9.222, 30.003]},
+"data": {"something": 42 }</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_records_conn(conn, records, validate=False, chunk_size=500):
+    &#34;&#34;&#34;
+    Load records.
+
+    Return the number of loaded objects.
+
+    {&#34;time&#34;: &#34;2019-02-21T11:32:08Z&#34;,
+     &#34;source&#34;: &#34;sensor_0&#34;,
+     &#34;data&#34;: {&#34;prop1&#34;: 0.333}},
+    {&#34;time&#34;: &#34;2019-02-21T11:34:08Z&#34;,
+     &#34;source&#34;: &#34;sensor_1&#34;,
+     &#34;data&#34;: {&#34;reference&#34;: &#34;hdfs://xxxx&#34;, &#34;index&#34;: 22}},
+    {&#34;time&#34;: &#34;2019-02-21T12:14:01Z&#34;,
+     &#34;source&#34;: &#34;sensor_3&#34;,
+     &#34;footprint&#34;: {&#34;type&#34;: &#34;Point&#34;, &#34;coordinates&#34;: [9.222, 30.003]},
+     &#34;data&#34;: {&#34;something&#34;: 42 }
+    &#34;&#34;&#34;
+    def get_required_internal_source_id_map(cursor, data):
+        external_ids = tuple(set(d[&#39;source&#39;] for d in data if &#39;tdmq_id&#39; not in d))
+        if external_ids:
+            #  If we get a lot of external_ids, using the IN clause might not be so efficient
+            q = &#34;SELECT external_id, tdmq_id FROM source WHERE external_id IN %s&#34;
+            cursor.execute(q, (external_ids,))
+            # The following `fetchall` and transforming the result to a dict is also at risk
+            # of explosion
+            map_external_to_tdm_id = dict(cur.fetchall())  # creates a mapping external_ids -&gt; tdmq_id
+        else:
+            map_external_to_tdm_id = dict()
+
+        return map_external_to_tdm_id
+
+    def gen_record_tuple(d, id_to_tdmq_id):
+        s_time = d[&#39;time&#39;]
+        tdmq_id = d[&#39;tdmq_id&#39;] if &#39;tdmq_id&#39; in d else id_to_tdmq_id[d[&#39;source&#39;]]
+        footprint = json.dumps(d.get(&#39;footprint&#39;)) if d.get(&#39;footprint&#39;) else None
+
+        return (s_time, tdmq_id, footprint, psycopg2.extras.Json(d[&#39;data&#39;]))
+
+    sql = &#34;INSERT INTO record (time, source_id, footprint, data) VALUES %s&#34;
+    template = &#34;(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s)&#34;
+    with conn:
+        with conn.cursor() as cur:
+            id_to_tdmq_id = get_required_internal_source_id_map(cur, records)
+            tuples = [gen_record_tuple(t, id_to_tdmq_id) for t in records]
+            logger.debug(&#39;load_records: start loading %d records&#39;, len(records))
+            psycopg2.extras.execute_values(cur, sql, tuples, template=template, page_size=chunk_size)
+
+    logger.debug(&#39;load_records: done.&#39;)
+    return len(records)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.load_sources"><code class="name flex">
+<span>def <span class="ident">load_sources</span></span>(<span>data, validate=False, chunk_size=500)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_sources(data, validate=False, chunk_size=500):
+    return load_sources_conn(get_db(), data, validate, chunk_size)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.load_sources_conn"><code class="name flex">
+<span>def <span class="ident">load_sources_conn</span></span>(<span>conn, data, validate=False, chunk_size=500)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load sensors objects.</p>
+<p>Return the list of UUIDs assigned to each object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_sources_conn(conn, data, validate=False, chunk_size=500):
+    &#34;&#34;&#34;
+    Load sensors objects.
+
+    Return the list of UUIDs assigned to each object.
+    &#34;&#34;&#34;
+    def gen_source_tuple(d):
+        tdmq_id = _compute_tdmq_id(d[&#39;id&#39;])
+        external_id = d[&#39;id&#39;]
+        entity_type = d[&#39;entity_type&#39;]
+        entity_cat = d[&#39;entity_category&#39;]
+        footprint = d[&#39;default_footprint&#39;]
+        stationary = d.get(&#39;stationary&#39;, True)
+        public = d.get(&#39;public&#39;, False)
+        return (tdmq_id, external_id, psycopg2.extras.Json(footprint), stationary, entity_cat, entity_type, psycopg2.extras.Json(d), public)
+
+    logger.debug(&#39;load_sources: start loading %d sources&#39;, len(data))
+    tuples = [gen_source_tuple(t) for t in data]
+    sqlstm = &#34;&#34;&#34;
+             INSERT INTO source
+             (tdmq_id, external_id, default_footprint, stationary, entity_category, entity_type, description, public)
+             VALUES %s&#34;&#34;&#34;
+    template = &#34;(%s, %s, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), 3003), %s, %s, %s, %s, %s)&#34;
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                psycopg2.extras.execute_values(cur, sqlstm, tuples, template=template, page_size=chunk_size)
+    except psycopg2.errors.UniqueViolation as e:
+        logger.info(e)
+        raise tdmq.errors.DuplicateItemException(f&#34;{e.pgerror}\n{e.diag.message_detail}&#34;)
+
+    logger.debug(&#39;load_sources: done.&#39;)
+    return [t[0] for t in tuples]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.query_db_all"><code class="name flex">
+<span>def <span class="ident">query_db_all</span></span>(<span>q, args=(), fetch=True, one=False, cursor_factory=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def query_db_all(q, args=(), fetch=True, one=False, cursor_factory=None):
+    with get_db() as db:
+        try:
+            with db.cursor(cursor_factory=cursor_factory) as cur:
+                cur.execute(q, tuple(args))
+                result = cur.fetchall() if fetch else None
+        except psycopg2.extensions.QueryCanceledError:
+            raise tdmq.errors.QueryTooLargeException(
+                &#34;Query too large.  Use the appropriate arguments to reduce the result set&#34;)
+
+    if one:
+        return result[0] if result else None
+    # else
+    return result</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.query_db_batches"><code class="name flex">
+<span>def <span class="ident">query_db_batches</span></span>(<span>q, args=(), batch_size: int = 2500, cursor_factory=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def query_db_batches(q, args=(), batch_size: int = 2500, cursor_factory=None):
+    assert batch_size &gt; 0
+    logger.debug(&#34;executing batch query with batch_size %s&#34;, batch_size)
+    with get_db() as db:
+        with db.cursor(cursor_factory=cursor_factory) as cur:
+            cur.execute(q, tuple(args))
+            while True:
+                batch = cur.fetchmany(batch_size)
+                if not batch:
+                    break
+                yield batch</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="tdmq.db.TimeseriesResult"><code class="flex name class">
+<span>class <span class="ident">TimeseriesResult</span></span>
+<span>(</span><span>source_info: Dict[str, Any], is_public: bool, fields: List[str], batch_row_iterator: Iterator[List[Tuple[]]])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TimeseriesResult:
+    def __init__(self,
+                 source_info: Dict[str, Any], is_public: bool,
+                 fields: List[str], batch_row_iterator: Iterator[List[Tuple]]):
+        self._source_info = source_info
+        self._is_public = is_public
+        self._fields = fields
+        self._batch_row_iter = batch_row_iterator
+
+    @property
+    def source_info(self):
+        return self._source_info
+
+    @property
+    def is_public(self):
+        return self._is_public
+
+    @property
+    def fields(self):
+        return self._fields
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return next(self._batch_row_iter)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.db.TimeseriesResult.fields"><code class="name">var <span class="ident">fields</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def fields(self):
+    return self._fields</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.TimeseriesResult.is_public"><code class="name">var <span class="ident">is_public</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def is_public(self):
+    return self._is_public</code></pre>
+</details>
+</dd>
+<dt id="tdmq.db.TimeseriesResult.source_info"><code class="name">var <span class="ident">source_info</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def source_info(self):
+    return self._source_info</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="tdmq" href="index.html">tdmq</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="tdmq.db.add_db_cli" href="#tdmq.db.add_db_cli">add_db_cli</a></code></li>
+<li><code><a title="tdmq.db.close_db" href="#tdmq.db.close_db">close_db</a></code></li>
+<li><code><a title="tdmq.db.delete_sources" href="#tdmq.db.delete_sources">delete_sources</a></code></li>
+<li><code><a title="tdmq.db.dump_field" href="#tdmq.db.dump_field">dump_field</a></code></li>
+<li><code><a title="tdmq.db.dump_table" href="#tdmq.db.dump_table">dump_table</a></code></li>
+<li><code><a title="tdmq.db.get_db" href="#tdmq.db.get_db">get_db</a></code></li>
+<li><code><a title="tdmq.db.get_latest_activity" href="#tdmq.db.get_latest_activity">get_latest_activity</a></code></li>
+<li><code><a title="tdmq.db.get_source_info" href="#tdmq.db.get_source_info">get_source_info</a></code></li>
+<li><code><a title="tdmq.db.get_sources" href="#tdmq.db.get_sources">get_sources</a></code></li>
+<li><code><a title="tdmq.db.get_timeseries" href="#tdmq.db.get_timeseries">get_timeseries</a></code></li>
+<li><code><a title="tdmq.db.get_timeseries_result" href="#tdmq.db.get_timeseries_result">get_timeseries_result</a></code></li>
+<li><code><a title="tdmq.db.list_entity_categories" href="#tdmq.db.list_entity_categories">list_entity_categories</a></code></li>
+<li><code><a title="tdmq.db.list_entity_types" href="#tdmq.db.list_entity_types">list_entity_types</a></code></li>
+<li><code><a title="tdmq.db.list_sources" href="#tdmq.db.list_sources">list_sources</a></code></li>
+<li><code><a title="tdmq.db.load_file" href="#tdmq.db.load_file">load_file</a></code></li>
+<li><code><a title="tdmq.db.load_records" href="#tdmq.db.load_records">load_records</a></code></li>
+<li><code><a title="tdmq.db.load_records_conn" href="#tdmq.db.load_records_conn">load_records_conn</a></code></li>
+<li><code><a title="tdmq.db.load_sources" href="#tdmq.db.load_sources">load_sources</a></code></li>
+<li><code><a title="tdmq.db.load_sources_conn" href="#tdmq.db.load_sources_conn">load_sources_conn</a></code></li>
+<li><code><a title="tdmq.db.query_db_all" href="#tdmq.db.query_db_all">query_db_all</a></code></li>
+<li><code><a title="tdmq.db.query_db_batches" href="#tdmq.db.query_db_batches">query_db_batches</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="tdmq.db.TimeseriesResult" href="#tdmq.db.TimeseriesResult">TimeseriesResult</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.db.TimeseriesResult.fields" href="#tdmq.db.TimeseriesResult.fields">fields</a></code></li>
+<li><code><a title="tdmq.db.TimeseriesResult.is_public" href="#tdmq.db.TimeseriesResult.is_public">is_public</a></code></li>
+<li><code><a title="tdmq.db.TimeseriesResult.source_info" href="#tdmq.db.TimeseriesResult.source_info">source_info</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

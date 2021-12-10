@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tdmq.client.client API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tdmq.client.client</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import math
+import logging
+import os
+
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from functools import wraps
+from typing import Any, Dict, List
+from urllib.parse import urlparse
+
+import numpy as np
+import requests
+
+import tiledb
+import tdmq.errors
+from tdmq.client.sources import Source, NonScalarSource, ScalarSource
+
+# FIXME need to do this to patch a overzealous logging by urllib3
+logging.getLogger(&#39;urllib3.connectionpool&#39;).setLevel(logging.ERROR)
+
+_logger = logging.getLogger(__name__)
+
+
+def log_level():
+    return _logger.getEffectiveLevel()
+
+
+def set_log_level(level):
+    _logger.setLevel(level)
+
+
+class Client:
+    DEFAULT_TDMQ_BASE_URL = &#39;http://web:8000/api/v0.0&#39;
+
+    # The &#39;Z&#39; at the end should stand for Zulu, which is the same as UTC
+    TDMQ_DT_FMT = &#39;%Y-%m-%dT%H:%M:%S.%fZ&#39;
+    TDMQ_DT_FMT_NO_MICRO = &#39;%Y-%m-%dT%H:%M:%SZ&#39;
+
+    @staticmethod
+    def _parse_timestamp(ts):
+        &#34;&#34;&#34;
+        Create datetime object from a timestamp arriving from the API.
+        Timestamps are specified in UTC time.
+        &#34;&#34;&#34;
+        return datetime.fromtimestamp(ts, timezone.utc)
+
+    @classmethod
+    def _format_timestamp(cls, ts):
+        &#34;&#34;&#34;
+        Format a datetime object `ts` in preparation to be sent to the API.
+        If ts specifies a time zone, it is used to convert to UTC time.  Else
+        **we assume that it is UTC time**.
+        &#34;&#34;&#34;
+        if ts.tzinfo is not None:
+            ts = ts.astimezone(timezone.utc)
+        return ts.strftime(cls.TDMQ_DT_FMT)
+
+    def __init__(self, tdmq_base_url=None, auth_token=None, verify_ssl=None):
+        self.base_url = (tdmq_base_url or
+                         os.getenv(&#39;TDMQ_BASE_URL&#39;) or
+                         self.DEFAULT_TDMQ_BASE_URL)
+        # Strip any trailing slashes from the prefix
+        self.base_url = self.base_url.rstrip(&#39;/&#39;)
+
+        _logger.debug(&#34;New tdmq client object for %s&#34;, self.base_url)
+
+        self.connected = False
+        self.tiledb_storage_root = None
+        self.tiledb_ctx = None
+        self.tiledb_vfs = None
+        self._request_opts = dict()
+        if not verify_ssl:  # either None or False
+            self._request_opts[&#39;verify&#39;] = False
+
+        self.headers = {&#34;User-Agent&#34;: &#34;TDMq client/unknown&#34;}
+        if auth_token is not None:
+            self.headers[&#34;Authorization&#34;] = f&#34;Bearer {auth_token}&#34;
+        self.headers[&#34;Accept&#34;] = &#34;application/json&#34;
+
+    def requires_connection(func):
+        &#34;&#34;&#34;
+        Decorator for methods that require a connection to the tdmq service.
+        &#34;&#34;&#34;
+        @wraps(func)
+        def wrapper_requires_connection(self, *args, **kwargs):
+            if not self.connected:
+                self.connect()
+            return func(self, *args, **kwargs)
+
+        return wrapper_requires_connection
+
+    def url_for(self, resource: str) -&gt; str:
+        return f&#39;{self.base_url}/{resource}&#39;
+
+    @staticmethod
+    def _raise_for_status(response: requests.Response) -&gt; None:
+        if response.status_code &lt; 400:
+            return
+        if response.status_code == 401 or response.status_code == 403:
+            raise tdmq.errors.UnauthorizedError(response.reason, response.status_code)
+        if response.status_code == 404:
+            raise tdmq.errors.ItemNotFoundException(response.reason)
+        if response.status_code == 413:
+            raise tdmq.errors.QueryTooLargeException(response.reason)
+        if response.status_code == 500:
+            raise tdmq.errors.InternalServerError(response.reason)
+        if response.status_code == 501:
+            raise tdmq.errors.UnsupportedFunctionality(response.reason)
+        if response.status_code &gt;= 400 and response.status_code &lt; 500:
+            raise tdmq.errors.TdmqBadRequestException(response.reason, response.status_code)
+        raise tdmq.errors.TdmqError(title=&#34;Server error&#34;, status=response.status_code, detail=response.reason)
+
+    def connect(self):
+        if self.connected:
+            return
+
+        service_info = self._do_get(&#39;service_info&#39;)
+        _logger.debug(&#34;Service sent the following info: \n%s&#34;, service_info)
+
+        if service_info[&#39;version&#39;] != &#39;0.1&#39;:
+            raise NotImplementedError(f&#34;This client isn&#39;t compatible with service version {service_info[&#39;version&#39;]}&#34;)
+        if &#39;tiledb&#39; in service_info:
+            self.tiledb_storage_root = service_info[&#39;tiledb&#39;][&#39;storage.root&#39;]
+            self.tiledb_ctx = tiledb.Ctx(service_info[&#39;tiledb&#39;].get(&#39;config&#39;))
+            self.tiledb_vfs = tiledb.VFS(config=self.tiledb_ctx.config(), ctx=self.tiledb_ctx)
+            _logger.info(&#34;Configured TileDB context&#34;)
+            _logger.debug(&#34;\t tiledb_storage_root: %s&#34;, self.tiledb_storage_root)
+            _logger.debug(&#34;\t tiledb_config:\n%s&#34;, self.tiledb_ctx.config())
+            if self.tiledb_storage_root.startswith(&#34;s3:&#34;):
+                if not self.tiledb_vfs.is_bucket(self.tiledb_storage_root):
+                    raise RuntimeError(f&#34;The storage root bucket {self.tiledb_storage_root} is not accessible or does not exist!&#34;)
+
+        self.connected = True
+        _logger.info(&#34;Client connected to TDMQ service at %s&#34;, self.base_url)
+
+    def _check_if_authorized(self, response: requests.Response) -&gt; None:
+        if response.status_code in (401, 403):
+            msg = f&#34;Request not authorized ({response.status_code} {response.reason})&#34;
+            if &#34;nginx&#34; in response.headers.get(&#34;Server&#34;, &#34;&#34;).lower():
+                # This looks like our oauth2 proxy
+                _logger.debug(&#34;Looks like our request was denied authorization by the TDMq oauth2 proxy&#34;)
+                url_parts = urlparse(self.base_url)
+                sign_in_uri = f&#34;{url_parts.scheme}://{url_parts.netloc}/oauth2/sign_in&#34;
+                msg += f&#34;\nPlease get an authentication token from {sign_in_uri}&#34;
+            _logger.error(msg)
+            raise tdmq.errors.UnauthorizedError(msg, status=response.status_code)
+
+    def _do_get(self, resource, params=None):
+        r = requests.get(f&#39;{self.base_url}/{resource}&#39;, params=params,
+                         headers=self.headers, **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
+        return r.json()
+
+    @contextmanager
+    def _do_get_stream_ctx(self, resource, params=None):
+        with requests.get(f&#39;{self.base_url}/{resource}&#39;, stream=True, params=params,
+                          headers=self.headers, **self._request_opts) as r:
+            self._check_if_authorized(r)
+            self._raise_for_status(r)
+            yield r
+
+    def _do_post(self, resource: str, json_obj) -&gt; requests.Response:
+        r = requests.post(resource, json=json_obj, headers=self.headers,
+                          **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
+        return r
+
+    def _destroy_source(self, tdmq_id):
+        r = requests.delete(f&#39;{self.base_url}/sources/{tdmq_id}&#39;, headers=self.headers,
+                            **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
+        array_name = self._source_data_path(tdmq_id)
+        if tiledb.object_type(self._source_data_path(tdmq_id), ctx=self.tiledb_ctx) == &#39;array&#39;:
+            tiledb.remove(array_name, ctx=self.tiledb_ctx)
+
+    def _source_data_path(self, tdmq_id):
+        return os.path.join(self.tiledb_storage_root, tdmq_id)
+
+    @requires_connection
+    def deregister_source(self, s):
+        _logger.debug(&#39;deregistering %s %s&#39;, s.tdmq_id, s)
+        # FIXME: this is kind of ugly.  Should we add the concept of Array
+        # to the top-most Source class?
+        if hasattr(s, &#39;close_array&#39;):
+            s.close_array()
+        self._destroy_source(s.tdmq_id)
+
+    @requires_connection
+    def register_source(self, definition, nslots=3600*24*365*10, **kwargs):
+        &#34;&#34;&#34;Register a new data source
+        .. :quickref: Register a new data source
+
+        :nslots: is the maximum expected number of slots that will be
+        needed. Actual storage allocation will be done at
+        ingestion. The default value is 10*24*3600*365
+
+        :tiledb_extents: (optional) list of tile extent sizes.
+                         First is for time dimension; successive ones apply to
+                         each respective shape dimension.  E.g.,
+                            shape = (576, 631); tiledb_extents = [ 100, 576, 631 ]
+
+
+        :properties: (optional) Mapping of `property name` -&gt; { storage attributes }.
+                     The following storage attributes can be specified:
+                       * `dtype` -&gt; numpy.dtype
+                       * `filters` -&gt; tiledb.FilterList
+                     A property may map to None if you don&#39;t want to customize settings.
+                     E.g., properties={&#39;temperature&#39;: None }
+
+        &#34;&#34;&#34;
+        assert isinstance(definition, dict)
+        # Try to validate arguments before registering the Source with tdmq
+        unknown_args = set(kwargs.keys()) - {&#39;tiledb_extents&#39;, &#39;properties&#39;}
+        if unknown_args:
+            raise ValueError(f&#34;Unknown kwargs {&#39;, &#39;.join(unknown_args)}&#34;)
+
+        if &#39;tiledb_extents&#39; in kwargs:
+            extents = kwargs[&#39;tiledb_extents&#39;]
+            if len(extents) != len(definition.get(&#39;shape&#39;, [])) + 1:
+                raise ValueError(&#34;Number of tile extents specified is incompatible with array shape &#34;
+                                 &#34;(expected len(shape) + 1 == len(tiledb_extents))&#34;)
+        if &#39;properties&#39; in kwargs:
+            unknown_properties = [ p for p in kwargs[&#39;properties&#39;].keys() if p not in definition[&#39;controlledProperties&#39;] ]
+            if unknown_properties:
+                raise ValueError(&#34;kwargs[&#39;properties&#39;] references the following properties that are not &#34;
+                                 f&#34;in the source&#39;s controlledProperties: {&#39;, &#39;.join(unknown_properties)}&#34;)
+            for k, v in kwargs[&#39;properties&#39;].items():
+                known_configs = (&#39;dtype&#39;, &#39;filters&#39;)
+                if any(k not in known_configs for k in v.keys()):
+                    raise ValueError(f&#34;Property configuration &#39;{k}&#39; contains invalid keys. &#34;
+                                     &#34;Valid keys are {&#39; and &#39;.join(known_configs)}&#34;)
+
+        _logger.debug(&#34;POSTing request to create new source with id &#39;%s&#39;&#34;, definition[&#39;id&#39;])
+        r = self._do_post(f&#39;{self.base_url}/sources&#39;, json_obj=[definition])
+        tdmq_id = r.json()[0]
+        _logger.debug(&#34;POST successful. Registered source with tdmq_id %s&#34;, tdmq_id)
+        if len(definition.get(&#39;shape&#39;, [])) &gt; 0:
+            try:
+                _logger.debug(&#34;Source is NonScalar.  Creating tiledb array&#34;)
+                extents = kwargs.get(&#39;tiledb_extents&#39;)
+                properties = dict.fromkeys(definition[&#39;controlledProperties&#39;])
+                if kwargs.get(&#39;properties&#39;):
+                    properties.update(kwargs[&#39;properties&#39;])
+
+                self._create_tiledb_array(tdmq_id, definition[&#39;shape&#39;], properties, nslots, extents)
+            except Exception as e:
+                _logger.exception(e)
+                _logger.error(&#39;Failure in creating tiledb array: %s, cleaning up&#39;, e)
+                self._destroy_source(tdmq_id)
+                raise tdmq.errors.TdmqError(f&#34;Error registering {definition.get(&#39;id&#39;, &#39;(id unavailable)&#39;)}. {e}&#34;)
+        return self.get_source(tdmq_id)
+
+    @requires_connection
+    def add_records(self, records) -&gt; None:
+        self._do_post(f&#39;{self.base_url}/records&#39;, json_obj=records)
+
+    @requires_connection
+    def get_entity_categories(self):
+        return self._do_get(&#39;entity_categories&#39;)
+
+    @requires_connection
+    def get_entity_types(self):
+        return self._do_get(&#39;entity_types&#39;)
+
+    def __source_factory(self, api_struct):
+        if api_struct[&#39;description&#39;].get(&#39;shape&#39;):
+            return NonScalarSource(self, api_struct[&#39;tdmq_id&#39;], api_struct)
+        # else
+        return ScalarSource(self, api_struct[&#39;tdmq_id&#39;], api_struct)
+
+    @requires_connection
+    def find_sources(self, args: Dict[str, Any] = None, **kwargs) -&gt; List[Source]:
+        &#34;&#34;&#34;
+        Gets the list of sources filtered using the provided args dictionary.  With
+        no parameters, it returns all the sources.  Multiple arguments are combined
+        with an AND condition (i.e., the intersection is returned).
+
+        Arguments:
+
+        only_public:
+            Boolean. Default: True. Specify `only_public=False` to also select private sources.
+        public:
+            Boolean.  Select public (True) or private (False) sources.
+        after:
+            datetime.  Selects sources that have been active after (included) the specified time.
+        before:
+            datetime.  Selects sources that have been active before the specified time.
+        roi:
+            string in the format `circle((center_lon, center_lat), radius_in_meters)`.
+            Selects sources in the specified region of interest.
+            Longitude and Latitude are WGS coordinates.
+        entity_type, entity_category:
+            String. Select sources of the specified entity type and category, respectively.
+        stationary:
+            Boolean. Select stationary or mobile sources.
+        controlledProperties:
+            string.  Comma-separated list of controlled properties that the source must provide.
+        id, external_id:
+            string. External ID of source.
+        other attributes:
+            Any attributes not listed above are matched for equality against the Source
+            description metadata.  *This will be work on public** sources.
+
+            Recognized attributes:
+                &#39;registration_time&#39;,
+                &#39;tdmq_id&#39;
+                &#39;brand_name&#39;,
+                &#39;edge_id&#39;,
+                &#39;model_name&#39;,
+                &#39;operated_by&#39;,
+                &#39;sensor_id&#39;,
+                &#39;shape&#39;,
+                &#39;station_id&#39;,
+                &#39;station_model&#39;,
+                &#39;type&#39;,
+            WARNING: Any queries trying to match attributes not defined in this doc will be
+            **limited to public sources**.
+        &#34;&#34;&#34;
+        if args:
+            if not isinstance(args, dict):
+                raise TypeError(&#34;&#39;args&#39; argument, if specified, must be a dict&#34;)
+            args = args.copy()
+            args.update(kwargs)
+        else:
+            args = kwargs
+        return [ self.__source_factory(s) for s in self._do_get(&#39;sources&#39;, params=args) ]
+
+    @requires_connection
+    def get_source(self, tdmq_id, anonymized=True):
+        res = self._do_get(f&#39;sources/{tdmq_id}&#39;, params={&#39;anonymized&#39;: anonymized})
+        assert res[&#39;tdmq_id&#39;] == str(tdmq_id)
+        return self.__source_factory(res)
+
+    @requires_connection
+    def get_timeseries(self, code, args, sparse: bool = None):
+        args = dict((k, v) for k, v in args.items() if v is not None)
+        if sparse is not None:
+            args[&#39;sparse&#39;] = sparse
+        # for testing!  args[&#39;batch_size&#39;] = 1
+        _logger.debug(&#39;get_timeseries(%s, %s)&#39;, code, args)
+        try:
+            with self._do_get_stream_ctx(f&#39;sources/{code}/timeseries_stream&#39;, params=args) as req:
+                return req.json()
+        except requests.exceptions.ChunkedEncodingError as e:
+            if &#39;0 bytes read&#39; in str(e).lower():
+                raise RuntimeError(&#34;Server took too long to respond.  Try reducing the size of the time series you&#39;re requesting&#34;)
+            raise
+
+    @requires_connection
+    def export_timeseries(self, code, args, data_format: str = &#39;csv&#39;, chunk_size=16384):
+        if data_format != &#39;csv&#39;:
+            raise NotImplementedError(&#34;only CSV export is supported&#34;)
+        _logger.debug(&#39;export_timeseries(%s, %s, data_format=%s, chunk_size=%s)&#39;,
+                      code, args, data_format, chunk_size)
+        args = dict((k, v) for k, v in args.items() if v is not None)
+        args[&#39;format&#39;] = data_format
+        with self._do_get_stream_ctx(f&#39;sources/{code}/timeseries_stream&#39;, params=args) as req:
+            for chunk in req.iter_content(chunk_size=chunk_size):
+                yield chunk
+
+    @requires_connection
+    def get_latest_source_activity(self, tdmq_id):
+        _logger.debug(&#34;get_latest_source_activity(%s)&#34;, tdmq_id)
+        r = self._do_get(f&#39;sources/{tdmq_id}/activity/latest&#39;)
+        if r[&#39;time&#39;] is not None:
+            r[&#39;time&#39;] = self._parse_timestamp(r[&#39;time&#39;])
+        return r
+
+    def open_array(self, tdmq_id, mode=&#39;r&#39;):
+        aname = self._source_data_path(tdmq_id)
+        return tiledb.open(aname, mode=mode, ctx=self.tiledb_ctx)
+
+    def close_array(self, tiledb_array):
+        tiledb_array.close()
+
+    @requires_connection
+    def fetch_non_scalar_slice(self, tiledb_array, tiledb_indices, args):
+        block_of_indx = tiledb_indices[args[0]]
+        block_of_indx = block_of_indx \
+            if isinstance(args[0], slice) else [block_of_indx]
+        indices = np.array(block_of_indx, dtype=np.int32)
+        assert len(indices) == 1 or np.all(indices[1:] - indices[:-1] == 1)
+        if isinstance(args[0], slice):
+            tiledb_i = (slice(int(indices.min()),
+                              int(indices.max()) + 1), ) + args[1:]
+        else:
+            assert len(indices) == 1
+            tiledb_i = (int(indices[0]),) + args[1:]
+        data = tiledb_array[tiledb_i]
+        return data
+
+    def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots, extent_sizes=None):
+        array_name = self._source_data_path(tdmq_id)
+        _logger.debug(&#39;attempting creation of %s&#39;, array_name)
+        if tiledb.object_type(array_name, self.tiledb_ctx) is not None:
+            raise tdmq.errors.DuplicateItemException(f&#39;duplicate object with path {array_name}&#39;)
+        assert len(shape) &gt; 0 and n_slots &gt; 0
+
+        attr_defaults = dict(dtype=np.float32, filters=tiledb.FilterList([tiledb.ZstdFilter()]))
+
+        def _attr_params(attr_name, attr_config=None):
+            if not attr_config:
+                attr_config = attr_defaults
+            return dict(name=attr_name,
+                        dtype=attr_config.get(&#39;dtype&#39;, attr_defaults[&#39;dtype&#39;]),
+                        filters=attr_config.get(&#39;filters&#39;, attr_defaults[&#39;filters&#39;]))
+
+        _logger.debug(&#39;Creating attributes for array %s&#39;, array_name)
+        attrs = [tiledb.Attr(**_attr_params(aname, cfg)) for aname, cfg in properties.items()]
+
+        if not extent_sizes:
+            extent_sizes = [ min(n_slots, 100) ] + [ math.ceil(s / 3) for s in shape ]
+        _logger.debug(&#34;Using extent sizes %s for shape %s&#34;, extent_sizes, shape)
+
+        dims = [tiledb.Dim(name=&#34;slot&#34;,
+                           domain=(0, n_slots),
+                           tile=extent_sizes[0], dtype=np.int32)]
+        dims = dims + [tiledb.Dim(name=f&#34;dim{i}&#34;, domain=(0, n - 1),
+                                  tile=extent_sizes[i+1], dtype=np.int32)
+                       for i, n in enumerate(shape)]
+        dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
+        schema = tiledb.ArraySchema(domain=dom, sparse=False,
+                                    attrs=attrs, ctx=self.tiledb_ctx)
+        _logger.debug(&#34;Array schema for %s:\n%s&#34;, array_name, schema)
+        _logger.debug(&#34;Creating the array on storage...&#34;)
+        _logger.debug(&#39;ensuring root storage directory exists: %s&#39;, self.tiledb_storage_root)
+        self.tiledb_vfs.create_dir(self.tiledb_storage_root)
+        _logger.debug(&#39;trying creation on disk of %s&#39;, array_name)
+        tiledb.DenseArray.create(array_name, schema, ctx=self.tiledb_ctx)
+        _logger.debug(&#39;%s successfully created.&#39;, array_name)
+        return array_name</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="tdmq.client.client.log_level"><code class="name flex">
+<span>def <span class="ident">log_level</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_level():
+    return _logger.getEffectiveLevel()</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.set_log_level"><code class="name flex">
+<span>def <span class="ident">set_log_level</span></span>(<span>level)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_log_level(level):
+    _logger.setLevel(level)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="tdmq.client.client.Client"><code class="flex name class">
+<span>class <span class="ident">Client</span></span>
+<span>(</span><span>tdmq_base_url=None, auth_token=None, verify_ssl=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Client:
+    DEFAULT_TDMQ_BASE_URL = &#39;http://web:8000/api/v0.0&#39;
+
+    # The &#39;Z&#39; at the end should stand for Zulu, which is the same as UTC
+    TDMQ_DT_FMT = &#39;%Y-%m-%dT%H:%M:%S.%fZ&#39;
+    TDMQ_DT_FMT_NO_MICRO = &#39;%Y-%m-%dT%H:%M:%SZ&#39;
+
+    @staticmethod
+    def _parse_timestamp(ts):
+        &#34;&#34;&#34;
+        Create datetime object from a timestamp arriving from the API.
+        Timestamps are specified in UTC time.
+        &#34;&#34;&#34;
+        return datetime.fromtimestamp(ts, timezone.utc)
+
+    @classmethod
+    def _format_timestamp(cls, ts):
+        &#34;&#34;&#34;
+        Format a datetime object `ts` in preparation to be sent to the API.
+        If ts specifies a time zone, it is used to convert to UTC time.  Else
+        **we assume that it is UTC time**.
+        &#34;&#34;&#34;
+        if ts.tzinfo is not None:
+            ts = ts.astimezone(timezone.utc)
+        return ts.strftime(cls.TDMQ_DT_FMT)
+
+    def __init__(self, tdmq_base_url=None, auth_token=None, verify_ssl=None):
+        self.base_url = (tdmq_base_url or
+                         os.getenv(&#39;TDMQ_BASE_URL&#39;) or
+                         self.DEFAULT_TDMQ_BASE_URL)
+        # Strip any trailing slashes from the prefix
+        self.base_url = self.base_url.rstrip(&#39;/&#39;)
+
+        _logger.debug(&#34;New tdmq client object for %s&#34;, self.base_url)
+
+        self.connected = False
+        self.tiledb_storage_root = None
+        self.tiledb_ctx = None
+        self.tiledb_vfs = None
+        self._request_opts = dict()
+        if not verify_ssl:  # either None or False
+            self._request_opts[&#39;verify&#39;] = False
+
+        self.headers = {&#34;User-Agent&#34;: &#34;TDMq client/unknown&#34;}
+        if auth_token is not None:
+            self.headers[&#34;Authorization&#34;] = f&#34;Bearer {auth_token}&#34;
+        self.headers[&#34;Accept&#34;] = &#34;application/json&#34;
+
+    def requires_connection(func):
+        &#34;&#34;&#34;
+        Decorator for methods that require a connection to the tdmq service.
+        &#34;&#34;&#34;
+        @wraps(func)
+        def wrapper_requires_connection(self, *args, **kwargs):
+            if not self.connected:
+                self.connect()
+            return func(self, *args, **kwargs)
+
+        return wrapper_requires_connection
+
+    def url_for(self, resource: str) -&gt; str:
+        return f&#39;{self.base_url}/{resource}&#39;
+
+    @staticmethod
+    def _raise_for_status(response: requests.Response) -&gt; None:
+        if response.status_code &lt; 400:
+            return
+        if response.status_code == 401 or response.status_code == 403:
+            raise tdmq.errors.UnauthorizedError(response.reason, response.status_code)
+        if response.status_code == 404:
+            raise tdmq.errors.ItemNotFoundException(response.reason)
+        if response.status_code == 413:
+            raise tdmq.errors.QueryTooLargeException(response.reason)
+        if response.status_code == 500:
+            raise tdmq.errors.InternalServerError(response.reason)
+        if response.status_code == 501:
+            raise tdmq.errors.UnsupportedFunctionality(response.reason)
+        if response.status_code &gt;= 400 and response.status_code &lt; 500:
+            raise tdmq.errors.TdmqBadRequestException(response.reason, response.status_code)
+        raise tdmq.errors.TdmqError(title=&#34;Server error&#34;, status=response.status_code, detail=response.reason)
+
+    def connect(self):
+        if self.connected:
+            return
+
+        service_info = self._do_get(&#39;service_info&#39;)
+        _logger.debug(&#34;Service sent the following info: \n%s&#34;, service_info)
+
+        if service_info[&#39;version&#39;] != &#39;0.1&#39;:
+            raise NotImplementedError(f&#34;This client isn&#39;t compatible with service version {service_info[&#39;version&#39;]}&#34;)
+        if &#39;tiledb&#39; in service_info:
+            self.tiledb_storage_root = service_info[&#39;tiledb&#39;][&#39;storage.root&#39;]
+            self.tiledb_ctx = tiledb.Ctx(service_info[&#39;tiledb&#39;].get(&#39;config&#39;))
+            self.tiledb_vfs = tiledb.VFS(config=self.tiledb_ctx.config(), ctx=self.tiledb_ctx)
+            _logger.info(&#34;Configured TileDB context&#34;)
+            _logger.debug(&#34;\t tiledb_storage_root: %s&#34;, self.tiledb_storage_root)
+            _logger.debug(&#34;\t tiledb_config:\n%s&#34;, self.tiledb_ctx.config())
+            if self.tiledb_storage_root.startswith(&#34;s3:&#34;):
+                if not self.tiledb_vfs.is_bucket(self.tiledb_storage_root):
+                    raise RuntimeError(f&#34;The storage root bucket {self.tiledb_storage_root} is not accessible or does not exist!&#34;)
+
+        self.connected = True
+        _logger.info(&#34;Client connected to TDMQ service at %s&#34;, self.base_url)
+
+    def _check_if_authorized(self, response: requests.Response) -&gt; None:
+        if response.status_code in (401, 403):
+            msg = f&#34;Request not authorized ({response.status_code} {response.reason})&#34;
+            if &#34;nginx&#34; in response.headers.get(&#34;Server&#34;, &#34;&#34;).lower():
+                # This looks like our oauth2 proxy
+                _logger.debug(&#34;Looks like our request was denied authorization by the TDMq oauth2 proxy&#34;)
+                url_parts = urlparse(self.base_url)
+                sign_in_uri = f&#34;{url_parts.scheme}://{url_parts.netloc}/oauth2/sign_in&#34;
+                msg += f&#34;\nPlease get an authentication token from {sign_in_uri}&#34;
+            _logger.error(msg)
+            raise tdmq.errors.UnauthorizedError(msg, status=response.status_code)
+
+    def _do_get(self, resource, params=None):
+        r = requests.get(f&#39;{self.base_url}/{resource}&#39;, params=params,
+                         headers=self.headers, **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
+        return r.json()
+
+    @contextmanager
+    def _do_get_stream_ctx(self, resource, params=None):
+        with requests.get(f&#39;{self.base_url}/{resource}&#39;, stream=True, params=params,
+                          headers=self.headers, **self._request_opts) as r:
+            self._check_if_authorized(r)
+            self._raise_for_status(r)
+            yield r
+
+    def _do_post(self, resource: str, json_obj) -&gt; requests.Response:
+        r = requests.post(resource, json=json_obj, headers=self.headers,
+                          **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
+        return r
+
+    def _destroy_source(self, tdmq_id):
+        r = requests.delete(f&#39;{self.base_url}/sources/{tdmq_id}&#39;, headers=self.headers,
+                            **self._request_opts)
+        self._check_if_authorized(r)
+        self._raise_for_status(r)
+        array_name = self._source_data_path(tdmq_id)
+        if tiledb.object_type(self._source_data_path(tdmq_id), ctx=self.tiledb_ctx) == &#39;array&#39;:
+            tiledb.remove(array_name, ctx=self.tiledb_ctx)
+
+    def _source_data_path(self, tdmq_id):
+        return os.path.join(self.tiledb_storage_root, tdmq_id)
+
+    @requires_connection
+    def deregister_source(self, s):
+        _logger.debug(&#39;deregistering %s %s&#39;, s.tdmq_id, s)
+        # FIXME: this is kind of ugly.  Should we add the concept of Array
+        # to the top-most Source class?
+        if hasattr(s, &#39;close_array&#39;):
+            s.close_array()
+        self._destroy_source(s.tdmq_id)
+
+    @requires_connection
+    def register_source(self, definition, nslots=3600*24*365*10, **kwargs):
+        &#34;&#34;&#34;Register a new data source
+        .. :quickref: Register a new data source
+
+        :nslots: is the maximum expected number of slots that will be
+        needed. Actual storage allocation will be done at
+        ingestion. The default value is 10*24*3600*365
+
+        :tiledb_extents: (optional) list of tile extent sizes.
+                         First is for time dimension; successive ones apply to
+                         each respective shape dimension.  E.g.,
+                            shape = (576, 631); tiledb_extents = [ 100, 576, 631 ]
+
+
+        :properties: (optional) Mapping of `property name` -&gt; { storage attributes }.
+                     The following storage attributes can be specified:
+                       * `dtype` -&gt; numpy.dtype
+                       * `filters` -&gt; tiledb.FilterList
+                     A property may map to None if you don&#39;t want to customize settings.
+                     E.g., properties={&#39;temperature&#39;: None }
+
+        &#34;&#34;&#34;
+        assert isinstance(definition, dict)
+        # Try to validate arguments before registering the Source with tdmq
+        unknown_args = set(kwargs.keys()) - {&#39;tiledb_extents&#39;, &#39;properties&#39;}
+        if unknown_args:
+            raise ValueError(f&#34;Unknown kwargs {&#39;, &#39;.join(unknown_args)}&#34;)
+
+        if &#39;tiledb_extents&#39; in kwargs:
+            extents = kwargs[&#39;tiledb_extents&#39;]
+            if len(extents) != len(definition.get(&#39;shape&#39;, [])) + 1:
+                raise ValueError(&#34;Number of tile extents specified is incompatible with array shape &#34;
+                                 &#34;(expected len(shape) + 1 == len(tiledb_extents))&#34;)
+        if &#39;properties&#39; in kwargs:
+            unknown_properties = [ p for p in kwargs[&#39;properties&#39;].keys() if p not in definition[&#39;controlledProperties&#39;] ]
+            if unknown_properties:
+                raise ValueError(&#34;kwargs[&#39;properties&#39;] references the following properties that are not &#34;
+                                 f&#34;in the source&#39;s controlledProperties: {&#39;, &#39;.join(unknown_properties)}&#34;)
+            for k, v in kwargs[&#39;properties&#39;].items():
+                known_configs = (&#39;dtype&#39;, &#39;filters&#39;)
+                if any(k not in known_configs for k in v.keys()):
+                    raise ValueError(f&#34;Property configuration &#39;{k}&#39; contains invalid keys. &#34;
+                                     &#34;Valid keys are {&#39; and &#39;.join(known_configs)}&#34;)
+
+        _logger.debug(&#34;POSTing request to create new source with id &#39;%s&#39;&#34;, definition[&#39;id&#39;])
+        r = self._do_post(f&#39;{self.base_url}/sources&#39;, json_obj=[definition])
+        tdmq_id = r.json()[0]
+        _logger.debug(&#34;POST successful. Registered source with tdmq_id %s&#34;, tdmq_id)
+        if len(definition.get(&#39;shape&#39;, [])) &gt; 0:
+            try:
+                _logger.debug(&#34;Source is NonScalar.  Creating tiledb array&#34;)
+                extents = kwargs.get(&#39;tiledb_extents&#39;)
+                properties = dict.fromkeys(definition[&#39;controlledProperties&#39;])
+                if kwargs.get(&#39;properties&#39;):
+                    properties.update(kwargs[&#39;properties&#39;])
+
+                self._create_tiledb_array(tdmq_id, definition[&#39;shape&#39;], properties, nslots, extents)
+            except Exception as e:
+                _logger.exception(e)
+                _logger.error(&#39;Failure in creating tiledb array: %s, cleaning up&#39;, e)
+                self._destroy_source(tdmq_id)
+                raise tdmq.errors.TdmqError(f&#34;Error registering {definition.get(&#39;id&#39;, &#39;(id unavailable)&#39;)}. {e}&#34;)
+        return self.get_source(tdmq_id)
+
+    @requires_connection
+    def add_records(self, records) -&gt; None:
+        self._do_post(f&#39;{self.base_url}/records&#39;, json_obj=records)
+
+    @requires_connection
+    def get_entity_categories(self):
+        return self._do_get(&#39;entity_categories&#39;)
+
+    @requires_connection
+    def get_entity_types(self):
+        return self._do_get(&#39;entity_types&#39;)
+
+    def __source_factory(self, api_struct):
+        if api_struct[&#39;description&#39;].get(&#39;shape&#39;):
+            return NonScalarSource(self, api_struct[&#39;tdmq_id&#39;], api_struct)
+        # else
+        return ScalarSource(self, api_struct[&#39;tdmq_id&#39;], api_struct)
+
+    @requires_connection
+    def find_sources(self, args: Dict[str, Any] = None, **kwargs) -&gt; List[Source]:
+        &#34;&#34;&#34;
+        Gets the list of sources filtered using the provided args dictionary.  With
+        no parameters, it returns all the sources.  Multiple arguments are combined
+        with an AND condition (i.e., the intersection is returned).
+
+        Arguments:
+
+        only_public:
+            Boolean. Default: True. Specify `only_public=False` to also select private sources.
+        public:
+            Boolean.  Select public (True) or private (False) sources.
+        after:
+            datetime.  Selects sources that have been active after (included) the specified time.
+        before:
+            datetime.  Selects sources that have been active before the specified time.
+        roi:
+            string in the format `circle((center_lon, center_lat), radius_in_meters)`.
+            Selects sources in the specified region of interest.
+            Longitude and Latitude are WGS coordinates.
+        entity_type, entity_category:
+            String. Select sources of the specified entity type and category, respectively.
+        stationary:
+            Boolean. Select stationary or mobile sources.
+        controlledProperties:
+            string.  Comma-separated list of controlled properties that the source must provide.
+        id, external_id:
+            string. External ID of source.
+        other attributes:
+            Any attributes not listed above are matched for equality against the Source
+            description metadata.  *This will be work on public** sources.
+
+            Recognized attributes:
+                &#39;registration_time&#39;,
+                &#39;tdmq_id&#39;
+                &#39;brand_name&#39;,
+                &#39;edge_id&#39;,
+                &#39;model_name&#39;,
+                &#39;operated_by&#39;,
+                &#39;sensor_id&#39;,
+                &#39;shape&#39;,
+                &#39;station_id&#39;,
+                &#39;station_model&#39;,
+                &#39;type&#39;,
+            WARNING: Any queries trying to match attributes not defined in this doc will be
+            **limited to public sources**.
+        &#34;&#34;&#34;
+        if args:
+            if not isinstance(args, dict):
+                raise TypeError(&#34;&#39;args&#39; argument, if specified, must be a dict&#34;)
+            args = args.copy()
+            args.update(kwargs)
+        else:
+            args = kwargs
+        return [ self.__source_factory(s) for s in self._do_get(&#39;sources&#39;, params=args) ]
+
+    @requires_connection
+    def get_source(self, tdmq_id, anonymized=True):
+        res = self._do_get(f&#39;sources/{tdmq_id}&#39;, params={&#39;anonymized&#39;: anonymized})
+        assert res[&#39;tdmq_id&#39;] == str(tdmq_id)
+        return self.__source_factory(res)
+
+    @requires_connection
+    def get_timeseries(self, code, args, sparse: bool = None):
+        args = dict((k, v) for k, v in args.items() if v is not None)
+        if sparse is not None:
+            args[&#39;sparse&#39;] = sparse
+        # for testing!  args[&#39;batch_size&#39;] = 1
+        _logger.debug(&#39;get_timeseries(%s, %s)&#39;, code, args)
+        try:
+            with self._do_get_stream_ctx(f&#39;sources/{code}/timeseries_stream&#39;, params=args) as req:
+                return req.json()
+        except requests.exceptions.ChunkedEncodingError as e:
+            if &#39;0 bytes read&#39; in str(e).lower():
+                raise RuntimeError(&#34;Server took too long to respond.  Try reducing the size of the time series you&#39;re requesting&#34;)
+            raise
+
+    @requires_connection
+    def export_timeseries(self, code, args, data_format: str = &#39;csv&#39;, chunk_size=16384):
+        if data_format != &#39;csv&#39;:
+            raise NotImplementedError(&#34;only CSV export is supported&#34;)
+        _logger.debug(&#39;export_timeseries(%s, %s, data_format=%s, chunk_size=%s)&#39;,
+                      code, args, data_format, chunk_size)
+        args = dict((k, v) for k, v in args.items() if v is not None)
+        args[&#39;format&#39;] = data_format
+        with self._do_get_stream_ctx(f&#39;sources/{code}/timeseries_stream&#39;, params=args) as req:
+            for chunk in req.iter_content(chunk_size=chunk_size):
+                yield chunk
+
+    @requires_connection
+    def get_latest_source_activity(self, tdmq_id):
+        _logger.debug(&#34;get_latest_source_activity(%s)&#34;, tdmq_id)
+        r = self._do_get(f&#39;sources/{tdmq_id}/activity/latest&#39;)
+        if r[&#39;time&#39;] is not None:
+            r[&#39;time&#39;] = self._parse_timestamp(r[&#39;time&#39;])
+        return r
+
+    def open_array(self, tdmq_id, mode=&#39;r&#39;):
+        aname = self._source_data_path(tdmq_id)
+        return tiledb.open(aname, mode=mode, ctx=self.tiledb_ctx)
+
+    def close_array(self, tiledb_array):
+        tiledb_array.close()
+
+    @requires_connection
+    def fetch_non_scalar_slice(self, tiledb_array, tiledb_indices, args):
+        block_of_indx = tiledb_indices[args[0]]
+        block_of_indx = block_of_indx \
+            if isinstance(args[0], slice) else [block_of_indx]
+        indices = np.array(block_of_indx, dtype=np.int32)
+        assert len(indices) == 1 or np.all(indices[1:] - indices[:-1] == 1)
+        if isinstance(args[0], slice):
+            tiledb_i = (slice(int(indices.min()),
+                              int(indices.max()) + 1), ) + args[1:]
+        else:
+            assert len(indices) == 1
+            tiledb_i = (int(indices[0]),) + args[1:]
+        data = tiledb_array[tiledb_i]
+        return data
+
+    def _create_tiledb_array(self, tdmq_id, shape, properties, n_slots, extent_sizes=None):
+        array_name = self._source_data_path(tdmq_id)
+        _logger.debug(&#39;attempting creation of %s&#39;, array_name)
+        if tiledb.object_type(array_name, self.tiledb_ctx) is not None:
+            raise tdmq.errors.DuplicateItemException(f&#39;duplicate object with path {array_name}&#39;)
+        assert len(shape) &gt; 0 and n_slots &gt; 0
+
+        attr_defaults = dict(dtype=np.float32, filters=tiledb.FilterList([tiledb.ZstdFilter()]))
+
+        def _attr_params(attr_name, attr_config=None):
+            if not attr_config:
+                attr_config = attr_defaults
+            return dict(name=attr_name,
+                        dtype=attr_config.get(&#39;dtype&#39;, attr_defaults[&#39;dtype&#39;]),
+                        filters=attr_config.get(&#39;filters&#39;, attr_defaults[&#39;filters&#39;]))
+
+        _logger.debug(&#39;Creating attributes for array %s&#39;, array_name)
+        attrs = [tiledb.Attr(**_attr_params(aname, cfg)) for aname, cfg in properties.items()]
+
+        if not extent_sizes:
+            extent_sizes = [ min(n_slots, 100) ] + [ math.ceil(s / 3) for s in shape ]
+        _logger.debug(&#34;Using extent sizes %s for shape %s&#34;, extent_sizes, shape)
+
+        dims = [tiledb.Dim(name=&#34;slot&#34;,
+                           domain=(0, n_slots),
+                           tile=extent_sizes[0], dtype=np.int32)]
+        dims = dims + [tiledb.Dim(name=f&#34;dim{i}&#34;, domain=(0, n - 1),
+                                  tile=extent_sizes[i+1], dtype=np.int32)
+                       for i, n in enumerate(shape)]
+        dom = tiledb.Domain(*dims, ctx=self.tiledb_ctx)
+        schema = tiledb.ArraySchema(domain=dom, sparse=False,
+                                    attrs=attrs, ctx=self.tiledb_ctx)
+        _logger.debug(&#34;Array schema for %s:\n%s&#34;, array_name, schema)
+        _logger.debug(&#34;Creating the array on storage...&#34;)
+        _logger.debug(&#39;ensuring root storage directory exists: %s&#39;, self.tiledb_storage_root)
+        self.tiledb_vfs.create_dir(self.tiledb_storage_root)
+        _logger.debug(&#39;trying creation on disk of %s&#39;, array_name)
+        tiledb.DenseArray.create(array_name, schema, ctx=self.tiledb_ctx)
+        _logger.debug(&#39;%s successfully created.&#39;, array_name)
+        return array_name</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="tdmq.client.client.Client.DEFAULT_TDMQ_BASE_URL"><code class="name">var <span class="ident">DEFAULT_TDMQ_BASE_URL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tdmq.client.client.Client.TDMQ_DT_FMT"><code class="name">var <span class="ident">TDMQ_DT_FMT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tdmq.client.client.Client.TDMQ_DT_FMT_NO_MICRO"><code class="name">var <span class="ident">TDMQ_DT_FMT_NO_MICRO</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.client.Client.add_records"><code class="name flex">
+<span>def <span class="ident">add_records</span></span>(<span>self, records) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def add_records(self, records) -&gt; None:
+    self._do_post(f&#39;{self.base_url}/records&#39;, json_obj=records)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.close_array"><code class="name flex">
+<span>def <span class="ident">close_array</span></span>(<span>self, tiledb_array)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_array(self, tiledb_array):
+    tiledb_array.close()</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.connect"><code class="name flex">
+<span>def <span class="ident">connect</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect(self):
+    if self.connected:
+        return
+
+    service_info = self._do_get(&#39;service_info&#39;)
+    _logger.debug(&#34;Service sent the following info: \n%s&#34;, service_info)
+
+    if service_info[&#39;version&#39;] != &#39;0.1&#39;:
+        raise NotImplementedError(f&#34;This client isn&#39;t compatible with service version {service_info[&#39;version&#39;]}&#34;)
+    if &#39;tiledb&#39; in service_info:
+        self.tiledb_storage_root = service_info[&#39;tiledb&#39;][&#39;storage.root&#39;]
+        self.tiledb_ctx = tiledb.Ctx(service_info[&#39;tiledb&#39;].get(&#39;config&#39;))
+        self.tiledb_vfs = tiledb.VFS(config=self.tiledb_ctx.config(), ctx=self.tiledb_ctx)
+        _logger.info(&#34;Configured TileDB context&#34;)
+        _logger.debug(&#34;\t tiledb_storage_root: %s&#34;, self.tiledb_storage_root)
+        _logger.debug(&#34;\t tiledb_config:\n%s&#34;, self.tiledb_ctx.config())
+        if self.tiledb_storage_root.startswith(&#34;s3:&#34;):
+            if not self.tiledb_vfs.is_bucket(self.tiledb_storage_root):
+                raise RuntimeError(f&#34;The storage root bucket {self.tiledb_storage_root} is not accessible or does not exist!&#34;)
+
+    self.connected = True
+    _logger.info(&#34;Client connected to TDMQ service at %s&#34;, self.base_url)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.deregister_source"><code class="name flex">
+<span>def <span class="ident">deregister_source</span></span>(<span>self, s)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def deregister_source(self, s):
+    _logger.debug(&#39;deregistering %s %s&#39;, s.tdmq_id, s)
+    # FIXME: this is kind of ugly.  Should we add the concept of Array
+    # to the top-most Source class?
+    if hasattr(s, &#39;close_array&#39;):
+        s.close_array()
+    self._destroy_source(s.tdmq_id)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.export_timeseries"><code class="name flex">
+<span>def <span class="ident">export_timeseries</span></span>(<span>self, code, args, data_format: str = 'csv', chunk_size=16384)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def export_timeseries(self, code, args, data_format: str = &#39;csv&#39;, chunk_size=16384):
+    if data_format != &#39;csv&#39;:
+        raise NotImplementedError(&#34;only CSV export is supported&#34;)
+    _logger.debug(&#39;export_timeseries(%s, %s, data_format=%s, chunk_size=%s)&#39;,
+                  code, args, data_format, chunk_size)
+    args = dict((k, v) for k, v in args.items() if v is not None)
+    args[&#39;format&#39;] = data_format
+    with self._do_get_stream_ctx(f&#39;sources/{code}/timeseries_stream&#39;, params=args) as req:
+        for chunk in req.iter_content(chunk_size=chunk_size):
+            yield chunk</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.fetch_non_scalar_slice"><code class="name flex">
+<span>def <span class="ident">fetch_non_scalar_slice</span></span>(<span>self, tiledb_array, tiledb_indices, args)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def fetch_non_scalar_slice(self, tiledb_array, tiledb_indices, args):
+    block_of_indx = tiledb_indices[args[0]]
+    block_of_indx = block_of_indx \
+        if isinstance(args[0], slice) else [block_of_indx]
+    indices = np.array(block_of_indx, dtype=np.int32)
+    assert len(indices) == 1 or np.all(indices[1:] - indices[:-1] == 1)
+    if isinstance(args[0], slice):
+        tiledb_i = (slice(int(indices.min()),
+                          int(indices.max()) + 1), ) + args[1:]
+    else:
+        assert len(indices) == 1
+        tiledb_i = (int(indices[0]),) + args[1:]
+    data = tiledb_array[tiledb_i]
+    return data</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.find_sources"><code class="name flex">
+<span>def <span class="ident">find_sources</span></span>(<span>self, args: Dict[str, Any] = None, **kwargs) ‑> List[<a title="tdmq.client.sources.Source" href="sources.html#tdmq.client.sources.Source">Source</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gets the list of sources filtered using the provided args dictionary.
+With
+no parameters, it returns all the sources.
+Multiple arguments are combined
+with an AND condition (i.e., the intersection is returned).</p>
+<p>Arguments:</p>
+<p>only_public:
+Boolean. Default: True. Specify <code>only_public=False</code> to also select private sources.
+public:
+Boolean.
+Select public (True) or private (False) sources.
+after:
+datetime.
+Selects sources that have been active after (included) the specified time.
+before:
+datetime.
+Selects sources that have been active before the specified time.
+roi:
+string in the format <code>circle((center_lon, center_lat), radius_in_meters)</code>.
+Selects sources in the specified region of interest.
+Longitude and Latitude are WGS coordinates.
+entity_type, entity_category:
+String. Select sources of the specified entity type and category, respectively.
+stationary:
+Boolean. Select stationary or mobile sources.
+controlledProperties:
+string.
+Comma-separated list of controlled properties that the source must provide.
+id, external_id:
+string. External ID of source.
+other attributes:
+Any attributes not listed above are matched for equality against the Source
+description metadata.
+<em>This will be work on public</em>* sources.</p>
+<pre><code>Recognized attributes:
+    'registration_time',
+    'tdmq_id'
+    'brand_name',
+    'edge_id',
+    'model_name',
+    'operated_by',
+    'sensor_id',
+    'shape',
+    'station_id',
+    'station_model',
+    'type',
+WARNING: Any queries trying to match attributes not defined in this doc will be
+**limited to public sources**.
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def find_sources(self, args: Dict[str, Any] = None, **kwargs) -&gt; List[Source]:
+    &#34;&#34;&#34;
+    Gets the list of sources filtered using the provided args dictionary.  With
+    no parameters, it returns all the sources.  Multiple arguments are combined
+    with an AND condition (i.e., the intersection is returned).
+
+    Arguments:
+
+    only_public:
+        Boolean. Default: True. Specify `only_public=False` to also select private sources.
+    public:
+        Boolean.  Select public (True) or private (False) sources.
+    after:
+        datetime.  Selects sources that have been active after (included) the specified time.
+    before:
+        datetime.  Selects sources that have been active before the specified time.
+    roi:
+        string in the format `circle((center_lon, center_lat), radius_in_meters)`.
+        Selects sources in the specified region of interest.
+        Longitude and Latitude are WGS coordinates.
+    entity_type, entity_category:
+        String. Select sources of the specified entity type and category, respectively.
+    stationary:
+        Boolean. Select stationary or mobile sources.
+    controlledProperties:
+        string.  Comma-separated list of controlled properties that the source must provide.
+    id, external_id:
+        string. External ID of source.
+    other attributes:
+        Any attributes not listed above are matched for equality against the Source
+        description metadata.  *This will be work on public** sources.
+
+        Recognized attributes:
+            &#39;registration_time&#39;,
+            &#39;tdmq_id&#39;
+            &#39;brand_name&#39;,
+            &#39;edge_id&#39;,
+            &#39;model_name&#39;,
+            &#39;operated_by&#39;,
+            &#39;sensor_id&#39;,
+            &#39;shape&#39;,
+            &#39;station_id&#39;,
+            &#39;station_model&#39;,
+            &#39;type&#39;,
+        WARNING: Any queries trying to match attributes not defined in this doc will be
+        **limited to public sources**.
+    &#34;&#34;&#34;
+    if args:
+        if not isinstance(args, dict):
+            raise TypeError(&#34;&#39;args&#39; argument, if specified, must be a dict&#34;)
+        args = args.copy()
+        args.update(kwargs)
+    else:
+        args = kwargs
+    return [ self.__source_factory(s) for s in self._do_get(&#39;sources&#39;, params=args) ]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.get_entity_categories"><code class="name flex">
+<span>def <span class="ident">get_entity_categories</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def get_entity_categories(self):
+    return self._do_get(&#39;entity_categories&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.get_entity_types"><code class="name flex">
+<span>def <span class="ident">get_entity_types</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def get_entity_types(self):
+    return self._do_get(&#39;entity_types&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.get_latest_source_activity"><code class="name flex">
+<span>def <span class="ident">get_latest_source_activity</span></span>(<span>self, tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def get_latest_source_activity(self, tdmq_id):
+    _logger.debug(&#34;get_latest_source_activity(%s)&#34;, tdmq_id)
+    r = self._do_get(f&#39;sources/{tdmq_id}/activity/latest&#39;)
+    if r[&#39;time&#39;] is not None:
+        r[&#39;time&#39;] = self._parse_timestamp(r[&#39;time&#39;])
+    return r</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.get_source"><code class="name flex">
+<span>def <span class="ident">get_source</span></span>(<span>self, tdmq_id, anonymized=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def get_source(self, tdmq_id, anonymized=True):
+    res = self._do_get(f&#39;sources/{tdmq_id}&#39;, params={&#39;anonymized&#39;: anonymized})
+    assert res[&#39;tdmq_id&#39;] == str(tdmq_id)
+    return self.__source_factory(res)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.get_timeseries"><code class="name flex">
+<span>def <span class="ident">get_timeseries</span></span>(<span>self, code, args, sparse: bool = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def get_timeseries(self, code, args, sparse: bool = None):
+    args = dict((k, v) for k, v in args.items() if v is not None)
+    if sparse is not None:
+        args[&#39;sparse&#39;] = sparse
+    # for testing!  args[&#39;batch_size&#39;] = 1
+    _logger.debug(&#39;get_timeseries(%s, %s)&#39;, code, args)
+    try:
+        with self._do_get_stream_ctx(f&#39;sources/{code}/timeseries_stream&#39;, params=args) as req:
+            return req.json()
+    except requests.exceptions.ChunkedEncodingError as e:
+        if &#39;0 bytes read&#39; in str(e).lower():
+            raise RuntimeError(&#34;Server took too long to respond.  Try reducing the size of the time series you&#39;re requesting&#34;)
+        raise</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.open_array"><code class="name flex">
+<span>def <span class="ident">open_array</span></span>(<span>self, tdmq_id, mode='r')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open_array(self, tdmq_id, mode=&#39;r&#39;):
+    aname = self._source_data_path(tdmq_id)
+    return tiledb.open(aname, mode=mode, ctx=self.tiledb_ctx)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.register_source"><code class="name flex">
+<span>def <span class="ident">register_source</span></span>(<span>self, definition, nslots=315360000, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Register a new data source
+.. :quickref: Register a new data source</p>
+<p>:nslots: is the maximum expected number of slots that will be
+needed. Actual storage allocation will be done at
+ingestion. The default value is 10<em>24</em>3600*365</p>
+<p>:tiledb_extents: (optional) list of tile extent sizes.
+First is for time dimension; successive ones apply to
+each respective shape dimension.
+E.g.,
+shape = (576, 631); tiledb_extents = [ 100, 576, 631 ]</p>
+<p>:properties: (optional) Mapping of <code>property name</code> -&gt; { storage attributes }.
+The following storage attributes can be specified:
+* <code>dtype</code> -&gt; numpy.dtype
+* <code>filters</code> -&gt; tiledb.FilterList
+A property may map to None if you don't want to customize settings.
+E.g., properties={'temperature': None }</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@requires_connection
+def register_source(self, definition, nslots=3600*24*365*10, **kwargs):
+    &#34;&#34;&#34;Register a new data source
+    .. :quickref: Register a new data source
+
+    :nslots: is the maximum expected number of slots that will be
+    needed. Actual storage allocation will be done at
+    ingestion. The default value is 10*24*3600*365
+
+    :tiledb_extents: (optional) list of tile extent sizes.
+                     First is for time dimension; successive ones apply to
+                     each respective shape dimension.  E.g.,
+                        shape = (576, 631); tiledb_extents = [ 100, 576, 631 ]
+
+
+    :properties: (optional) Mapping of `property name` -&gt; { storage attributes }.
+                 The following storage attributes can be specified:
+                   * `dtype` -&gt; numpy.dtype
+                   * `filters` -&gt; tiledb.FilterList
+                 A property may map to None if you don&#39;t want to customize settings.
+                 E.g., properties={&#39;temperature&#39;: None }
+
+    &#34;&#34;&#34;
+    assert isinstance(definition, dict)
+    # Try to validate arguments before registering the Source with tdmq
+    unknown_args = set(kwargs.keys()) - {&#39;tiledb_extents&#39;, &#39;properties&#39;}
+    if unknown_args:
+        raise ValueError(f&#34;Unknown kwargs {&#39;, &#39;.join(unknown_args)}&#34;)
+
+    if &#39;tiledb_extents&#39; in kwargs:
+        extents = kwargs[&#39;tiledb_extents&#39;]
+        if len(extents) != len(definition.get(&#39;shape&#39;, [])) + 1:
+            raise ValueError(&#34;Number of tile extents specified is incompatible with array shape &#34;
+                             &#34;(expected len(shape) + 1 == len(tiledb_extents))&#34;)
+    if &#39;properties&#39; in kwargs:
+        unknown_properties = [ p for p in kwargs[&#39;properties&#39;].keys() if p not in definition[&#39;controlledProperties&#39;] ]
+        if unknown_properties:
+            raise ValueError(&#34;kwargs[&#39;properties&#39;] references the following properties that are not &#34;
+                             f&#34;in the source&#39;s controlledProperties: {&#39;, &#39;.join(unknown_properties)}&#34;)
+        for k, v in kwargs[&#39;properties&#39;].items():
+            known_configs = (&#39;dtype&#39;, &#39;filters&#39;)
+            if any(k not in known_configs for k in v.keys()):
+                raise ValueError(f&#34;Property configuration &#39;{k}&#39; contains invalid keys. &#34;
+                                 &#34;Valid keys are {&#39; and &#39;.join(known_configs)}&#34;)
+
+    _logger.debug(&#34;POSTing request to create new source with id &#39;%s&#39;&#34;, definition[&#39;id&#39;])
+    r = self._do_post(f&#39;{self.base_url}/sources&#39;, json_obj=[definition])
+    tdmq_id = r.json()[0]
+    _logger.debug(&#34;POST successful. Registered source with tdmq_id %s&#34;, tdmq_id)
+    if len(definition.get(&#39;shape&#39;, [])) &gt; 0:
+        try:
+            _logger.debug(&#34;Source is NonScalar.  Creating tiledb array&#34;)
+            extents = kwargs.get(&#39;tiledb_extents&#39;)
+            properties = dict.fromkeys(definition[&#39;controlledProperties&#39;])
+            if kwargs.get(&#39;properties&#39;):
+                properties.update(kwargs[&#39;properties&#39;])
+
+            self._create_tiledb_array(tdmq_id, definition[&#39;shape&#39;], properties, nslots, extents)
+        except Exception as e:
+            _logger.exception(e)
+            _logger.error(&#39;Failure in creating tiledb array: %s, cleaning up&#39;, e)
+            self._destroy_source(tdmq_id)
+            raise tdmq.errors.TdmqError(f&#34;Error registering {definition.get(&#39;id&#39;, &#39;(id unavailable)&#39;)}. {e}&#34;)
+    return self.get_source(tdmq_id)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.requires_connection"><code class="name flex">
+<span>def <span class="ident">requires_connection</span></span>(<span>func)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decorator for methods that require a connection to the tdmq service.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def requires_connection(func):
+    &#34;&#34;&#34;
+    Decorator for methods that require a connection to the tdmq service.
+    &#34;&#34;&#34;
+    @wraps(func)
+    def wrapper_requires_connection(self, *args, **kwargs):
+        if not self.connected:
+            self.connect()
+        return func(self, *args, **kwargs)
+
+    return wrapper_requires_connection</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.client.Client.url_for"><code class="name flex">
+<span>def <span class="ident">url_for</span></span>(<span>self, resource: str) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def url_for(self, resource: str) -&gt; str:
+    return f&#39;{self.base_url}/{resource}&#39;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="tdmq.client" href="index.html">tdmq.client</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="tdmq.client.client.log_level" href="#tdmq.client.client.log_level">log_level</a></code></li>
+<li><code><a title="tdmq.client.client.set_log_level" href="#tdmq.client.client.set_log_level">set_log_level</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="tdmq.client.client.Client" href="#tdmq.client.client.Client">Client</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.client.client.Client.DEFAULT_TDMQ_BASE_URL" href="#tdmq.client.client.Client.DEFAULT_TDMQ_BASE_URL">DEFAULT_TDMQ_BASE_URL</a></code></li>
+<li><code><a title="tdmq.client.client.Client.TDMQ_DT_FMT" href="#tdmq.client.client.Client.TDMQ_DT_FMT">TDMQ_DT_FMT</a></code></li>
+<li><code><a title="tdmq.client.client.Client.TDMQ_DT_FMT_NO_MICRO" href="#tdmq.client.client.Client.TDMQ_DT_FMT_NO_MICRO">TDMQ_DT_FMT_NO_MICRO</a></code></li>
+<li><code><a title="tdmq.client.client.Client.add_records" href="#tdmq.client.client.Client.add_records">add_records</a></code></li>
+<li><code><a title="tdmq.client.client.Client.close_array" href="#tdmq.client.client.Client.close_array">close_array</a></code></li>
+<li><code><a title="tdmq.client.client.Client.connect" href="#tdmq.client.client.Client.connect">connect</a></code></li>
+<li><code><a title="tdmq.client.client.Client.deregister_source" href="#tdmq.client.client.Client.deregister_source">deregister_source</a></code></li>
+<li><code><a title="tdmq.client.client.Client.export_timeseries" href="#tdmq.client.client.Client.export_timeseries">export_timeseries</a></code></li>
+<li><code><a title="tdmq.client.client.Client.fetch_non_scalar_slice" href="#tdmq.client.client.Client.fetch_non_scalar_slice">fetch_non_scalar_slice</a></code></li>
+<li><code><a title="tdmq.client.client.Client.find_sources" href="#tdmq.client.client.Client.find_sources">find_sources</a></code></li>
+<li><code><a title="tdmq.client.client.Client.get_entity_categories" href="#tdmq.client.client.Client.get_entity_categories">get_entity_categories</a></code></li>
+<li><code><a title="tdmq.client.client.Client.get_entity_types" href="#tdmq.client.client.Client.get_entity_types">get_entity_types</a></code></li>
+<li><code><a title="tdmq.client.client.Client.get_latest_source_activity" href="#tdmq.client.client.Client.get_latest_source_activity">get_latest_source_activity</a></code></li>
+<li><code><a title="tdmq.client.client.Client.get_source" href="#tdmq.client.client.Client.get_source">get_source</a></code></li>
+<li><code><a title="tdmq.client.client.Client.get_timeseries" href="#tdmq.client.client.Client.get_timeseries">get_timeseries</a></code></li>
+<li><code><a title="tdmq.client.client.Client.open_array" href="#tdmq.client.client.Client.open_array">open_array</a></code></li>
+<li><code><a title="tdmq.client.client.Client.register_source" href="#tdmq.client.client.Client.register_source">register_source</a></code></li>
+<li><code><a title="tdmq.client.client.Client.requires_connection" href="#tdmq.client.client.Client.requires_connection">requires_connection</a></code></li>
+<li><code><a title="tdmq.client.client.Client.url_for" href="#tdmq.client.client.Client.url_for">url_for</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

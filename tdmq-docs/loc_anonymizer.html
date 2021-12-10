@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tdmq.loc_anonymizer API documentation</title>
+<meta name="description" content="Location anonymization module …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tdmq.loc_anonymizer</code></h1>
+</header>
+<section id="section-intro">
+<p>Location anonymization module.</p>
+<p>No coordinate transformations are performed, but there is an underlying
+assumption that we are working in wsg84.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Location anonymization module.
+
+No coordinate transformations are performed, but there is an underlying
+assumption that we are working in wsg84.
+&#34;&#34;&#34;
+import logging
+import os
+import subprocess
+import tarfile
+import tempfile
+import urllib.parse as up
+
+import shapefile
+import shapely
+import shapely.geometry as sg
+from shapely.strtree import STRtree
+
+from tdmq.utils import find_exec
+
+_logger = logging.getLogger(__name__)
+
+
+if not shapely.speedups.enabled:
+    _logger.warning(&#34;Shapely speedups are not enabled&#34;)
+
+
+def _fetch_file(uri, dest):
+    &#34;&#34;&#34;
+    Fetch a file from a local or remote `uri` and write it to `dest`.
+
+    Remove uris must specify the scheme required to access them (e.g., http://...).
+    Paths without a scheme are assumed to be local.
+    &#34;&#34;&#34;
+    num_retries = 5
+    supported_schemes = (&#39;file&#39;, &#39;http&#39;, &#39;https&#39;, &#39;ftp&#39;, &#39;ftps&#39;)
+    uri_parts = up.urlparse(uri)
+    if uri_parts.scheme != &#39;&#39; and uri_parts.scheme not in supported_schemes:
+        raise ValueError(&#34;Unsupported access protocol for LOC_ANONYMIZER_DB.  &#34;
+                         &#34;We only support local paths and %s&#34; + &#39;,&#39;.join(supported_schemes))
+    if os.path.exists(dest):
+        raise RuntimeError(f&#34;Download destination path {dest} already exists!&#34;)
+
+    if uri_parts.scheme in (&#39;&#39;, &#39;file&#39;):
+        src_path = uri_parts.path
+        if not os.path.exists(src_path):
+            raise ValueError(f&#34;LOC_ANONYMIZER_DB local source path {src_path} does not exist!&#34;)
+        os.symlink(src_path, dest)
+        _logger.debug(&#34;Symlinked %s to destination path %s&#34;, src_path, dest)
+    else:
+        wget = find_exec(&#39;wget&#39;)
+        if not wget:
+            raise RuntimeError(&#34;Couldn&#39;t find wget executable in PATH&#34;)
+
+        _logger.debug(&#34;Found wget: %s&#34;, wget)
+        cmd = [ wget, &#39;--quiet&#39;, &#39;--timeout=5&#39;, f&#39;--tries={num_retries}&#39;, f&#39;--output-document={dest}&#39;, uri ]
+        _logger.debug(&#34;Executing download command: %s&#34;, cmd)
+        _logger.info(&#34;Downloading Zone database from %s&#34;, uri)
+        subprocess.check_call(cmd)
+        _logger.info(&#34;Download finished. Fetched %s bytes&#34;, os.path.getsize(dest))
+
+
+def _extract_zonedb_archive(archive_path, dest):
+    # Takes liberally from stack overflow answer
+    # https://stackoverflow.com/questions/10060069/safely-extract-zip-or-tar-using-python
+    def resolved(path):
+        return os.path.realpath(os.path.abspath(path))
+
+    def goodpath(path, base):
+        # joinpath will ignore base if path is absolute
+        return resolved(os.path.join(base, path)).startswith(base)
+
+    def safe_members(members):
+        base_path = resolved(dest)
+        for m in members:
+            if m.isfile() and goodpath(m.name, base_path):
+                yield m
+            else:
+                _logger.warning(&#34;Skipping item in tar archive:  %s&#34;, m.name)
+    with tarfile.open(archive_path) as tar:
+        tar.extractall(path=dest, members=safe_members(tar.getmembers()))
+
+
+def _iter_shapefile_archive(uri):
+    with tempfile.TemporaryDirectory(suffix=&#34;tdmq_download&#34;) as download_dir,\
+         tempfile.TemporaryDirectory(suffix=&#34;tdmq_extraction&#34;) as extraction_dir:
+        dest = os.path.join(download_dir, &#39;archive&#39;)
+        _fetch_file(uri, dest)
+        _extract_zonedb_archive(dest, extraction_dir)
+        shapefile_parts = []
+        shapefile_extensions = (&#39;.dbf&#39;, &#39;.prj&#39;, &#39;.shp&#39;, &#39;.shx&#39;)
+        for root, dirs, files in os.walk(extraction_dir):
+            shapefile_parts.extend(
+                os.path.join(root, os.path.splitext(f)[0])
+                for f in files if os.path.splitext(f)[1] in shapefile_extensions)
+        unique_set = set(shapefile_parts)
+        if len(unique_set) != 1:
+            _logger.error(&#34;Incompatible archive.  Expected to find exactly &#34;
+                          &#34;one basename in shapefile archive but found %s&#34;, len(unique_set))
+            _logger.error(&#34;Shape file parts found: %s&#34;, &#39;\n&#39;.join(unique_set))
+            raise ValueError(&#34;Incompatible shapefile archive.  Expected example &#34;
+                             f&#34;one basename but found {len(unique_set)}&#34;)
+
+        shapefile_basename = unique_set.pop()
+        _logger.info(&#34;Found shapefile %s in archive&#34;, shapefile_basename)
+
+        with shapefile.Reader(shapefile_basename) as f:
+            for shaperec in f.iterShapeRecords():
+                yield dict(geometry=sg.shape(shaperec.shape),
+                           properties={&#39;name&#39;: shaperec.record[&#39;ZONE_NAME&#39;]})
+
+
+class Zone:
+    def __init__(self, geometry, properties):
+        if not isinstance(geometry, sg.base.BaseGeometry):
+            raise TypeError(&#34;Expected a shapely geometry&#34;)
+        self._geometry = geometry
+        self._properties = properties if properties is not None else dict()
+
+    @property
+    def geometry(self):
+        return self._geometry
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def centroid(self):
+        if not hasattr(self, &#39;_geometry_centroid_cache&#39;):
+            self._geometry_centroid_cache = self._geometry.centroid
+        return self._geometry_centroid_cache
+
+    @property
+    def area(self):
+        if not hasattr(self, &#39;_geometry_area_cache&#39;):
+            self._geometry_area_cache = self._geometry.area
+        return self._geometry_area_cache
+
+
+class ZoneDB:
+    def __init__(self):
+        self._index_by_id = None
+        self._rtree = None
+
+    def load_zone_db(self, db_iterator):
+        &#34;&#34;&#34;
+        db_reader: an iterable yielding indexable elements with keys `geometry` and `properties`.
+        e.g., { &#39;geometry&#39;: {...}, &#39;properties&#39;: { ... } }
+        &#34;&#34;&#34;
+        index_by_id = dict()
+        for element in db_iterator:
+            index_by_id[id(element[&#39;geometry&#39;])] = Zone(element[&#39;geometry&#39;], element[&#39;properties&#39;])
+
+        _logger.debug(&#34;Indexing anonymization zones with STRtree...&#34;)
+        rtree = STRtree((z.geometry for z in index_by_id.values()))
+        _logger.debug(&#34;finished&#34;)
+
+        self._index_by_id = index_by_id
+        self._rtree = rtree
+        _logger.info(&#34;Loaded ZoneDB with %s zones&#34;, len(self._index_by_id))
+        return self
+
+    def lookup(self, shapely_geometry):
+        if self._rtree is None:
+            raise RuntimeError(&#34;ZoneDB not loaded&#34;)
+        results = self._rtree.query(shapely_geometry)
+        if len(results) == 0:
+            return None
+        # return the result with the smallest area
+        geometry_obj = min(results, key=lambda x: x.area)
+        return self._index_by_id[id(geometry_obj)]
+
+
+class LocAnonymizer:
+    &#34;&#34;&#34;
+    Location anonymization class.
+
+    The current implementation maps a given coordinate to the centroid of the
+    smallest containing area that is found in the configured &#34;Zone database&#34;.
+    The default zone database is the map of all Italian municipalities, plus
+    the database of the &#34;official&#34; neighbourhoods of the city of Cagliari&#34;.
+
+    Coordinates that are outside of the these areas will be mapped to the DefaultLocation.
+    &#34;&#34;&#34;
+    # DEFAULT_LOC_ANONYMIZER_DB = &#34;https://space.crs4.it/s/YQjJFmfdjN6RMRj/download&#34;
+    DefaultLocation = Zone(
+        geometry=sg.shape({ &#34;type&#34;: &#34;Point&#34;, &#34;coordinates&#34;: [ 12.492227554321289, 41.890441712228586 ] }),
+        properties={&#39;name&#39;: &#34;Somewhere&#34;})
+
+    def __init__(self, app=None):
+        self._zone_db = None
+        self._db_source = None
+        if app:
+            self.init_app(app)
+
+    @property
+    def db_source(self):
+        return self._db_source
+
+    def init_app(self, flask_app):
+        db_path = flask_app.config.get(&#39;LOC_ANONYMIZER_DB&#39;)
+        if not db_path:
+            _logger.warning(&#34;LOC_ANONYMIZER_DB not set.  All anonymized locations will point to the default location&#34;)
+
+        if self._db_source == db_path:
+            _logger.info(&#34;Using already set ZoneDB path &#39;%s&#39;.  Not reloading&#34;, self._db_source)
+            return
+
+        if not db_path:
+            self._zone_db = None
+            self._db_source = None
+            _logger.info(&#34;Disabled LocAnonymizer&#34;)
+        else:
+            _logger.info(&#34;Initializing LocAnonymizer with database path %s&#34;, db_path)
+            zone_db = ZoneDB()
+            zone_db.load_zone_db(_iter_shapefile_archive(db_path))
+            # operation successful
+            self._zone_db = zone_db
+            self._db_source = db_path
+
+    def anonymize_location(self, geometry):
+        &#34;&#34;&#34;
+        Call this function to anonymize a geometry representing a location.
+        We map the geometry to the centroid of smallest intersecting zone.
+        If no zones intersect, we map to the default location.
+        &#34;&#34;&#34;
+        if not isinstance(geometry, sg.base.BaseGeometry):
+            raise TypeError(&#34;Expected a shapely geometry&#34;)
+        if self._zone_db:
+            zone = self._zone_db.lookup(geometry)
+            if zone:
+                return zone
+        return self.DefaultLocation
+
+
+loc_anonymizer = LocAnonymizer()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="tdmq.loc_anonymizer.LocAnonymizer"><code class="flex name class">
+<span>class <span class="ident">LocAnonymizer</span></span>
+<span>(</span><span>app=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Location anonymization class.</p>
+<p>The current implementation maps a given coordinate to the centroid of the
+smallest containing area that is found in the configured "Zone database".
+The default zone database is the map of all Italian municipalities, plus
+the database of the "official" neighbourhoods of the city of Cagliari".</p>
+<p>Coordinates that are outside of the these areas will be mapped to the DefaultLocation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LocAnonymizer:
+    &#34;&#34;&#34;
+    Location anonymization class.
+
+    The current implementation maps a given coordinate to the centroid of the
+    smallest containing area that is found in the configured &#34;Zone database&#34;.
+    The default zone database is the map of all Italian municipalities, plus
+    the database of the &#34;official&#34; neighbourhoods of the city of Cagliari&#34;.
+
+    Coordinates that are outside of the these areas will be mapped to the DefaultLocation.
+    &#34;&#34;&#34;
+    # DEFAULT_LOC_ANONYMIZER_DB = &#34;https://space.crs4.it/s/YQjJFmfdjN6RMRj/download&#34;
+    DefaultLocation = Zone(
+        geometry=sg.shape({ &#34;type&#34;: &#34;Point&#34;, &#34;coordinates&#34;: [ 12.492227554321289, 41.890441712228586 ] }),
+        properties={&#39;name&#39;: &#34;Somewhere&#34;})
+
+    def __init__(self, app=None):
+        self._zone_db = None
+        self._db_source = None
+        if app:
+            self.init_app(app)
+
+    @property
+    def db_source(self):
+        return self._db_source
+
+    def init_app(self, flask_app):
+        db_path = flask_app.config.get(&#39;LOC_ANONYMIZER_DB&#39;)
+        if not db_path:
+            _logger.warning(&#34;LOC_ANONYMIZER_DB not set.  All anonymized locations will point to the default location&#34;)
+
+        if self._db_source == db_path:
+            _logger.info(&#34;Using already set ZoneDB path &#39;%s&#39;.  Not reloading&#34;, self._db_source)
+            return
+
+        if not db_path:
+            self._zone_db = None
+            self._db_source = None
+            _logger.info(&#34;Disabled LocAnonymizer&#34;)
+        else:
+            _logger.info(&#34;Initializing LocAnonymizer with database path %s&#34;, db_path)
+            zone_db = ZoneDB()
+            zone_db.load_zone_db(_iter_shapefile_archive(db_path))
+            # operation successful
+            self._zone_db = zone_db
+            self._db_source = db_path
+
+    def anonymize_location(self, geometry):
+        &#34;&#34;&#34;
+        Call this function to anonymize a geometry representing a location.
+        We map the geometry to the centroid of smallest intersecting zone.
+        If no zones intersect, we map to the default location.
+        &#34;&#34;&#34;
+        if not isinstance(geometry, sg.base.BaseGeometry):
+            raise TypeError(&#34;Expected a shapely geometry&#34;)
+        if self._zone_db:
+            zone = self._zone_db.lookup(geometry)
+            if zone:
+                return zone
+        return self.DefaultLocation</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="tdmq.loc_anonymizer.LocAnonymizer.DefaultLocation"><code class="name">var <span class="ident">DefaultLocation</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.loc_anonymizer.LocAnonymizer.db_source"><code class="name">var <span class="ident">db_source</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def db_source(self):
+    return self._db_source</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.loc_anonymizer.LocAnonymizer.anonymize_location"><code class="name flex">
+<span>def <span class="ident">anonymize_location</span></span>(<span>self, geometry)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Call this function to anonymize a geometry representing a location.
+We map the geometry to the centroid of smallest intersecting zone.
+If no zones intersect, we map to the default location.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def anonymize_location(self, geometry):
+    &#34;&#34;&#34;
+    Call this function to anonymize a geometry representing a location.
+    We map the geometry to the centroid of smallest intersecting zone.
+    If no zones intersect, we map to the default location.
+    &#34;&#34;&#34;
+    if not isinstance(geometry, sg.base.BaseGeometry):
+        raise TypeError(&#34;Expected a shapely geometry&#34;)
+    if self._zone_db:
+        zone = self._zone_db.lookup(geometry)
+        if zone:
+            return zone
+    return self.DefaultLocation</code></pre>
+</details>
+</dd>
+<dt id="tdmq.loc_anonymizer.LocAnonymizer.init_app"><code class="name flex">
+<span>def <span class="ident">init_app</span></span>(<span>self, flask_app)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_app(self, flask_app):
+    db_path = flask_app.config.get(&#39;LOC_ANONYMIZER_DB&#39;)
+    if not db_path:
+        _logger.warning(&#34;LOC_ANONYMIZER_DB not set.  All anonymized locations will point to the default location&#34;)
+
+    if self._db_source == db_path:
+        _logger.info(&#34;Using already set ZoneDB path &#39;%s&#39;.  Not reloading&#34;, self._db_source)
+        return
+
+    if not db_path:
+        self._zone_db = None
+        self._db_source = None
+        _logger.info(&#34;Disabled LocAnonymizer&#34;)
+    else:
+        _logger.info(&#34;Initializing LocAnonymizer with database path %s&#34;, db_path)
+        zone_db = ZoneDB()
+        zone_db.load_zone_db(_iter_shapefile_archive(db_path))
+        # operation successful
+        self._zone_db = zone_db
+        self._db_source = db_path</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="tdmq.loc_anonymizer.Zone"><code class="flex name class">
+<span>class <span class="ident">Zone</span></span>
+<span>(</span><span>geometry, properties)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Zone:
+    def __init__(self, geometry, properties):
+        if not isinstance(geometry, sg.base.BaseGeometry):
+            raise TypeError(&#34;Expected a shapely geometry&#34;)
+        self._geometry = geometry
+        self._properties = properties if properties is not None else dict()
+
+    @property
+    def geometry(self):
+        return self._geometry
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def centroid(self):
+        if not hasattr(self, &#39;_geometry_centroid_cache&#39;):
+            self._geometry_centroid_cache = self._geometry.centroid
+        return self._geometry_centroid_cache
+
+    @property
+    def area(self):
+        if not hasattr(self, &#39;_geometry_area_cache&#39;):
+            self._geometry_area_cache = self._geometry.area
+        return self._geometry_area_cache</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.loc_anonymizer.Zone.area"><code class="name">var <span class="ident">area</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def area(self):
+    if not hasattr(self, &#39;_geometry_area_cache&#39;):
+        self._geometry_area_cache = self._geometry.area
+    return self._geometry_area_cache</code></pre>
+</details>
+</dd>
+<dt id="tdmq.loc_anonymizer.Zone.centroid"><code class="name">var <span class="ident">centroid</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def centroid(self):
+    if not hasattr(self, &#39;_geometry_centroid_cache&#39;):
+        self._geometry_centroid_cache = self._geometry.centroid
+    return self._geometry_centroid_cache</code></pre>
+</details>
+</dd>
+<dt id="tdmq.loc_anonymizer.Zone.geometry"><code class="name">var <span class="ident">geometry</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def geometry(self):
+    return self._geometry</code></pre>
+</details>
+</dd>
+<dt id="tdmq.loc_anonymizer.Zone.properties"><code class="name">var <span class="ident">properties</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def properties(self):
+    return self._properties</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="tdmq.loc_anonymizer.ZoneDB"><code class="flex name class">
+<span>class <span class="ident">ZoneDB</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ZoneDB:
+    def __init__(self):
+        self._index_by_id = None
+        self._rtree = None
+
+    def load_zone_db(self, db_iterator):
+        &#34;&#34;&#34;
+        db_reader: an iterable yielding indexable elements with keys `geometry` and `properties`.
+        e.g., { &#39;geometry&#39;: {...}, &#39;properties&#39;: { ... } }
+        &#34;&#34;&#34;
+        index_by_id = dict()
+        for element in db_iterator:
+            index_by_id[id(element[&#39;geometry&#39;])] = Zone(element[&#39;geometry&#39;], element[&#39;properties&#39;])
+
+        _logger.debug(&#34;Indexing anonymization zones with STRtree...&#34;)
+        rtree = STRtree((z.geometry for z in index_by_id.values()))
+        _logger.debug(&#34;finished&#34;)
+
+        self._index_by_id = index_by_id
+        self._rtree = rtree
+        _logger.info(&#34;Loaded ZoneDB with %s zones&#34;, len(self._index_by_id))
+        return self
+
+    def lookup(self, shapely_geometry):
+        if self._rtree is None:
+            raise RuntimeError(&#34;ZoneDB not loaded&#34;)
+        results = self._rtree.query(shapely_geometry)
+        if len(results) == 0:
+            return None
+        # return the result with the smallest area
+        geometry_obj = min(results, key=lambda x: x.area)
+        return self._index_by_id[id(geometry_obj)]</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.loc_anonymizer.ZoneDB.load_zone_db"><code class="name flex">
+<span>def <span class="ident">load_zone_db</span></span>(<span>self, db_iterator)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>db_reader: an iterable yielding indexable elements with keys <code>geometry</code> and <code>properties</code>.
+e.g., { 'geometry': {&hellip;}, 'properties': { &hellip; } }</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_zone_db(self, db_iterator):
+    &#34;&#34;&#34;
+    db_reader: an iterable yielding indexable elements with keys `geometry` and `properties`.
+    e.g., { &#39;geometry&#39;: {...}, &#39;properties&#39;: { ... } }
+    &#34;&#34;&#34;
+    index_by_id = dict()
+    for element in db_iterator:
+        index_by_id[id(element[&#39;geometry&#39;])] = Zone(element[&#39;geometry&#39;], element[&#39;properties&#39;])
+
+    _logger.debug(&#34;Indexing anonymization zones with STRtree...&#34;)
+    rtree = STRtree((z.geometry for z in index_by_id.values()))
+    _logger.debug(&#34;finished&#34;)
+
+    self._index_by_id = index_by_id
+    self._rtree = rtree
+    _logger.info(&#34;Loaded ZoneDB with %s zones&#34;, len(self._index_by_id))
+    return self</code></pre>
+</details>
+</dd>
+<dt id="tdmq.loc_anonymizer.ZoneDB.lookup"><code class="name flex">
+<span>def <span class="ident">lookup</span></span>(<span>self, shapely_geometry)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def lookup(self, shapely_geometry):
+    if self._rtree is None:
+        raise RuntimeError(&#34;ZoneDB not loaded&#34;)
+    results = self._rtree.query(shapely_geometry)
+    if len(results) == 0:
+        return None
+    # return the result with the smallest area
+    geometry_obj = min(results, key=lambda x: x.area)
+    return self._index_by_id[id(geometry_obj)]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="tdmq" href="index.html">tdmq</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="tdmq.loc_anonymizer.LocAnonymizer" href="#tdmq.loc_anonymizer.LocAnonymizer">LocAnonymizer</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.loc_anonymizer.LocAnonymizer.DefaultLocation" href="#tdmq.loc_anonymizer.LocAnonymizer.DefaultLocation">DefaultLocation</a></code></li>
+<li><code><a title="tdmq.loc_anonymizer.LocAnonymizer.anonymize_location" href="#tdmq.loc_anonymizer.LocAnonymizer.anonymize_location">anonymize_location</a></code></li>
+<li><code><a title="tdmq.loc_anonymizer.LocAnonymizer.db_source" href="#tdmq.loc_anonymizer.LocAnonymizer.db_source">db_source</a></code></li>
+<li><code><a title="tdmq.loc_anonymizer.LocAnonymizer.init_app" href="#tdmq.loc_anonymizer.LocAnonymizer.init_app">init_app</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.loc_anonymizer.Zone" href="#tdmq.loc_anonymizer.Zone">Zone</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.loc_anonymizer.Zone.area" href="#tdmq.loc_anonymizer.Zone.area">area</a></code></li>
+<li><code><a title="tdmq.loc_anonymizer.Zone.centroid" href="#tdmq.loc_anonymizer.Zone.centroid">centroid</a></code></li>
+<li><code><a title="tdmq.loc_anonymizer.Zone.geometry" href="#tdmq.loc_anonymizer.Zone.geometry">geometry</a></code></li>
+<li><code><a title="tdmq.loc_anonymizer.Zone.properties" href="#tdmq.loc_anonymizer.Zone.properties">properties</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.loc_anonymizer.ZoneDB" href="#tdmq.loc_anonymizer.ZoneDB">ZoneDB</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.loc_anonymizer.ZoneDB.load_zone_db" href="#tdmq.loc_anonymizer.ZoneDB.load_zone_db">load_zone_db</a></code></li>
+<li><code><a title="tdmq.loc_anonymizer.ZoneDB.lookup" href="#tdmq.loc_anonymizer.ZoneDB.lookup">lookup</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

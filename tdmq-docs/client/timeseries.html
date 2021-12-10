@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tdmq.client.timeseries API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tdmq.client.timeseries</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import abc
+import collections.abc
+import warnings
+import numpy as np
+
+
+class TimeSeries(abc.ABC):
+
+    def __init__(self, source, after, before, bucket, op, properties=None):
+        self._source = source
+        self._after = after
+        self._before = before
+        self._bucket = bucket
+        self._op = op
+        self._time = None
+        self._properties = properties
+
+    @property
+    def source(self):
+        return self._source
+
+    @property
+    def after(self):
+        return self._after
+
+    @property
+    def before(self):
+        return self._before
+
+    @property
+    def bucket(self):
+        return self._bucket
+
+    @property
+    def op(self):
+        return self._op
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def time(self):
+        self._ensure_fetched()
+        return self._time
+
+    def _fetch_ts_and_set_time(self, sparse: bool = None):
+        &#34;&#34;&#34;
+        Fetch timeseries from tdmq web service and set the self.time array; returns tdmq
+        timeseries data.
+
+        The web service only returns data from timescaleDB.  Therefore, data
+        for vector timeseries, stored in TileDB, is not fetched here.
+
+        In this class, only series coordinates and some metatadata is handled.  The
+        actual data series are returned so that they can be processed by specialized
+        subclasses.
+
+        :returns: dict mapping:  controlledProperty -&gt; list
+        &#34;&#34;&#34;
+        if not self.source.is_stationary:
+            warnings.warn(&#34;Mobile data sources aren&#39;t implemented in the Client&#34;)
+
+        args = {&#39;after&#39;: self.after, &#39;before&#39;: self.before,
+                &#39;bucket&#39;: self.bucket, &#39;op&#39;: self.op}
+
+        if self.properties:
+            args[&#39;fields&#39;] = &#39;,&#39;.join(self.properties)
+
+        res = self.source.get_timeseries(args, sparse)
+        # pylint: disable=protected-access
+        assert res[&#39;fields&#39;][0] == &#39;time&#39;
+        if res[&#39;sparse&#39;]:
+            timestamps = (row[&#39;time&#39;] for row in res[&#39;items&#39;])
+        else:
+            timestamps = (row[0] for row in res[&#39;items&#39;])
+
+        self._time = np.array([self.source.client._parse_timestamp(t) for t in timestamps])
+
+        return res
+
+    def _ensure_fetched(self):
+        if self._time is None:
+            self._fetch()
+
+    @abc.abstractmethod
+    def _fetch(self):
+        pass
+
+    @abc.abstractmethod
+    def get_item(self, args):
+        &#34;&#34;&#34;
+        Index into timeseries.  Accepts indexes and slices compatible with numpy arrays.
+
+        Returns a tuple with two elements:
+            1. np.ndarray of timestamps
+            2. OrderedDict mapping property names to  np.ndarrays containing the actual data.
+        &#34;&#34;&#34;
+
+    def __len__(self):
+        return len(self.time)
+
+    def __getitem__(self, indx):
+        return self.get_item(np.index_exp[indx])
+
+    def get_shape(self):
+        return (len(self.time),) + self.source.shape
+
+
+class NoneArray(collections.abc.Sequence):
+    def __init__(self, length):
+        if length &lt; 0:
+            raise ValueError(&#34;length &lt; 0&#34;)
+        self._length = length
+
+    def __getitem__(self, s):
+        is_tuple = False
+        if isinstance(s, tuple):
+            is_tuple = True
+            if len(s) != 1:
+                raise IndexError(f&#34;Wrong number of indices for this array. Expected 1; got {len(s)}&#34;)
+            s = s[0]
+            # Continue into next `if`
+
+        if isinstance(s, slice):
+            start, stop, step = s.indices(self._length)
+            if step == 0:
+                raise ValueError(&#34;slice step cannot be zero&#34;)
+            if start &gt;= stop:
+                return []
+            selected_length = 1 + (stop - start - 1) // step
+            return np.array([None] * selected_length)
+
+        if isinstance(s, int):
+            if -self._length &lt;= s &lt; self._length:
+                return None
+            raise IndexError(f&#34;index {s} out of range&#34;)
+
+        # else:
+        error_msg = &#34;list indices must be integers, slices or tuples of integers or slices &#34;
+        if is_tuple:
+            error_msg += f&#34;(index ({s},) is a tuple of {type(s)})&#34;
+        else:
+            error_msg += f&#34;(index {s} is a {type(s)})&#34;
+        raise TypeError(error_msg)
+
+    def __len__(self):
+        return self._length
+
+    def __contains__(self, item):
+        return self._length &gt; 0 and item is None
+
+    def __iter__(self):
+        for _ in range(self._length):
+            yield None
+
+    def __reversed__(self):
+        yield from self.__iter__()
+
+    def index(self, value, start=0, stop=9223372036854775807):
+        start, stop, _ = slice(start, stop).indices(self._length)
+        if start &lt; stop and value is None:
+            return 0
+        raise ValueError(f&#34;{value} is not in list&#34;)
+
+    def count(self, value):
+        return self._length if value is None else 0
+
+
+class ScalarTimeSeries(TimeSeries):
+
+    &#34;&#34;&#34;
+    To the attributes defined by TimeSeries, this class adds self.series
+    which contains a dict mapping property names to np_arrays of scalar data.
+    &#34;&#34;&#34;
+
+    def __init__(self, source, after, before, bucket, op, properties=None):
+        self._series = None
+        super().__init__(source, after, before, bucket, op, properties)
+
+    @property
+    def series(self):
+        self._ensure_fetched()
+        return self._series
+
+    def _ensure_fetched(self):
+        if self._time is None or self._series is None:
+            self._fetch()
+
+    def _fetch(self):
+        api_response = self._fetch_ts_and_set_time()
+        if api_response[&#39;sparse&#39;]:
+            self._parse_sparse_response(api_response)
+        else:
+            self._parse_dense_response(api_response)
+
+    def _parse_sparse_response(self, api_response):
+        assert api_response[&#39;sparse&#39;]
+        # Sparse representation is a list of dictionaries.  In each dictionary,
+        # the fields are they keys.  We skip the first two fields
+        # (time and footprint) which are handled elsewhere.
+        self._series = dict()
+        for f in api_response[&#39;fields&#39;][2:]:
+            # extract the value for the field. If the value was None on the
+            # server side, it was not sent -- so we cannot assume that the key
+            # will be in the dict.
+            field_data = [row.get(f) for row in api_response[&#39;items&#39;]]
+            # If all values are None, replace the array with a NoneArray;
+            # else we store the data in a numpy array.
+            if all(x is None for x in field_data):
+                self._series[f] = NoneArray(len(field_data))
+            else:
+                self._series[f] = np.array(field_data)
+
+    def _parse_dense_response(self, api_response):
+        assert not api_response[&#39;sparse&#39;]
+        # convert the arrays returned by _fetch_ts_and_set_time into numpy arrays
+        if len(api_response[&#39;items&#39;]) &gt; 0:
+            transpose = list(zip(*api_response[&#39;items&#39;]))
+        else:
+            transpose = [[]] * len(api_response[&#39;fields&#39;])
+
+        self._series = dict()
+        # iterate over fields, except for &#39;time&#39; and &#39;footprint&#39; (the first two)
+        for idx in range(2, len(api_response[&#39;fields&#39;])):
+            field_name = api_response[&#39;fields&#39;][idx]
+            if all(x is None for x in transpose[idx]):
+                self._series[field_name] = NoneArray(len(transpose[idx]))
+            else:
+                self._series[field_name] = np.array(transpose[idx])
+
+    def get_item(self, args):
+        assert len(args) == 1
+        return (self.time[args], dict((propname, self.series[propname][args]) for propname in self.series))
+
+    def export(self, stream, data_format: str = &#39;csv&#39;) -&gt; None:
+        if data_format != &#39;csv&#39;:
+            raise NotImplementedError(&#34;only CSV export is supported&#34;)
+        args = {&#39;after&#39;: self.after, &#39;before&#39;: self.before,
+                &#39;bucket&#39;: self.bucket, &#39;op&#39;: self.op}
+        if self.properties:
+            args[&#39;fields&#39;] = &#39;,&#39;.join(self.properties)
+        args[&#39;format&#39;] = &#39;csv&#39;
+
+        for chunk in self.source.client.export_timeseries(self.source.tdmq_id, args, data_format=&#39;csv&#39;):
+            stream.write(chunk)
+
+
+class NonScalarTimeSeries(TimeSeries):
+    def __init__(self, source, after, before, bucket, op):
+        self._tiledb_indices = None
+        if bucket:
+            raise NotImplementedError(&#34;Bucketing is not yet implemented in the client for non-scalar timeseries&#34;)
+        super().__init__(source, after, before, bucket, op)
+
+    @property
+    def tiledb_indices(self):
+        self._ensure_fetched()
+        return self._tiledb_indices
+
+    def _ensure_fetched(self):
+        if self._time is None or self._tiledb_indices is None:
+            self._fetch()
+
+    def _fetch(self):
+        # NonScalarTimeSeries ignores any properties specified.  It only considers tiledb_index
+        api_response = self._fetch_ts_and_set_time(sparse=False)
+        assert api_response[&#39;fields&#39;][2] == &#39;tiledb_index&#39;
+        self._tiledb_indices = [row[2] for row in api_response[&#39;items&#39;]]
+
+    def fetch_data_block(self, args):
+        if self.bucket is None:
+            return self.source.client.fetch_non_scalar_slice(self.source.get_array(), self.tiledb_indices, args)
+        raise ValueError(&#39;bucket not supported&#39;)
+
+    def get_item(self, args):
+        assert len(args) &gt; 0
+        time = self.time[args[0]]
+        if isinstance(args[0], slice) and len(time) == 0:
+            return (time, np.array([], dtype=np.int32))
+        return (time, self.fetch_data_block(args))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="tdmq.client.timeseries.NonScalarTimeSeries"><code class="flex name class">
+<span>class <span class="ident">NonScalarTimeSeries</span></span>
+<span>(</span><span>source, after, before, bucket, op)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NonScalarTimeSeries(TimeSeries):
+    def __init__(self, source, after, before, bucket, op):
+        self._tiledb_indices = None
+        if bucket:
+            raise NotImplementedError(&#34;Bucketing is not yet implemented in the client for non-scalar timeseries&#34;)
+        super().__init__(source, after, before, bucket, op)
+
+    @property
+    def tiledb_indices(self):
+        self._ensure_fetched()
+        return self._tiledb_indices
+
+    def _ensure_fetched(self):
+        if self._time is None or self._tiledb_indices is None:
+            self._fetch()
+
+    def _fetch(self):
+        # NonScalarTimeSeries ignores any properties specified.  It only considers tiledb_index
+        api_response = self._fetch_ts_and_set_time(sparse=False)
+        assert api_response[&#39;fields&#39;][2] == &#39;tiledb_index&#39;
+        self._tiledb_indices = [row[2] for row in api_response[&#39;items&#39;]]
+
+    def fetch_data_block(self, args):
+        if self.bucket is None:
+            return self.source.client.fetch_non_scalar_slice(self.source.get_array(), self.tiledb_indices, args)
+        raise ValueError(&#39;bucket not supported&#39;)
+
+    def get_item(self, args):
+        assert len(args) &gt; 0
+        time = self.time[args[0]]
+        if isinstance(args[0], slice) and len(time) == 0:
+            return (time, np.array([], dtype=np.int32))
+        return (time, self.fetch_data_block(args))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="tdmq.client.timeseries.TimeSeries" href="#tdmq.client.timeseries.TimeSeries">TimeSeries</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.client.timeseries.NonScalarTimeSeries.tiledb_indices"><code class="name">var <span class="ident">tiledb_indices</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def tiledb_indices(self):
+    self._ensure_fetched()
+    return self._tiledb_indices</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.timeseries.NonScalarTimeSeries.fetch_data_block"><code class="name flex">
+<span>def <span class="ident">fetch_data_block</span></span>(<span>self, args)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_data_block(self, args):
+    if self.bucket is None:
+        return self.source.client.fetch_non_scalar_slice(self.source.get_array(), self.tiledb_indices, args)
+    raise ValueError(&#39;bucket not supported&#39;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="tdmq.client.timeseries.TimeSeries" href="#tdmq.client.timeseries.TimeSeries">TimeSeries</a></b></code>:
+<ul class="hlist">
+<li><code><a title="tdmq.client.timeseries.TimeSeries.get_item" href="#tdmq.client.timeseries.TimeSeries.get_item">get_item</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="tdmq.client.timeseries.NoneArray"><code class="flex name class">
+<span>class <span class="ident">NoneArray</span></span>
+<span>(</span><span>length)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>All the operations on a read-only sequence.</p>
+<p>Concrete subclasses must override <strong>new</strong> or <strong>init</strong>,
+<strong>getitem</strong>, and <strong>len</strong>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NoneArray(collections.abc.Sequence):
+    def __init__(self, length):
+        if length &lt; 0:
+            raise ValueError(&#34;length &lt; 0&#34;)
+        self._length = length
+
+    def __getitem__(self, s):
+        is_tuple = False
+        if isinstance(s, tuple):
+            is_tuple = True
+            if len(s) != 1:
+                raise IndexError(f&#34;Wrong number of indices for this array. Expected 1; got {len(s)}&#34;)
+            s = s[0]
+            # Continue into next `if`
+
+        if isinstance(s, slice):
+            start, stop, step = s.indices(self._length)
+            if step == 0:
+                raise ValueError(&#34;slice step cannot be zero&#34;)
+            if start &gt;= stop:
+                return []
+            selected_length = 1 + (stop - start - 1) // step
+            return np.array([None] * selected_length)
+
+        if isinstance(s, int):
+            if -self._length &lt;= s &lt; self._length:
+                return None
+            raise IndexError(f&#34;index {s} out of range&#34;)
+
+        # else:
+        error_msg = &#34;list indices must be integers, slices or tuples of integers or slices &#34;
+        if is_tuple:
+            error_msg += f&#34;(index ({s},) is a tuple of {type(s)})&#34;
+        else:
+            error_msg += f&#34;(index {s} is a {type(s)})&#34;
+        raise TypeError(error_msg)
+
+    def __len__(self):
+        return self._length
+
+    def __contains__(self, item):
+        return self._length &gt; 0 and item is None
+
+    def __iter__(self):
+        for _ in range(self._length):
+            yield None
+
+    def __reversed__(self):
+        yield from self.__iter__()
+
+    def index(self, value, start=0, stop=9223372036854775807):
+        start, stop, _ = slice(start, stop).indices(self._length)
+        if start &lt; stop and value is None:
+            return 0
+        raise ValueError(f&#34;{value} is not in list&#34;)
+
+    def count(self, value):
+        return self._length if value is None else 0</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>collections.abc.Sequence</li>
+<li>collections.abc.Reversible</li>
+<li>collections.abc.Collection</li>
+<li>collections.abc.Sized</li>
+<li>collections.abc.Iterable</li>
+<li>collections.abc.Container</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.timeseries.NoneArray.count"><code class="name flex">
+<span>def <span class="ident">count</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>S.count(value) -&gt; integer &ndash; return number of occurrences of value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def count(self, value):
+    return self._length if value is None else 0</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.NoneArray.index"><code class="name flex">
+<span>def <span class="ident">index</span></span>(<span>self, value, start=0, stop=9223372036854775807)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>S.index(value, [start, [stop]]) -&gt; integer &ndash; return first index of value.
+Raises ValueError if the value is not present.</p>
+<p>Supporting start and stop arguments is optional, but
+recommended.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def index(self, value, start=0, stop=9223372036854775807):
+    start, stop, _ = slice(start, stop).indices(self._length)
+    if start &lt; stop and value is None:
+        return 0
+    raise ValueError(f&#34;{value} is not in list&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="tdmq.client.timeseries.ScalarTimeSeries"><code class="flex name class">
+<span>class <span class="ident">ScalarTimeSeries</span></span>
+<span>(</span><span>source, after, before, bucket, op, properties=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>To the attributes defined by TimeSeries, this class adds self.series
+which contains a dict mapping property names to np_arrays of scalar data.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScalarTimeSeries(TimeSeries):
+
+    &#34;&#34;&#34;
+    To the attributes defined by TimeSeries, this class adds self.series
+    which contains a dict mapping property names to np_arrays of scalar data.
+    &#34;&#34;&#34;
+
+    def __init__(self, source, after, before, bucket, op, properties=None):
+        self._series = None
+        super().__init__(source, after, before, bucket, op, properties)
+
+    @property
+    def series(self):
+        self._ensure_fetched()
+        return self._series
+
+    def _ensure_fetched(self):
+        if self._time is None or self._series is None:
+            self._fetch()
+
+    def _fetch(self):
+        api_response = self._fetch_ts_and_set_time()
+        if api_response[&#39;sparse&#39;]:
+            self._parse_sparse_response(api_response)
+        else:
+            self._parse_dense_response(api_response)
+
+    def _parse_sparse_response(self, api_response):
+        assert api_response[&#39;sparse&#39;]
+        # Sparse representation is a list of dictionaries.  In each dictionary,
+        # the fields are they keys.  We skip the first two fields
+        # (time and footprint) which are handled elsewhere.
+        self._series = dict()
+        for f in api_response[&#39;fields&#39;][2:]:
+            # extract the value for the field. If the value was None on the
+            # server side, it was not sent -- so we cannot assume that the key
+            # will be in the dict.
+            field_data = [row.get(f) for row in api_response[&#39;items&#39;]]
+            # If all values are None, replace the array with a NoneArray;
+            # else we store the data in a numpy array.
+            if all(x is None for x in field_data):
+                self._series[f] = NoneArray(len(field_data))
+            else:
+                self._series[f] = np.array(field_data)
+
+    def _parse_dense_response(self, api_response):
+        assert not api_response[&#39;sparse&#39;]
+        # convert the arrays returned by _fetch_ts_and_set_time into numpy arrays
+        if len(api_response[&#39;items&#39;]) &gt; 0:
+            transpose = list(zip(*api_response[&#39;items&#39;]))
+        else:
+            transpose = [[]] * len(api_response[&#39;fields&#39;])
+
+        self._series = dict()
+        # iterate over fields, except for &#39;time&#39; and &#39;footprint&#39; (the first two)
+        for idx in range(2, len(api_response[&#39;fields&#39;])):
+            field_name = api_response[&#39;fields&#39;][idx]
+            if all(x is None for x in transpose[idx]):
+                self._series[field_name] = NoneArray(len(transpose[idx]))
+            else:
+                self._series[field_name] = np.array(transpose[idx])
+
+    def get_item(self, args):
+        assert len(args) == 1
+        return (self.time[args], dict((propname, self.series[propname][args]) for propname in self.series))
+
+    def export(self, stream, data_format: str = &#39;csv&#39;) -&gt; None:
+        if data_format != &#39;csv&#39;:
+            raise NotImplementedError(&#34;only CSV export is supported&#34;)
+        args = {&#39;after&#39;: self.after, &#39;before&#39;: self.before,
+                &#39;bucket&#39;: self.bucket, &#39;op&#39;: self.op}
+        if self.properties:
+            args[&#39;fields&#39;] = &#39;,&#39;.join(self.properties)
+        args[&#39;format&#39;] = &#39;csv&#39;
+
+        for chunk in self.source.client.export_timeseries(self.source.tdmq_id, args, data_format=&#39;csv&#39;):
+            stream.write(chunk)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="tdmq.client.timeseries.TimeSeries" href="#tdmq.client.timeseries.TimeSeries">TimeSeries</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.client.timeseries.ScalarTimeSeries.series"><code class="name">var <span class="ident">series</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def series(self):
+    self._ensure_fetched()
+    return self._series</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.timeseries.ScalarTimeSeries.export"><code class="name flex">
+<span>def <span class="ident">export</span></span>(<span>self, stream, data_format: str = 'csv') ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def export(self, stream, data_format: str = &#39;csv&#39;) -&gt; None:
+    if data_format != &#39;csv&#39;:
+        raise NotImplementedError(&#34;only CSV export is supported&#34;)
+    args = {&#39;after&#39;: self.after, &#39;before&#39;: self.before,
+            &#39;bucket&#39;: self.bucket, &#39;op&#39;: self.op}
+    if self.properties:
+        args[&#39;fields&#39;] = &#39;,&#39;.join(self.properties)
+    args[&#39;format&#39;] = &#39;csv&#39;
+
+    for chunk in self.source.client.export_timeseries(self.source.tdmq_id, args, data_format=&#39;csv&#39;):
+        stream.write(chunk)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="tdmq.client.timeseries.TimeSeries" href="#tdmq.client.timeseries.TimeSeries">TimeSeries</a></b></code>:
+<ul class="hlist">
+<li><code><a title="tdmq.client.timeseries.TimeSeries.get_item" href="#tdmq.client.timeseries.TimeSeries.get_item">get_item</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries"><code class="flex name class">
+<span>class <span class="ident">TimeSeries</span></span>
+<span>(</span><span>source, after, before, bucket, op, properties=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TimeSeries(abc.ABC):
+
+    def __init__(self, source, after, before, bucket, op, properties=None):
+        self._source = source
+        self._after = after
+        self._before = before
+        self._bucket = bucket
+        self._op = op
+        self._time = None
+        self._properties = properties
+
+    @property
+    def source(self):
+        return self._source
+
+    @property
+    def after(self):
+        return self._after
+
+    @property
+    def before(self):
+        return self._before
+
+    @property
+    def bucket(self):
+        return self._bucket
+
+    @property
+    def op(self):
+        return self._op
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def time(self):
+        self._ensure_fetched()
+        return self._time
+
+    def _fetch_ts_and_set_time(self, sparse: bool = None):
+        &#34;&#34;&#34;
+        Fetch timeseries from tdmq web service and set the self.time array; returns tdmq
+        timeseries data.
+
+        The web service only returns data from timescaleDB.  Therefore, data
+        for vector timeseries, stored in TileDB, is not fetched here.
+
+        In this class, only series coordinates and some metatadata is handled.  The
+        actual data series are returned so that they can be processed by specialized
+        subclasses.
+
+        :returns: dict mapping:  controlledProperty -&gt; list
+        &#34;&#34;&#34;
+        if not self.source.is_stationary:
+            warnings.warn(&#34;Mobile data sources aren&#39;t implemented in the Client&#34;)
+
+        args = {&#39;after&#39;: self.after, &#39;before&#39;: self.before,
+                &#39;bucket&#39;: self.bucket, &#39;op&#39;: self.op}
+
+        if self.properties:
+            args[&#39;fields&#39;] = &#39;,&#39;.join(self.properties)
+
+        res = self.source.get_timeseries(args, sparse)
+        # pylint: disable=protected-access
+        assert res[&#39;fields&#39;][0] == &#39;time&#39;
+        if res[&#39;sparse&#39;]:
+            timestamps = (row[&#39;time&#39;] for row in res[&#39;items&#39;])
+        else:
+            timestamps = (row[0] for row in res[&#39;items&#39;])
+
+        self._time = np.array([self.source.client._parse_timestamp(t) for t in timestamps])
+
+        return res
+
+    def _ensure_fetched(self):
+        if self._time is None:
+            self._fetch()
+
+    @abc.abstractmethod
+    def _fetch(self):
+        pass
+
+    @abc.abstractmethod
+    def get_item(self, args):
+        &#34;&#34;&#34;
+        Index into timeseries.  Accepts indexes and slices compatible with numpy arrays.
+
+        Returns a tuple with two elements:
+            1. np.ndarray of timestamps
+            2. OrderedDict mapping property names to  np.ndarrays containing the actual data.
+        &#34;&#34;&#34;
+
+    def __len__(self):
+        return len(self.time)
+
+    def __getitem__(self, indx):
+        return self.get_item(np.index_exp[indx])
+
+    def get_shape(self):
+        return (len(self.time),) + self.source.shape</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="tdmq.client.timeseries.NonScalarTimeSeries" href="#tdmq.client.timeseries.NonScalarTimeSeries">NonScalarTimeSeries</a></li>
+<li><a title="tdmq.client.timeseries.ScalarTimeSeries" href="#tdmq.client.timeseries.ScalarTimeSeries">ScalarTimeSeries</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.client.timeseries.TimeSeries.after"><code class="name">var <span class="ident">after</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def after(self):
+    return self._after</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries.before"><code class="name">var <span class="ident">before</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def before(self):
+    return self._before</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries.bucket"><code class="name">var <span class="ident">bucket</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def bucket(self):
+    return self._bucket</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries.op"><code class="name">var <span class="ident">op</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def op(self):
+    return self._op</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries.properties"><code class="name">var <span class="ident">properties</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def properties(self):
+    return self._properties</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries.source"><code class="name">var <span class="ident">source</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def source(self):
+    return self._source</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries.time"><code class="name">var <span class="ident">time</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def time(self):
+    self._ensure_fetched()
+    return self._time</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.timeseries.TimeSeries.get_item"><code class="name flex">
+<span>def <span class="ident">get_item</span></span>(<span>self, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Index into timeseries.
+Accepts indexes and slices compatible with numpy arrays.</p>
+<p>Returns a tuple with two elements:
+1. np.ndarray of timestamps
+2. OrderedDict mapping property names to
+np.ndarrays containing the actual data.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def get_item(self, args):
+    &#34;&#34;&#34;
+    Index into timeseries.  Accepts indexes and slices compatible with numpy arrays.
+
+    Returns a tuple with two elements:
+        1. np.ndarray of timestamps
+        2. OrderedDict mapping property names to  np.ndarrays containing the actual data.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.timeseries.TimeSeries.get_shape"><code class="name flex">
+<span>def <span class="ident">get_shape</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_shape(self):
+    return (len(self.time),) + self.source.shape</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="tdmq.client" href="index.html">tdmq.client</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="tdmq.client.timeseries.NonScalarTimeSeries" href="#tdmq.client.timeseries.NonScalarTimeSeries">NonScalarTimeSeries</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.client.timeseries.NonScalarTimeSeries.fetch_data_block" href="#tdmq.client.timeseries.NonScalarTimeSeries.fetch_data_block">fetch_data_block</a></code></li>
+<li><code><a title="tdmq.client.timeseries.NonScalarTimeSeries.tiledb_indices" href="#tdmq.client.timeseries.NonScalarTimeSeries.tiledb_indices">tiledb_indices</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.client.timeseries.NoneArray" href="#tdmq.client.timeseries.NoneArray">NoneArray</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.client.timeseries.NoneArray.count" href="#tdmq.client.timeseries.NoneArray.count">count</a></code></li>
+<li><code><a title="tdmq.client.timeseries.NoneArray.index" href="#tdmq.client.timeseries.NoneArray.index">index</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.client.timeseries.ScalarTimeSeries" href="#tdmq.client.timeseries.ScalarTimeSeries">ScalarTimeSeries</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.client.timeseries.ScalarTimeSeries.export" href="#tdmq.client.timeseries.ScalarTimeSeries.export">export</a></code></li>
+<li><code><a title="tdmq.client.timeseries.ScalarTimeSeries.series" href="#tdmq.client.timeseries.ScalarTimeSeries.series">series</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.client.timeseries.TimeSeries" href="#tdmq.client.timeseries.TimeSeries">TimeSeries</a></code></h4>
+<ul class="two-column">
+<li><code><a title="tdmq.client.timeseries.TimeSeries.after" href="#tdmq.client.timeseries.TimeSeries.after">after</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.before" href="#tdmq.client.timeseries.TimeSeries.before">before</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.bucket" href="#tdmq.client.timeseries.TimeSeries.bucket">bucket</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.get_item" href="#tdmq.client.timeseries.TimeSeries.get_item">get_item</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.get_shape" href="#tdmq.client.timeseries.TimeSeries.get_shape">get_shape</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.op" href="#tdmq.client.timeseries.TimeSeries.op">op</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.properties" href="#tdmq.client.timeseries.TimeSeries.properties">properties</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.source" href="#tdmq.client.timeseries.TimeSeries.source">source</a></code></li>
+<li><code><a title="tdmq.client.timeseries.TimeSeries.time" href="#tdmq.client.timeseries.TimeSeries.time">time</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

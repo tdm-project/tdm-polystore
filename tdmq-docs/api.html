@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tdmq.api API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tdmq.api</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import copy
+import json
+import logging
+from datetime import timedelta
+from functools import wraps
+from http import HTTPStatus
+from typing import List
+
+import werkzeug.exceptions as wex
+from flask import Blueprint, current_app, jsonify, request
+from flask import render_template
+
+import tdmq.errors
+from .model import EntityType, EntityCategory, Source, Timeseries
+from .utils import convert_roi, str_to_bool
+
+logger = logging.getLogger(__name__)
+tdmq_bp = Blueprint(&#39;tdmq&#39;, __name__)
+
+
+ERROR_CODES = {
+    400: &#34;bad_request&#34;,
+    401: &#34;unauthorized&#34;,
+    403: &#34;forbidden&#34;,
+    404: &#34;not_found&#34;,
+    405: &#34;method_not_allowed&#34;,
+    409: &#34;duplicated_resource&#34;,
+    413: &#34;payload_too_large&#34;,
+    500: &#34;error_retrieving_data&#34;
+}
+
+
+@tdmq_bp.app_errorhandler(wex.HTTPException)
+def handle_http_exception(e):
+    response_logger = logging.getLogger(&#34;response&#34;)
+    response_logger.exception(e)
+    struct = {
+        &#34;error&#34;: ERROR_CODES.get(e.code),
+        &#34;description&#34;: e.description
+    }
+    return jsonify(struct), e.code
+
+
+@tdmq_bp.app_errorhandler(tdmq.errors.TdmqError)
+def handle_tdmq_error(e):
+    response_logger = logging.getLogger(&#34;response&#34;)
+    response_logger.exception(e)
+    struct = {
+        &#34;error&#34;: e.title,
+        &#34;code&#34;: e.status,
+        &#34;description&#34;: e.detail
+    }
+    return jsonify(struct), e.status
+
+
+def _request_authorized():
+    auth_header = request.headers.get(&#39;Authorization&#39;)
+    return f&#34;Bearer {current_app.config[&#39;AUTH_TOKEN&#39;]}&#34; == auth_header
+
+
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not request.headers.get(&#39;Authorization&#39;):
+            raise wex.Unauthorized(&#34;Access token required&#34;)
+
+        auth_header = request.headers.get(&#39;Authorization&#39;)
+
+        if not auth_header.startswith(&#39;Bearer&#39;):
+            raise wex.Unauthorized(&#39;Only Bearer token authentication is supported&#39;)
+        if f&#34;Bearer {current_app.config[&#39;AUTH_TOKEN&#39;]}&#34; != auth_header:
+            raise wex.Unauthorized(&#34;Invalid access token&#34;)
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+@tdmq_bp.route(&#39;/entity_types&#39;)
+def entity_types_get():
+    types = EntityType.get_entity_types()
+    res = jsonify({&#39;entity_types&#39;: types})
+    return res
+
+
+@tdmq_bp.route(&#39;/entity_categories&#39;)
+def entity_categories_get():
+    categories = EntityCategory.get_entity_categories()
+    res = jsonify({&#39;entity_categories&#39;: categories})
+    return res
+
+
+@tdmq_bp.route(&#39;/sources&#39;, methods=[&#39;GET&#39;])
+def sources_get():
+    &#34;&#34;&#34;
+    Return a list of sources.
+    See spec for documentation.
+    &#34;&#34;&#34;
+    rargs = {k: v for k, v in request.args.items()}
+    logger.debug(&#34;source: args is %s&#34;, rargs)
+
+    anonymize_private = str_to_bool(rargs.pop(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    # preprocess controlledProperties and roi arguments
+    if &#39;controlledProperties&#39; in rargs:
+        rargs[&#39;controlledProperties&#39;] = \
+            rargs[&#39;controlledProperties&#39;].split(&#39;,&#39;)
+    if &#39;public&#39; in rargs:
+        rargs[&#39;public&#39;] = str_to_bool(rargs[&#39;public&#39;])
+
+    if &#39;only_public&#39; in rargs:
+        if &#39;public&#39; in rargs:
+            raise wex.BadRequest(&#34;Cannot specify both &#39;only_public&#39; and &#39;public&#39; query attributes&#34;)
+        only_public = str_to_bool(rargs.pop(&#39;only_public&#39;))
+        if only_public:
+            rargs[&#39;public&#39;] = True
+    else:
+        # If neither &#39;public&#39; nor &#39;only_public&#39; have been specified, default to public=True
+        rargs[&#39;public&#39;] = rargs.get(&#39;public&#39;, True)
+
+    if &#39;roi&#39; in rargs:
+        rargs[&#39;roi&#39;] = convert_roi(rargs[&#39;roi&#39;])
+        if rargs[&#39;roi&#39;][&#39;type&#39;] != &#39;Circle&#39;:
+            raise NotImplementedError()
+        if rargs[&#39;roi&#39;][&#39;radius&#39;] &lt;= 0:
+            raise wex.BadRequest(&#34;ROI radius must be &gt; 0&#34;)
+    if &#39;stationary&#39; in rargs:
+        rargs[&#39;stationary&#39;] = str_to_bool(rargs[&#39;stationary&#39;])
+
+    search_args = dict((k, rargs.pop(k)) for k in Source.AcceptedSearchKeys if k in rargs)
+
+    limit = rargs.pop(&#39;limit&#39;, None)
+    if limit:
+        limit = int(limit)
+    offset = rargs.pop(&#39;offset&#39;, None)
+    if offset:
+        offset = int(offset)
+
+    match_attr = rargs  # everything that hasn&#39;t been popped
+
+    try:
+        items = Source.search(search_args, match_attr, anonymize_private, limit, offset)
+    except tdmq.errors.DBOperationalError:
+        raise wex.InternalServerError()
+
+    res = jsonify(items)
+    return res
+
+
+@tdmq_bp.route(&#39;/sources&#39;, methods=[&#39;POST&#39;])
+@auth_required
+def sources_post():
+    data = request.json
+    try:
+        tdmq_ids = Source.store_new(data)
+    except tdmq.errors.DuplicateItemException:
+        raise wex.Conflict()
+    return jsonify(tdmq_ids)
+
+
+@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;&#39;)
+def sources_get_one(tdmq_id):
+    anonymize_private = str_to_bool(request.args.get(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    source = Source.get_one(tdmq_id, anonymize_private)
+    if source is None:
+        raise wex.NotFound(f&#34;source {tdmq_id} does not exist&#34;)
+    return jsonify(source)
+
+
+@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;&#39;, methods=[&#39;DELETE&#39;])
+@auth_required
+def sources_delete(tdmq_id):
+    Source.delete_one(tdmq_id)
+    return (&#39;&#39;, HTTPStatus.NO_CONTENT)
+
+
+@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;/timeseries_stream&#39;)
+def timeseries_get_stream(tdmq_id):
+    rargs = request.args
+
+    anonymize_private = str_to_bool(rargs.get(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    args = dict((k, rargs.get(k, None))
+                for k in [&#39;after&#39;, &#39;before&#39;, &#39;bucket&#39;, &#39;fields&#39;, &#39;op&#39;])
+    if args[&#39;bucket&#39;] is not None:
+        args[&#39;bucket&#39;] = timedelta(seconds=float(args[&#39;bucket&#39;]))
+    if args[&#39;fields&#39;] is not None:
+        args[&#39;fields&#39;] = args[&#39;fields&#39;].split(&#39;,&#39;)
+    if rargs.get(&#39;sparse&#39;):
+        sparse_format = str_to_bool(rargs[&#39;sparse&#39;])
+    else:
+        # By default, use a dense format if only a subset of the fields is
+        # requested by the query.
+        sparse_format = not bool(args[&#39;fields&#39;])
+
+    data_format = rargs.get(&#39;format&#39;, &#39;json&#39;)
+    if data_format not in (&#39;json&#39;, &#39;csv&#39;):
+        raise wex.BadRequest(f&#34;Unknown/unsupported format {data_format}&#34;)
+
+    batch_size = int(rargs.get(&#39;batch_size&#39;, 2500))
+    assert batch_size &gt; 0
+    logger.debug(&#34;GET using batch_size of %s&#34;, batch_size)
+
+    result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, batch_size, args)
+
+    if data_format == &#39;json&#39;:
+        response = current_app.response_class(
+            generate_ts_json(result, sparse_format),
+            content_type=&#39;application/json&#39;)
+    else:
+        response = current_app.response_class(
+            generate_ts_csv(result), content_type=&#39;text/csv&#39;)
+        response.headers[&#34;Content-Disposition&#34;] = f&#34;attachment;filename={result.tdmq_id}.csv&#34;
+    return response
+
+
+def generate_ts_json(resultset, sparse_format: bool):
+    def format_sparse_row(row: List) -&gt; str:
+        assert len(row) == len(resultset.fields)
+        d = {field_name: value for field_name, value in zip(resultset.fields, row) if value is not None}
+        return json.dumps(d)
+
+    def format_dense_row(row: List) -&gt; str:
+        return json.dumps(row)
+
+    row_format_fn = format_sparse_row if sparse_format else format_dense_row
+
+    logger.debug(&#34;Generating JSON timeseries output&#34;)
+    response_opening = \
+        f&#39;{{&#34;tdmq_id&#34;: {json.dumps(str(resultset.tdmq_id))},&#39;\
+        f&#39;&#34;shape&#34;: {json.dumps(resultset.shape)},&#39;\
+        f&#39;&#34;bucket&#34;: {json.dumps(resultset.bucket)},&#39;\
+        f&#39;&#34;fields&#34;: {json.dumps(resultset.fields)},&#39;\
+        f&#39;&#34;sparse&#34;: {json.dumps(sparse_format)},&#39;
+    if resultset.default_footprint:
+        response_opening += f&#39;&#34;default_footprint&#34;: {json.dumps(resultset.default_footprint)},&#39;
+    response_opening += &#39;&#34;items&#34;: [&#39;
+    yield response_opening
+    first_batch = True
+    for batch in resultset:
+        logger.debug(&#34;Timeseries: sending %s records&#34;, len(batch))
+        if not first_batch:  # First batch does not need pre-pending the comma
+            yield &#39;,&#39;
+        yield &#39;,&#39;.join((row_format_fn(row) for row in batch))
+        first_batch = False
+    yield &#39;]}&#39;  # response closing
+
+
+def generate_ts_csv(resultset):
+    def format_row(row: List) -&gt; str:
+        return &#39;,&#39;.join( (str(v if v is not None else &#39;&#39;) for v in row) )
+
+    logger.debug(&#34;Generating CSV timeseries output&#34;)
+    # header row
+    yield &#39;,&#39;.join(resultset.fields) + &#34;\n&#34;
+    # content
+    for batch in resultset:
+        logger.debug(&#34;Timeseries: sending %s records&#34;, len(batch))
+        yield &#39;\n&#39;.join((format_row(row) for row in batch))
+
+
+@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;/timeseries&#39;)
+def timeseries_get(tdmq_id):
+    &#34;&#34;&#34;
+    Old implementation of GET /timeseries that retrieves and returns the entire query set at once.
+    &#34;&#34;&#34;
+    rargs = request.args
+
+    anonymize_private = str_to_bool(rargs.get(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    args = dict((k, rargs.get(k, None))
+                for k in [&#39;after&#39;, &#39;before&#39;, &#39;bucket&#39;, &#39;fields&#39;, &#39;op&#39;])
+    if args[&#39;bucket&#39;] is not None:
+        args[&#39;bucket&#39;] = timedelta(seconds=float(args[&#39;bucket&#39;]))
+    if args[&#39;fields&#39;] is not None:
+        args[&#39;fields&#39;] = args[&#39;fields&#39;].split(&#39;,&#39;)
+
+    result = Timeseries.get_one(tdmq_id, anonymize_private, args)
+    jres = jsonify(result)
+    return jres
+
+
+@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;/activity/latest&#39;)
+def source_activity_latest(tdmq_id):
+    result = Source.get_latest_activity(tdmq_id)
+    if result is None:
+        raise wex.NotFound(f&#34;source {tdmq_id} does not exist&#34;)
+    jres = jsonify(result)
+    return jres
+
+
+@tdmq_bp.route(&#39;/records&#39;, methods=[&#34;POST&#34;])
+@auth_required
+def records_post():
+    def validate_record(record):
+        if not all(k in record for k in (&#39;time&#39;, &#39;data&#39;)) or \
+           not any(k in record for k in (&#39;tdmq_id&#39;, &#39;source&#39;)):
+            raise wex.BadRequest(
+                &#34;Missing fields in request.  &#34;
+                &#34;Mandatory fields: &#39;time&#39;, &#39;data&#39;, (&#39;tdmq_id&#39; or &#39;source&#39;)&#34;)
+
+    data = request.json
+    for record in data:
+        validate_record(record)
+    n = Timeseries.store_new_records(data)
+    return jsonify({&#34;loaded&#34;: n})
+
+
+@tdmq_bp.route(&#39;/&#39;)
+@tdmq_bp.route(&#39;/service_info&#39;)
+def service_info_get():
+    response = {
+        &#39;version&#39;: &#39;0.1&#39;
+    }
+
+    # Check whether the client is inside or outside the local network.  We do
+    # this by checking whether the Host to which the request was addressed is in
+    # the domain configured as &#34;EXTERNAL_HOST_DOMAIN&#34; (if it was configured).
+    external_client = current_app.config.get(&#39;EXTERNAL_HOST_DOMAIN&#39;) and \
+        request.headers.get(&#39;Host&#39;, &#39;&#39;).endswith(current_app.config.get(&#39;EXTERNAL_HOST_DOMAIN&#39;))
+    response[&#39;client-origin&#39;] = &#39;external&#39; if external_client else &#39;internal&#39;
+
+    if request.headers.get(&#39;Authorization&#39;):
+        oauth2_conf = {
+            &#39;jwt_token&#39;: f&#34;Authorization: {request.headers[&#39;Authorization&#39;]}&#34;
+        }
+
+        if &#39;X-Forwarded-User&#39; in request.headers:
+            oauth2_conf[&#39;user_name&#39;] = request.headers[&#39;X-Forwarded-User&#39;]
+
+        if &#39;X-Forwarded-Email&#39; in request.headers:
+            oauth2_conf[&#39;user_email&#39;] = request.headers[&#39;X-Forwarded-Email&#39;]
+
+        response[&#39;oauth2&#39;] = oauth2_conf
+
+    if external_client and current_app.config.get(&#39;TILEDB_EXTERNAL_VFS&#39;):
+        vfs_config = current_app.config[&#39;TILEDB_EXTERNAL_VFS&#39;]
+    else:
+        vfs_config = current_app.config.get(&#39;TILEDB_INTERNAL_VFS&#39;)
+
+    if vfs_config is not None:
+        response_tiledb_conf = {
+            &#39;storage.root&#39;: vfs_config[&#39;storage.root&#39;],
+            &#39;config&#39;: copy.deepcopy(vfs_config[&#39;config&#39;])
+        }
+
+        if _request_authorized():
+            response_tiledb_conf[&#39;config&#39;].update(vfs_config.get(&#39;credentials&#39;, {}))
+
+        response[&#39;tiledb&#39;] = response_tiledb_conf
+
+    if request.accept_mimetypes.accept_html:
+        return render_template(&#39;service_info.html&#39;, data=response)
+    return jsonify(response)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="tdmq.api.auth_required"><code class="name flex">
+<span>def <span class="ident">auth_required</span></span>(<span>f)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not request.headers.get(&#39;Authorization&#39;):
+            raise wex.Unauthorized(&#34;Access token required&#34;)
+
+        auth_header = request.headers.get(&#39;Authorization&#39;)
+
+        if not auth_header.startswith(&#39;Bearer&#39;):
+            raise wex.Unauthorized(&#39;Only Bearer token authentication is supported&#39;)
+        if f&#34;Bearer {current_app.config[&#39;AUTH_TOKEN&#39;]}&#34; != auth_header:
+            raise wex.Unauthorized(&#34;Invalid access token&#34;)
+
+        return f(*args, **kwargs)
+
+    return decorated_function</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.entity_categories_get"><code class="name flex">
+<span>def <span class="ident">entity_categories_get</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/entity_categories&#39;)
+def entity_categories_get():
+    categories = EntityCategory.get_entity_categories()
+    res = jsonify({&#39;entity_categories&#39;: categories})
+    return res</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.entity_types_get"><code class="name flex">
+<span>def <span class="ident">entity_types_get</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/entity_types&#39;)
+def entity_types_get():
+    types = EntityType.get_entity_types()
+    res = jsonify({&#39;entity_types&#39;: types})
+    return res</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.generate_ts_csv"><code class="name flex">
+<span>def <span class="ident">generate_ts_csv</span></span>(<span>resultset)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_ts_csv(resultset):
+    def format_row(row: List) -&gt; str:
+        return &#39;,&#39;.join( (str(v if v is not None else &#39;&#39;) for v in row) )
+
+    logger.debug(&#34;Generating CSV timeseries output&#34;)
+    # header row
+    yield &#39;,&#39;.join(resultset.fields) + &#34;\n&#34;
+    # content
+    for batch in resultset:
+        logger.debug(&#34;Timeseries: sending %s records&#34;, len(batch))
+        yield &#39;\n&#39;.join((format_row(row) for row in batch))</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.generate_ts_json"><code class="name flex">
+<span>def <span class="ident">generate_ts_json</span></span>(<span>resultset, sparse_format: bool)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_ts_json(resultset, sparse_format: bool):
+    def format_sparse_row(row: List) -&gt; str:
+        assert len(row) == len(resultset.fields)
+        d = {field_name: value for field_name, value in zip(resultset.fields, row) if value is not None}
+        return json.dumps(d)
+
+    def format_dense_row(row: List) -&gt; str:
+        return json.dumps(row)
+
+    row_format_fn = format_sparse_row if sparse_format else format_dense_row
+
+    logger.debug(&#34;Generating JSON timeseries output&#34;)
+    response_opening = \
+        f&#39;{{&#34;tdmq_id&#34;: {json.dumps(str(resultset.tdmq_id))},&#39;\
+        f&#39;&#34;shape&#34;: {json.dumps(resultset.shape)},&#39;\
+        f&#39;&#34;bucket&#34;: {json.dumps(resultset.bucket)},&#39;\
+        f&#39;&#34;fields&#34;: {json.dumps(resultset.fields)},&#39;\
+        f&#39;&#34;sparse&#34;: {json.dumps(sparse_format)},&#39;
+    if resultset.default_footprint:
+        response_opening += f&#39;&#34;default_footprint&#34;: {json.dumps(resultset.default_footprint)},&#39;
+    response_opening += &#39;&#34;items&#34;: [&#39;
+    yield response_opening
+    first_batch = True
+    for batch in resultset:
+        logger.debug(&#34;Timeseries: sending %s records&#34;, len(batch))
+        if not first_batch:  # First batch does not need pre-pending the comma
+            yield &#39;,&#39;
+        yield &#39;,&#39;.join((row_format_fn(row) for row in batch))
+        first_batch = False
+    yield &#39;]}&#39;  # response closing</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.handle_http_exception"><code class="name flex">
+<span>def <span class="ident">handle_http_exception</span></span>(<span>e)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.app_errorhandler(wex.HTTPException)
+def handle_http_exception(e):
+    response_logger = logging.getLogger(&#34;response&#34;)
+    response_logger.exception(e)
+    struct = {
+        &#34;error&#34;: ERROR_CODES.get(e.code),
+        &#34;description&#34;: e.description
+    }
+    return jsonify(struct), e.code</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.handle_tdmq_error"><code class="name flex">
+<span>def <span class="ident">handle_tdmq_error</span></span>(<span>e)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.app_errorhandler(tdmq.errors.TdmqError)
+def handle_tdmq_error(e):
+    response_logger = logging.getLogger(&#34;response&#34;)
+    response_logger.exception(e)
+    struct = {
+        &#34;error&#34;: e.title,
+        &#34;code&#34;: e.status,
+        &#34;description&#34;: e.detail
+    }
+    return jsonify(struct), e.status</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.records_post"><code class="name flex">
+<span>def <span class="ident">records_post</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/records&#39;, methods=[&#34;POST&#34;])
+@auth_required
+def records_post():
+    def validate_record(record):
+        if not all(k in record for k in (&#39;time&#39;, &#39;data&#39;)) or \
+           not any(k in record for k in (&#39;tdmq_id&#39;, &#39;source&#39;)):
+            raise wex.BadRequest(
+                &#34;Missing fields in request.  &#34;
+                &#34;Mandatory fields: &#39;time&#39;, &#39;data&#39;, (&#39;tdmq_id&#39; or &#39;source&#39;)&#34;)
+
+    data = request.json
+    for record in data:
+        validate_record(record)
+    n = Timeseries.store_new_records(data)
+    return jsonify({&#34;loaded&#34;: n})</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.service_info_get"><code class="name flex">
+<span>def <span class="ident">service_info_get</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/&#39;)
+@tdmq_bp.route(&#39;/service_info&#39;)
+def service_info_get():
+    response = {
+        &#39;version&#39;: &#39;0.1&#39;
+    }
+
+    # Check whether the client is inside or outside the local network.  We do
+    # this by checking whether the Host to which the request was addressed is in
+    # the domain configured as &#34;EXTERNAL_HOST_DOMAIN&#34; (if it was configured).
+    external_client = current_app.config.get(&#39;EXTERNAL_HOST_DOMAIN&#39;) and \
+        request.headers.get(&#39;Host&#39;, &#39;&#39;).endswith(current_app.config.get(&#39;EXTERNAL_HOST_DOMAIN&#39;))
+    response[&#39;client-origin&#39;] = &#39;external&#39; if external_client else &#39;internal&#39;
+
+    if request.headers.get(&#39;Authorization&#39;):
+        oauth2_conf = {
+            &#39;jwt_token&#39;: f&#34;Authorization: {request.headers[&#39;Authorization&#39;]}&#34;
+        }
+
+        if &#39;X-Forwarded-User&#39; in request.headers:
+            oauth2_conf[&#39;user_name&#39;] = request.headers[&#39;X-Forwarded-User&#39;]
+
+        if &#39;X-Forwarded-Email&#39; in request.headers:
+            oauth2_conf[&#39;user_email&#39;] = request.headers[&#39;X-Forwarded-Email&#39;]
+
+        response[&#39;oauth2&#39;] = oauth2_conf
+
+    if external_client and current_app.config.get(&#39;TILEDB_EXTERNAL_VFS&#39;):
+        vfs_config = current_app.config[&#39;TILEDB_EXTERNAL_VFS&#39;]
+    else:
+        vfs_config = current_app.config.get(&#39;TILEDB_INTERNAL_VFS&#39;)
+
+    if vfs_config is not None:
+        response_tiledb_conf = {
+            &#39;storage.root&#39;: vfs_config[&#39;storage.root&#39;],
+            &#39;config&#39;: copy.deepcopy(vfs_config[&#39;config&#39;])
+        }
+
+        if _request_authorized():
+            response_tiledb_conf[&#39;config&#39;].update(vfs_config.get(&#39;credentials&#39;, {}))
+
+        response[&#39;tiledb&#39;] = response_tiledb_conf
+
+    if request.accept_mimetypes.accept_html:
+        return render_template(&#39;service_info.html&#39;, data=response)
+    return jsonify(response)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.source_activity_latest"><code class="name flex">
+<span>def <span class="ident">source_activity_latest</span></span>(<span>tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;/activity/latest&#39;)
+def source_activity_latest(tdmq_id):
+    result = Source.get_latest_activity(tdmq_id)
+    if result is None:
+        raise wex.NotFound(f&#34;source {tdmq_id} does not exist&#34;)
+    jres = jsonify(result)
+    return jres</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.sources_delete"><code class="name flex">
+<span>def <span class="ident">sources_delete</span></span>(<span>tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;&#39;, methods=[&#39;DELETE&#39;])
+@auth_required
+def sources_delete(tdmq_id):
+    Source.delete_one(tdmq_id)
+    return (&#39;&#39;, HTTPStatus.NO_CONTENT)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.sources_get"><code class="name flex">
+<span>def <span class="ident">sources_get</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a list of sources.
+See spec for documentation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/sources&#39;, methods=[&#39;GET&#39;])
+def sources_get():
+    &#34;&#34;&#34;
+    Return a list of sources.
+    See spec for documentation.
+    &#34;&#34;&#34;
+    rargs = {k: v for k, v in request.args.items()}
+    logger.debug(&#34;source: args is %s&#34;, rargs)
+
+    anonymize_private = str_to_bool(rargs.pop(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    # preprocess controlledProperties and roi arguments
+    if &#39;controlledProperties&#39; in rargs:
+        rargs[&#39;controlledProperties&#39;] = \
+            rargs[&#39;controlledProperties&#39;].split(&#39;,&#39;)
+    if &#39;public&#39; in rargs:
+        rargs[&#39;public&#39;] = str_to_bool(rargs[&#39;public&#39;])
+
+    if &#39;only_public&#39; in rargs:
+        if &#39;public&#39; in rargs:
+            raise wex.BadRequest(&#34;Cannot specify both &#39;only_public&#39; and &#39;public&#39; query attributes&#34;)
+        only_public = str_to_bool(rargs.pop(&#39;only_public&#39;))
+        if only_public:
+            rargs[&#39;public&#39;] = True
+    else:
+        # If neither &#39;public&#39; nor &#39;only_public&#39; have been specified, default to public=True
+        rargs[&#39;public&#39;] = rargs.get(&#39;public&#39;, True)
+
+    if &#39;roi&#39; in rargs:
+        rargs[&#39;roi&#39;] = convert_roi(rargs[&#39;roi&#39;])
+        if rargs[&#39;roi&#39;][&#39;type&#39;] != &#39;Circle&#39;:
+            raise NotImplementedError()
+        if rargs[&#39;roi&#39;][&#39;radius&#39;] &lt;= 0:
+            raise wex.BadRequest(&#34;ROI radius must be &gt; 0&#34;)
+    if &#39;stationary&#39; in rargs:
+        rargs[&#39;stationary&#39;] = str_to_bool(rargs[&#39;stationary&#39;])
+
+    search_args = dict((k, rargs.pop(k)) for k in Source.AcceptedSearchKeys if k in rargs)
+
+    limit = rargs.pop(&#39;limit&#39;, None)
+    if limit:
+        limit = int(limit)
+    offset = rargs.pop(&#39;offset&#39;, None)
+    if offset:
+        offset = int(offset)
+
+    match_attr = rargs  # everything that hasn&#39;t been popped
+
+    try:
+        items = Source.search(search_args, match_attr, anonymize_private, limit, offset)
+    except tdmq.errors.DBOperationalError:
+        raise wex.InternalServerError()
+
+    res = jsonify(items)
+    return res</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.sources_get_one"><code class="name flex">
+<span>def <span class="ident">sources_get_one</span></span>(<span>tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;&#39;)
+def sources_get_one(tdmq_id):
+    anonymize_private = str_to_bool(request.args.get(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    source = Source.get_one(tdmq_id, anonymize_private)
+    if source is None:
+        raise wex.NotFound(f&#34;source {tdmq_id} does not exist&#34;)
+    return jsonify(source)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.sources_post"><code class="name flex">
+<span>def <span class="ident">sources_post</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/sources&#39;, methods=[&#39;POST&#39;])
+@auth_required
+def sources_post():
+    data = request.json
+    try:
+        tdmq_ids = Source.store_new(data)
+    except tdmq.errors.DuplicateItemException:
+        raise wex.Conflict()
+    return jsonify(tdmq_ids)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.timeseries_get"><code class="name flex">
+<span>def <span class="ident">timeseries_get</span></span>(<span>tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Old implementation of GET /timeseries that retrieves and returns the entire query set at once.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;/timeseries&#39;)
+def timeseries_get(tdmq_id):
+    &#34;&#34;&#34;
+    Old implementation of GET /timeseries that retrieves and returns the entire query set at once.
+    &#34;&#34;&#34;
+    rargs = request.args
+
+    anonymize_private = str_to_bool(rargs.get(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    args = dict((k, rargs.get(k, None))
+                for k in [&#39;after&#39;, &#39;before&#39;, &#39;bucket&#39;, &#39;fields&#39;, &#39;op&#39;])
+    if args[&#39;bucket&#39;] is not None:
+        args[&#39;bucket&#39;] = timedelta(seconds=float(args[&#39;bucket&#39;]))
+    if args[&#39;fields&#39;] is not None:
+        args[&#39;fields&#39;] = args[&#39;fields&#39;].split(&#39;,&#39;)
+
+    result = Timeseries.get_one(tdmq_id, anonymize_private, args)
+    jres = jsonify(result)
+    return jres</code></pre>
+</details>
+</dd>
+<dt id="tdmq.api.timeseries_get_stream"><code class="name flex">
+<span>def <span class="ident">timeseries_get_stream</span></span>(<span>tdmq_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@tdmq_bp.route(&#39;/sources/&lt;uuid:tdmq_id&gt;/timeseries_stream&#39;)
+def timeseries_get_stream(tdmq_id):
+    rargs = request.args
+
+    anonymize_private = str_to_bool(rargs.get(&#39;anonymized&#39;, &#39;true&#39;))
+    if not anonymize_private and not _request_authorized():
+        raise wex.Unauthorized(&#34;Unauthorized request for unanonymized private data&#34;)
+
+    args = dict((k, rargs.get(k, None))
+                for k in [&#39;after&#39;, &#39;before&#39;, &#39;bucket&#39;, &#39;fields&#39;, &#39;op&#39;])
+    if args[&#39;bucket&#39;] is not None:
+        args[&#39;bucket&#39;] = timedelta(seconds=float(args[&#39;bucket&#39;]))
+    if args[&#39;fields&#39;] is not None:
+        args[&#39;fields&#39;] = args[&#39;fields&#39;].split(&#39;,&#39;)
+    if rargs.get(&#39;sparse&#39;):
+        sparse_format = str_to_bool(rargs[&#39;sparse&#39;])
+    else:
+        # By default, use a dense format if only a subset of the fields is
+        # requested by the query.
+        sparse_format = not bool(args[&#39;fields&#39;])
+
+    data_format = rargs.get(&#39;format&#39;, &#39;json&#39;)
+    if data_format not in (&#39;json&#39;, &#39;csv&#39;):
+        raise wex.BadRequest(f&#34;Unknown/unsupported format {data_format}&#34;)
+
+    batch_size = int(rargs.get(&#39;batch_size&#39;, 2500))
+    assert batch_size &gt; 0
+    logger.debug(&#34;GET using batch_size of %s&#34;, batch_size)
+
+    result = Timeseries.get_one_by_batch(tdmq_id, anonymize_private, batch_size, args)
+
+    if data_format == &#39;json&#39;:
+        response = current_app.response_class(
+            generate_ts_json(result, sparse_format),
+            content_type=&#39;application/json&#39;)
+    else:
+        response = current_app.response_class(
+            generate_ts_csv(result), content_type=&#39;text/csv&#39;)
+        response.headers[&#34;Content-Disposition&#34;] = f&#34;attachment;filename={result.tdmq_id}.csv&#34;
+    return response</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="tdmq" href="index.html">tdmq</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="tdmq.api.auth_required" href="#tdmq.api.auth_required">auth_required</a></code></li>
+<li><code><a title="tdmq.api.entity_categories_get" href="#tdmq.api.entity_categories_get">entity_categories_get</a></code></li>
+<li><code><a title="tdmq.api.entity_types_get" href="#tdmq.api.entity_types_get">entity_types_get</a></code></li>
+<li><code><a title="tdmq.api.generate_ts_csv" href="#tdmq.api.generate_ts_csv">generate_ts_csv</a></code></li>
+<li><code><a title="tdmq.api.generate_ts_json" href="#tdmq.api.generate_ts_json">generate_ts_json</a></code></li>
+<li><code><a title="tdmq.api.handle_http_exception" href="#tdmq.api.handle_http_exception">handle_http_exception</a></code></li>
+<li><code><a title="tdmq.api.handle_tdmq_error" href="#tdmq.api.handle_tdmq_error">handle_tdmq_error</a></code></li>
+<li><code><a title="tdmq.api.records_post" href="#tdmq.api.records_post">records_post</a></code></li>
+<li><code><a title="tdmq.api.service_info_get" href="#tdmq.api.service_info_get">service_info_get</a></code></li>
+<li><code><a title="tdmq.api.source_activity_latest" href="#tdmq.api.source_activity_latest">source_activity_latest</a></code></li>
+<li><code><a title="tdmq.api.sources_delete" href="#tdmq.api.sources_delete">sources_delete</a></code></li>
+<li><code><a title="tdmq.api.sources_get" href="#tdmq.api.sources_get">sources_get</a></code></li>
+<li><code><a title="tdmq.api.sources_get_one" href="#tdmq.api.sources_get_one">sources_get_one</a></code></li>
+<li><code><a title="tdmq.api.sources_post" href="#tdmq.api.sources_post">sources_post</a></code></li>
+<li><code><a title="tdmq.api.timeseries_get" href="#tdmq.api.timeseries_get">timeseries_get</a></code></li>
+<li><code><a title="tdmq.api.timeseries_get_stream" href="#tdmq.api.timeseries_get_stream">timeseries_get_stream</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

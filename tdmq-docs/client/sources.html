@@ -1,0 +1,1555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tdmq.client.sources API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tdmq.client.sources</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import abc
+import itertools
+import logging
+from collections.abc import Sequence
+from contextlib import contextmanager
+
+import numpy as np
+import tiledb
+from tdmq.client.timeseries import ScalarTimeSeries
+from tdmq.client.timeseries import NonScalarTimeSeries
+from tdmq.utils import timeit
+
+_logger = logging.getLogger(__name__)
+
+
+class Source(abc.ABC):
+    def __init__(self, client, tdmq_id, desc):
+        self.client = client
+        self.tdmq_id = tdmq_id
+        self._full_body = desc
+
+    def _get_info(self):
+        return self._full_body[&#39;description&#39;]
+
+    @property
+    def id(self):
+        return self._full_body.get(&#39;external_id&#39;)
+
+    @property
+    def external_id(self):
+        return self.id
+
+    @property
+    def default_footprint(self):
+        return self._full_body[&#39;default_footprint&#39;]
+
+    @property
+    def is_stationary(self):
+        return self._full_body[&#39;stationary&#39;]
+
+    @property
+    def entity_category(self):
+        return self._full_body[&#39;entity_category&#39;]
+
+    @property
+    def entity_type(self):
+        return self._full_body[&#39;entity_type&#39;]
+
+    @property
+    def registration_time(self):
+        return self._full_body[&#39;registration_time&#39;]
+
+    @property
+    def public(self):
+        return self._full_body.get(&#39;public&#39;, False)
+
+    @property
+    def alias(self):
+        return self._get_info().get(&#39;alias&#39;)
+
+    @property
+    def shape(self):
+        return tuple(self._get_info().get(&#39;shape&#39;, ()))
+
+    @property
+    def controlled_properties(self):
+        return self._get_info()[&#39;controlledProperties&#39;]
+
+    @property
+    def comments(self):
+        return self._get_info().get(&#39;comments&#39;)
+
+    @property
+    def reference(self):
+        return self._get_info().get(&#39;reference&#39;)
+
+    @property
+    def brand_name(self):
+        return self._get_info().get(&#39;brand_name&#39;)
+
+    @property
+    def model_name(self):
+        return self._get_info().get(&#39;model_name&#39;)
+
+    @property
+    def operated_by(self):
+        return self._get_info().get(&#39;operated_by&#39;)
+
+    def __repr__(self):
+        return repr({
+            &#39;tdmq_id &#39;: self.tdmq_id,
+            &#39;id &#39;: self.id,
+            &#39;entity_category &#39;: self.entity_category,
+            &#39;entity_type &#39;: self.entity_type,
+            &#39;default_footprint &#39;: self.default_footprint,
+            &#39;is_stationary &#39;: self.is_stationary,
+            &#39;shape &#39;: self.shape,
+            &#39;controlled_properties &#39;: self.controlled_properties,
+            &#39;brand_name &#39;: self.brand_name,
+            &#39;model_name &#39;: self.model_name,
+            &#39;operated_by &#39;: self.operated_by,
+            &#39;reference &#39;: self.reference,
+            &#39;comments &#39;: self.comments,
+            })
+
+    def get_timeseries(self, args, sparse: bool = None):
+        return self.client.get_timeseries(self.tdmq_id, args, sparse)
+
+    @abc.abstractmethod
+    def timeseries(self, after, before, bucket=None, op=None, properties=None):
+        pass
+
+    def get_latest_activity(self):
+        &#34;&#34;&#34;
+        Get Timeseries starting at latest registered record&#39;s timestamp.
+        &#34;&#34;&#34;
+        s = self.client.get_latest_source_activity(self.tdmq_id)
+        return self.timeseries(after=s[&#39;time&#39;], before=None)
+
+    # # Ingestion ###
+    # # Requires authentication
+    # #
+    @abc.abstractmethod
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        &#34;&#34;&#34;
+        :param t: datetime object.  Assumed to be in UTC time.
+        &#34;&#34;&#34;
+
+    def ingest(self, t, data, slot=None):
+        &#34;&#34;&#34;
+        :param t: datetime object.  Assumed to be in UTC time.
+        &#34;&#34;&#34;
+        self.ingest_one(t, data, slot)
+
+    @abc.abstractmethod
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        &#34;&#34;&#34;
+        :param times: Sequence of datetime objects.  Assumed to be in UTC time.
+        &#34;&#34;&#34;
+
+
+class ScalarSource(Source):
+
+    @property
+    def sensor_id(self):
+        return self._get_info().get(&#39;sensor_id&#39;)
+
+    @property
+    def station_id(self):
+        return self._get_info().get(&#39;station_id&#39;)
+
+    @property
+    def station_model(self):
+        return self._get_info().get(&#39;station_model&#39;)
+
+    @property
+    def edge_id(self):
+        return self._get_info().get(&#39;edge_id&#39;)
+
+    def __repr__(self):
+        return repr({
+            &#39;tdmq_id &#39;:               self.tdmq_id,
+            &#39;id &#39;:                    self.id,
+            &#39;entity_category &#39;:       self.entity_category,
+            &#39;entity_type &#39;:           self.entity_type,
+            &#39;default_footprint &#39;:     self.default_footprint,
+            &#39;is_stationary &#39;:         self.is_stationary,
+            &#39;shape &#39;:                 self.shape,
+            &#39;controlled_properties &#39;: self.controlled_properties,
+            &#39;edge_id&#39;:                self.edge_id,
+            &#39;station_id&#39;:             self.station_id,
+            &#39;station_model&#39;:          self.station_model,
+            &#39;sensor_id&#39;:              self.sensor_id,
+            })
+
+    def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
+        return ScalarTimeSeries(self, after, before, bucket, op, properties)
+
+    def _format_record(self, t, d, foot=None):
+        record = {
+            # pylint: disable=protected-access
+            &#39;time&#39;: self.client._format_timestamp(t),
+            &#39;data&#39;: d,
+            &#39;tdmq_id&#39;: self.tdmq_id }
+        if foot:
+            record[&#39;footprint&#39;] = foot
+        return record
+
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        if footprint is None:
+            footprint_it = None
+        else:
+            footprint_it = [footprint]
+        self.ingest_many([t], [data], slot, footprint_it)
+
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        if initial_slot:
+            raise TypeError(&#34;Can&#39;t specity a slot to ingest a scalar record&#34;)
+        if footprint_iter is None:
+            records = [ self._format_record(t, d) for t, d in zip(times, data) ]
+        else:
+            records = [ self._format_record(t, d, f) for t, d, f in zip(times, data, footprint_iter) ]
+        self.client.add_records(records)
+
+
+class NonScalarSource(Source):
+    def __init__(self, client, tdmq_id, desc):
+        super().__init__(client, tdmq_id, desc)
+        self._tiledb_array = None
+
+    def __del__(self):
+        _logger.debug(&#34;NonScalarSource destructor&#34;)
+        self.close_array()
+
+    def close_array(self):
+        if self._tiledb_array:
+            _logger.debug(&#34;NonScalarSource: closing array&#34;)
+            try:
+                self._tiledb_array.close()
+            finally:
+                self._tiledb_array = None
+
+    def open_array(self, mode=&#39;r&#39;):
+        if mode not in (&#39;r&#39;, &#39;w&#39;):
+            raise ValueError(f&#34;Invalid mode {mode}&#34;)
+
+        if not self._tiledb_array:
+            _logger.debug(&#34;NonScalarSource: opening array %s with mode %s&#34;, self.tdmq_id, mode)
+            self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
+        elif mode not in self._tiledb_array.mode:
+            _logger.debug(&#34;NonScalarSource: array %s opened in incompatible mode. Reopening with mode %s&#34;, self.tdmq_id, mode)
+            self.client.close_array(self._tiledb_array)
+            self._tiledb_array = None
+            self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
+        return self._tiledb_array
+
+    @contextmanager
+    def array_context(self, mode=&#39;r&#39;):
+        ary = self.open_array(mode)
+        try:
+            yield ary
+        finally:
+            self.close_array()
+
+    def get_array(self):
+        if not self._tiledb_array:
+            raise RuntimeError(&#34;Array not open!&#34;)
+        return self._tiledb_array
+
+    def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
+        self.open_array(mode=&#39;r&#39;)
+        return NonScalarTimeSeries(self, after, before, bucket, op)
+
+    def _format_record(self, t, slot, foot=None):
+        record = {
+            &#39;time&#39;: t.strftime(self.client.TDMQ_DT_FMT),
+            &#39;data&#39;: { &#39;tiledb_index&#39;: slot },
+            &#39;tdmq_id&#39;: self.tdmq_id }
+        if foot:
+            record[&#39;footprint&#39;] = foot
+        return record
+
+    def _get_next_slot(self):
+        _logger.debug(&#34;NonScalarSource._get_next_slot: getting latest activity&#34;)
+        s = self.client.get_latest_source_activity(self.tdmq_id)
+        if s[&#39;time&#39;] is None:
+            _logger.debug(&#34;No activity found. Starting from beginning&#34;)
+            return 0  # first slot
+        if &#39;tiledb_index&#39; not in s[&#39;data&#39;]:
+            raise RuntimeError(f&#34;Activity record collected for {self.tdmq_id} does not contain `tiledb_index`!&#34;)
+        most_recent_slot = s[&#39;data&#39;][&#39;tiledb_index&#39;]
+        _logger.debug(&#34;Found most recent slot %s. Returning %s + 1&#34;, most_recent_slot, most_recent_slot)
+        return most_recent_slot + 1
+
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        &#34;&#34;&#34;
+        auto-slot -&gt; if you don&#39;t specify a slot, the client will retrieve the latest slot
+        used for this source (as in most recent timestamp) and increment it by 1.
+
+        Don&#39;t use this feature unless you consistently append to the time series.  I.e.,
+        if the most recent record points to somewhere in the middle of the array, you&#39;ll
+        end up overwriting data in the tiledb array.
+        &#34;&#34;&#34;
+        ary = self.open_array(mode=&#39;w&#39;)
+
+        if slot is None:
+            slot = self._get_next_slot()
+            _logger.debug(&#34;source %s: auto-slot: %s&#34;, self.tdmq_id, slot)
+
+        for p in self.controlled_properties:
+            if p not in data:
+                raise ValueError(f&#39;data is missing field {p}&#39;)
+        record = self._format_record(t, slot, footprint)
+        _logger.debug(&#34;Array %s: setting one slice in slot %s&#34;, self.tdmq_id, slot)
+        with timeit(_logger.debug):
+            ary[slot:slot + 1] = data
+        _logger.debug(&#34;Registering record with tdmq&#34;)
+        self.client.add_records([record])
+
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        if initial_slot is None:
+            initial_slot = self._get_next_slot()
+            _logger.debug(&#34;source %s: auto-slot: %s&#34;, self.tdmq_id, initial_slot)
+
+        for p in self.controlled_properties:
+            if p not in data:
+                raise ValueError(f&#39;data is missing property {p}&#39;)
+
+        if footprint_iter is None:
+            footprint_iter = itertools.cycle([None])
+        records = [
+            self._format_record(t, s, f)
+            for t, s, f in zip(times, itertools.count(initial_slot), footprint_iter) ]
+
+        ary = self.open_array(mode=&#39;w&#39;)
+        # Prepare the data.  The `data` argument must always be a mapping
+        # property -&gt; values to be ingested.
+        # The values can be:
+        # a) a sequence a np arrays, each one a slice for a single time slot;
+        # b) a single np array with the same ndim as our array, where the
+        #    first axis is the time dimension.
+        struct = dict()
+        for prop, value in data.items():
+            if isinstance(value, Sequence):
+                # The value should be a time sequence of np arrays, which we will stack
+                new_data = np.stack(value)
+            elif isinstance(value, np.ndarray):
+                new_data = value
+
+            if new_data.ndim != ary.ndim:
+                raise ValueError(f&#34;Array for property {prop} has {value.ndim} dimensions, while &#34;
+                                 &#34;{ary.ndim} are expected&#34;)
+            if new_data.shape[1:] != ary.shape[1:]:
+                raise ValueError(f&#34;Array for property {prop} has shape {value.shape} which &#34;
+                                 &#34;is incompatible with {ary.shape}&#34;)
+            # At this point, the array should be ok for assignment.
+            struct[prop] = new_data
+
+        _logger.debug(&#34;Array %s: setting %s slices in slots starting from %s&#34;,
+                      self.tdmq_id, new_data.shape[0], initial_slot)
+        with timeit(_logger.debug):
+            ary[initial_slot:(initial_slot + new_data.shape[0])] = struct
+        _logger.debug(&#34;Registering %s records with tdmq&#34;, len(records))
+        self.client.add_records(records)
+
+    def consolidate(self, mode=None, config_dict=None, vacuum=True):
+        &#34;&#34;&#34;
+        The keys &#34;sm.consolidation.mode&#34; and &#34;sm.vacuum.mode&#34; in the
+        configuration (both `config_dict` and in the Context) are ignored.
+        By default this function will run for all consolidation
+        (and vacuum) modes.  If you only want to run a specific mode, specify
+        it with the `mode` parameter.
+        &#34;&#34;&#34;
+        valid_modes = (&#39;fragments&#39;, &#39;fragment_meta&#39;, &#39;array_meta&#39;)
+        # pylint: disable=protected-access
+        array_name = self.client._source_data_path(self.tdmq_id)
+        _logger.debug(&#34;Ensuring client is connected...&#34;)
+        self.client.connect()
+
+        # As of 2021/03/10 to work around a bug in tiledb.consolidate
+        # we have to explicitly pass the config to the function (rather
+        # that implicitly using the configuration held by the context).
+        # https://forum.tiledb.com/t/write-confirmation-question/305/12
+
+        # Both options below generate an independent configuration object,
+        # copied/disjoint from its original source (i.e., config_dict or tiledb_ctx)
+        if config_dict:
+            config = tiledb.Config(config_dict)
+        else:
+            config = self.client.tiledb_ctx.config()
+
+        def _specific_consolidation(mode):
+            config[&#34;sm.consolidation.mode&#34;] = mode
+            _logger.info(&#34;Executing %s consolidation on array %s&#34;, mode, array_name)
+            with timeit(_logger.info):
+                tiledb.consolidate(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+        if mode:
+            if mode not in valid_modes:
+                raise ValueError(f&#34;Invalid tiledb consolidation mode &#39;{mode}&#39;. &#34;
+                                 &#34;Valid modes are {&#39;, &#39;.join(valid_modes)}&#34;)
+            _specific_consolidation(mode)
+        else:
+            for m in valid_modes:
+                _specific_consolidation(m)
+
+        def _specific_vacuum(mode):
+            config[&#34;sm.vacuum.mode&#34;] = mode
+            _logger.info(&#34;Executing %s vacuum on array %s&#34;, mode, array_name)
+            with timeit(_logger.info):
+                tiledb.vacuum(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+        if vacuum:
+            _logger.info(&#34;Vacuuming tiledb array %s&#34;, array_name)
+            # LP: I have found (empirically) that if I try to vacuum an array while it
+            # is open the vacuum call will block.
+            if self._tiledb_array and self._tiledb_array.isopen:
+                _logger.debug(&#34;Array is open.  Must close it before proceeding&#34;)
+                self.close_array()
+            if mode:
+                # mode already validated before consolidation
+                _specific_vacuum(mode)
+            else:
+                # for m in valid_modes:  -&gt; &#39;array_meta&#39; vacuum mode fails in tests
+                for m in (&#39;fragments&#39;, &#39;fragment_meta&#39;):
+                    _specific_vacuum(m)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="tdmq.client.sources.NonScalarSource"><code class="flex name class">
+<span>class <span class="ident">NonScalarSource</span></span>
+<span>(</span><span>client, tdmq_id, desc)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NonScalarSource(Source):
+    def __init__(self, client, tdmq_id, desc):
+        super().__init__(client, tdmq_id, desc)
+        self._tiledb_array = None
+
+    def __del__(self):
+        _logger.debug(&#34;NonScalarSource destructor&#34;)
+        self.close_array()
+
+    def close_array(self):
+        if self._tiledb_array:
+            _logger.debug(&#34;NonScalarSource: closing array&#34;)
+            try:
+                self._tiledb_array.close()
+            finally:
+                self._tiledb_array = None
+
+    def open_array(self, mode=&#39;r&#39;):
+        if mode not in (&#39;r&#39;, &#39;w&#39;):
+            raise ValueError(f&#34;Invalid mode {mode}&#34;)
+
+        if not self._tiledb_array:
+            _logger.debug(&#34;NonScalarSource: opening array %s with mode %s&#34;, self.tdmq_id, mode)
+            self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
+        elif mode not in self._tiledb_array.mode:
+            _logger.debug(&#34;NonScalarSource: array %s opened in incompatible mode. Reopening with mode %s&#34;, self.tdmq_id, mode)
+            self.client.close_array(self._tiledb_array)
+            self._tiledb_array = None
+            self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
+        return self._tiledb_array
+
+    @contextmanager
+    def array_context(self, mode=&#39;r&#39;):
+        ary = self.open_array(mode)
+        try:
+            yield ary
+        finally:
+            self.close_array()
+
+    def get_array(self):
+        if not self._tiledb_array:
+            raise RuntimeError(&#34;Array not open!&#34;)
+        return self._tiledb_array
+
+    def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
+        self.open_array(mode=&#39;r&#39;)
+        return NonScalarTimeSeries(self, after, before, bucket, op)
+
+    def _format_record(self, t, slot, foot=None):
+        record = {
+            &#39;time&#39;: t.strftime(self.client.TDMQ_DT_FMT),
+            &#39;data&#39;: { &#39;tiledb_index&#39;: slot },
+            &#39;tdmq_id&#39;: self.tdmq_id }
+        if foot:
+            record[&#39;footprint&#39;] = foot
+        return record
+
+    def _get_next_slot(self):
+        _logger.debug(&#34;NonScalarSource._get_next_slot: getting latest activity&#34;)
+        s = self.client.get_latest_source_activity(self.tdmq_id)
+        if s[&#39;time&#39;] is None:
+            _logger.debug(&#34;No activity found. Starting from beginning&#34;)
+            return 0  # first slot
+        if &#39;tiledb_index&#39; not in s[&#39;data&#39;]:
+            raise RuntimeError(f&#34;Activity record collected for {self.tdmq_id} does not contain `tiledb_index`!&#34;)
+        most_recent_slot = s[&#39;data&#39;][&#39;tiledb_index&#39;]
+        _logger.debug(&#34;Found most recent slot %s. Returning %s + 1&#34;, most_recent_slot, most_recent_slot)
+        return most_recent_slot + 1
+
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        &#34;&#34;&#34;
+        auto-slot -&gt; if you don&#39;t specify a slot, the client will retrieve the latest slot
+        used for this source (as in most recent timestamp) and increment it by 1.
+
+        Don&#39;t use this feature unless you consistently append to the time series.  I.e.,
+        if the most recent record points to somewhere in the middle of the array, you&#39;ll
+        end up overwriting data in the tiledb array.
+        &#34;&#34;&#34;
+        ary = self.open_array(mode=&#39;w&#39;)
+
+        if slot is None:
+            slot = self._get_next_slot()
+            _logger.debug(&#34;source %s: auto-slot: %s&#34;, self.tdmq_id, slot)
+
+        for p in self.controlled_properties:
+            if p not in data:
+                raise ValueError(f&#39;data is missing field {p}&#39;)
+        record = self._format_record(t, slot, footprint)
+        _logger.debug(&#34;Array %s: setting one slice in slot %s&#34;, self.tdmq_id, slot)
+        with timeit(_logger.debug):
+            ary[slot:slot + 1] = data
+        _logger.debug(&#34;Registering record with tdmq&#34;)
+        self.client.add_records([record])
+
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        if initial_slot is None:
+            initial_slot = self._get_next_slot()
+            _logger.debug(&#34;source %s: auto-slot: %s&#34;, self.tdmq_id, initial_slot)
+
+        for p in self.controlled_properties:
+            if p not in data:
+                raise ValueError(f&#39;data is missing property {p}&#39;)
+
+        if footprint_iter is None:
+            footprint_iter = itertools.cycle([None])
+        records = [
+            self._format_record(t, s, f)
+            for t, s, f in zip(times, itertools.count(initial_slot), footprint_iter) ]
+
+        ary = self.open_array(mode=&#39;w&#39;)
+        # Prepare the data.  The `data` argument must always be a mapping
+        # property -&gt; values to be ingested.
+        # The values can be:
+        # a) a sequence a np arrays, each one a slice for a single time slot;
+        # b) a single np array with the same ndim as our array, where the
+        #    first axis is the time dimension.
+        struct = dict()
+        for prop, value in data.items():
+            if isinstance(value, Sequence):
+                # The value should be a time sequence of np arrays, which we will stack
+                new_data = np.stack(value)
+            elif isinstance(value, np.ndarray):
+                new_data = value
+
+            if new_data.ndim != ary.ndim:
+                raise ValueError(f&#34;Array for property {prop} has {value.ndim} dimensions, while &#34;
+                                 &#34;{ary.ndim} are expected&#34;)
+            if new_data.shape[1:] != ary.shape[1:]:
+                raise ValueError(f&#34;Array for property {prop} has shape {value.shape} which &#34;
+                                 &#34;is incompatible with {ary.shape}&#34;)
+            # At this point, the array should be ok for assignment.
+            struct[prop] = new_data
+
+        _logger.debug(&#34;Array %s: setting %s slices in slots starting from %s&#34;,
+                      self.tdmq_id, new_data.shape[0], initial_slot)
+        with timeit(_logger.debug):
+            ary[initial_slot:(initial_slot + new_data.shape[0])] = struct
+        _logger.debug(&#34;Registering %s records with tdmq&#34;, len(records))
+        self.client.add_records(records)
+
+    def consolidate(self, mode=None, config_dict=None, vacuum=True):
+        &#34;&#34;&#34;
+        The keys &#34;sm.consolidation.mode&#34; and &#34;sm.vacuum.mode&#34; in the
+        configuration (both `config_dict` and in the Context) are ignored.
+        By default this function will run for all consolidation
+        (and vacuum) modes.  If you only want to run a specific mode, specify
+        it with the `mode` parameter.
+        &#34;&#34;&#34;
+        valid_modes = (&#39;fragments&#39;, &#39;fragment_meta&#39;, &#39;array_meta&#39;)
+        # pylint: disable=protected-access
+        array_name = self.client._source_data_path(self.tdmq_id)
+        _logger.debug(&#34;Ensuring client is connected...&#34;)
+        self.client.connect()
+
+        # As of 2021/03/10 to work around a bug in tiledb.consolidate
+        # we have to explicitly pass the config to the function (rather
+        # that implicitly using the configuration held by the context).
+        # https://forum.tiledb.com/t/write-confirmation-question/305/12
+
+        # Both options below generate an independent configuration object,
+        # copied/disjoint from its original source (i.e., config_dict or tiledb_ctx)
+        if config_dict:
+            config = tiledb.Config(config_dict)
+        else:
+            config = self.client.tiledb_ctx.config()
+
+        def _specific_consolidation(mode):
+            config[&#34;sm.consolidation.mode&#34;] = mode
+            _logger.info(&#34;Executing %s consolidation on array %s&#34;, mode, array_name)
+            with timeit(_logger.info):
+                tiledb.consolidate(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+        if mode:
+            if mode not in valid_modes:
+                raise ValueError(f&#34;Invalid tiledb consolidation mode &#39;{mode}&#39;. &#34;
+                                 &#34;Valid modes are {&#39;, &#39;.join(valid_modes)}&#34;)
+            _specific_consolidation(mode)
+        else:
+            for m in valid_modes:
+                _specific_consolidation(m)
+
+        def _specific_vacuum(mode):
+            config[&#34;sm.vacuum.mode&#34;] = mode
+            _logger.info(&#34;Executing %s vacuum on array %s&#34;, mode, array_name)
+            with timeit(_logger.info):
+                tiledb.vacuum(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+        if vacuum:
+            _logger.info(&#34;Vacuuming tiledb array %s&#34;, array_name)
+            # LP: I have found (empirically) that if I try to vacuum an array while it
+            # is open the vacuum call will block.
+            if self._tiledb_array and self._tiledb_array.isopen:
+                _logger.debug(&#34;Array is open.  Must close it before proceeding&#34;)
+                self.close_array()
+            if mode:
+                # mode already validated before consolidation
+                _specific_vacuum(mode)
+            else:
+                # for m in valid_modes:  -&gt; &#39;array_meta&#39; vacuum mode fails in tests
+                for m in (&#39;fragments&#39;, &#39;fragment_meta&#39;):
+                    _specific_vacuum(m)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="tdmq.client.sources.Source" href="#tdmq.client.sources.Source">Source</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.sources.NonScalarSource.array_context"><code class="name flex">
+<span>def <span class="ident">array_context</span></span>(<span>self, mode='r')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+def array_context(self, mode=&#39;r&#39;):
+    ary = self.open_array(mode)
+    try:
+        yield ary
+    finally:
+        self.close_array()</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.NonScalarSource.close_array"><code class="name flex">
+<span>def <span class="ident">close_array</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_array(self):
+    if self._tiledb_array:
+        _logger.debug(&#34;NonScalarSource: closing array&#34;)
+        try:
+            self._tiledb_array.close()
+        finally:
+            self._tiledb_array = None</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.NonScalarSource.consolidate"><code class="name flex">
+<span>def <span class="ident">consolidate</span></span>(<span>self, mode=None, config_dict=None, vacuum=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The keys "sm.consolidation.mode" and "sm.vacuum.mode" in the
+configuration (both <code>config_dict</code> and in the Context) are ignored.
+By default this function will run for all consolidation
+(and vacuum) modes.
+If you only want to run a specific mode, specify
+it with the <code>mode</code> parameter.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def consolidate(self, mode=None, config_dict=None, vacuum=True):
+    &#34;&#34;&#34;
+    The keys &#34;sm.consolidation.mode&#34; and &#34;sm.vacuum.mode&#34; in the
+    configuration (both `config_dict` and in the Context) are ignored.
+    By default this function will run for all consolidation
+    (and vacuum) modes.  If you only want to run a specific mode, specify
+    it with the `mode` parameter.
+    &#34;&#34;&#34;
+    valid_modes = (&#39;fragments&#39;, &#39;fragment_meta&#39;, &#39;array_meta&#39;)
+    # pylint: disable=protected-access
+    array_name = self.client._source_data_path(self.tdmq_id)
+    _logger.debug(&#34;Ensuring client is connected...&#34;)
+    self.client.connect()
+
+    # As of 2021/03/10 to work around a bug in tiledb.consolidate
+    # we have to explicitly pass the config to the function (rather
+    # that implicitly using the configuration held by the context).
+    # https://forum.tiledb.com/t/write-confirmation-question/305/12
+
+    # Both options below generate an independent configuration object,
+    # copied/disjoint from its original source (i.e., config_dict or tiledb_ctx)
+    if config_dict:
+        config = tiledb.Config(config_dict)
+    else:
+        config = self.client.tiledb_ctx.config()
+
+    def _specific_consolidation(mode):
+        config[&#34;sm.consolidation.mode&#34;] = mode
+        _logger.info(&#34;Executing %s consolidation on array %s&#34;, mode, array_name)
+        with timeit(_logger.info):
+            tiledb.consolidate(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+    if mode:
+        if mode not in valid_modes:
+            raise ValueError(f&#34;Invalid tiledb consolidation mode &#39;{mode}&#39;. &#34;
+                             &#34;Valid modes are {&#39;, &#39;.join(valid_modes)}&#34;)
+        _specific_consolidation(mode)
+    else:
+        for m in valid_modes:
+            _specific_consolidation(m)
+
+    def _specific_vacuum(mode):
+        config[&#34;sm.vacuum.mode&#34;] = mode
+        _logger.info(&#34;Executing %s vacuum on array %s&#34;, mode, array_name)
+        with timeit(_logger.info):
+            tiledb.vacuum(array_name, config=config, ctx=self.client.tiledb_ctx)
+
+    if vacuum:
+        _logger.info(&#34;Vacuuming tiledb array %s&#34;, array_name)
+        # LP: I have found (empirically) that if I try to vacuum an array while it
+        # is open the vacuum call will block.
+        if self._tiledb_array and self._tiledb_array.isopen:
+            _logger.debug(&#34;Array is open.  Must close it before proceeding&#34;)
+            self.close_array()
+        if mode:
+            # mode already validated before consolidation
+            _specific_vacuum(mode)
+        else:
+            # for m in valid_modes:  -&gt; &#39;array_meta&#39; vacuum mode fails in tests
+            for m in (&#39;fragments&#39;, &#39;fragment_meta&#39;):
+                _specific_vacuum(m)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.NonScalarSource.get_array"><code class="name flex">
+<span>def <span class="ident">get_array</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_array(self):
+    if not self._tiledb_array:
+        raise RuntimeError(&#34;Array not open!&#34;)
+    return self._tiledb_array</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.NonScalarSource.ingest_one"><code class="name flex">
+<span>def <span class="ident">ingest_one</span></span>(<span>self, t, data, slot=None, footprint=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>auto-slot -&gt; if you don't specify a slot, the client will retrieve the latest slot
+used for this source (as in most recent timestamp) and increment it by 1.</p>
+<p>Don't use this feature unless you consistently append to the time series.
+I.e.,
+if the most recent record points to somewhere in the middle of the array, you'll
+end up overwriting data in the tiledb array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ingest_one(self, t, data, slot=None, footprint=None):
+    &#34;&#34;&#34;
+    auto-slot -&gt; if you don&#39;t specify a slot, the client will retrieve the latest slot
+    used for this source (as in most recent timestamp) and increment it by 1.
+
+    Don&#39;t use this feature unless you consistently append to the time series.  I.e.,
+    if the most recent record points to somewhere in the middle of the array, you&#39;ll
+    end up overwriting data in the tiledb array.
+    &#34;&#34;&#34;
+    ary = self.open_array(mode=&#39;w&#39;)
+
+    if slot is None:
+        slot = self._get_next_slot()
+        _logger.debug(&#34;source %s: auto-slot: %s&#34;, self.tdmq_id, slot)
+
+    for p in self.controlled_properties:
+        if p not in data:
+            raise ValueError(f&#39;data is missing field {p}&#39;)
+    record = self._format_record(t, slot, footprint)
+    _logger.debug(&#34;Array %s: setting one slice in slot %s&#34;, self.tdmq_id, slot)
+    with timeit(_logger.debug):
+        ary[slot:slot + 1] = data
+    _logger.debug(&#34;Registering record with tdmq&#34;)
+    self.client.add_records([record])</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.NonScalarSource.open_array"><code class="name flex">
+<span>def <span class="ident">open_array</span></span>(<span>self, mode='r')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open_array(self, mode=&#39;r&#39;):
+    if mode not in (&#39;r&#39;, &#39;w&#39;):
+        raise ValueError(f&#34;Invalid mode {mode}&#34;)
+
+    if not self._tiledb_array:
+        _logger.debug(&#34;NonScalarSource: opening array %s with mode %s&#34;, self.tdmq_id, mode)
+        self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
+    elif mode not in self._tiledb_array.mode:
+        _logger.debug(&#34;NonScalarSource: array %s opened in incompatible mode. Reopening with mode %s&#34;, self.tdmq_id, mode)
+        self.client.close_array(self._tiledb_array)
+        self._tiledb_array = None
+        self._tiledb_array = self.client.open_array(self.tdmq_id, mode)
+    return self._tiledb_array</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.NonScalarSource.timeseries"><code class="name flex">
+<span>def <span class="ident">timeseries</span></span>(<span>self, after=None, before=None, bucket=None, op=None, properties=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
+    self.open_array(mode=&#39;r&#39;)
+    return NonScalarTimeSeries(self, after, before, bucket, op)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="tdmq.client.sources.Source" href="#tdmq.client.sources.Source">Source</a></b></code>:
+<ul class="hlist">
+<li><code><a title="tdmq.client.sources.Source.get_latest_activity" href="#tdmq.client.sources.Source.get_latest_activity">get_latest_activity</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest" href="#tdmq.client.sources.Source.ingest">ingest</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest_many" href="#tdmq.client.sources.Source.ingest_many">ingest_many</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="tdmq.client.sources.ScalarSource"><code class="flex name class">
+<span>class <span class="ident">ScalarSource</span></span>
+<span>(</span><span>client, tdmq_id, desc)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ScalarSource(Source):
+
+    @property
+    def sensor_id(self):
+        return self._get_info().get(&#39;sensor_id&#39;)
+
+    @property
+    def station_id(self):
+        return self._get_info().get(&#39;station_id&#39;)
+
+    @property
+    def station_model(self):
+        return self._get_info().get(&#39;station_model&#39;)
+
+    @property
+    def edge_id(self):
+        return self._get_info().get(&#39;edge_id&#39;)
+
+    def __repr__(self):
+        return repr({
+            &#39;tdmq_id &#39;:               self.tdmq_id,
+            &#39;id &#39;:                    self.id,
+            &#39;entity_category &#39;:       self.entity_category,
+            &#39;entity_type &#39;:           self.entity_type,
+            &#39;default_footprint &#39;:     self.default_footprint,
+            &#39;is_stationary &#39;:         self.is_stationary,
+            &#39;shape &#39;:                 self.shape,
+            &#39;controlled_properties &#39;: self.controlled_properties,
+            &#39;edge_id&#39;:                self.edge_id,
+            &#39;station_id&#39;:             self.station_id,
+            &#39;station_model&#39;:          self.station_model,
+            &#39;sensor_id&#39;:              self.sensor_id,
+            })
+
+    def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
+        return ScalarTimeSeries(self, after, before, bucket, op, properties)
+
+    def _format_record(self, t, d, foot=None):
+        record = {
+            # pylint: disable=protected-access
+            &#39;time&#39;: self.client._format_timestamp(t),
+            &#39;data&#39;: d,
+            &#39;tdmq_id&#39;: self.tdmq_id }
+        if foot:
+            record[&#39;footprint&#39;] = foot
+        return record
+
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        if footprint is None:
+            footprint_it = None
+        else:
+            footprint_it = [footprint]
+        self.ingest_many([t], [data], slot, footprint_it)
+
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        if initial_slot:
+            raise TypeError(&#34;Can&#39;t specity a slot to ingest a scalar record&#34;)
+        if footprint_iter is None:
+            records = [ self._format_record(t, d) for t, d in zip(times, data) ]
+        else:
+            records = [ self._format_record(t, d, f) for t, d, f in zip(times, data, footprint_iter) ]
+        self.client.add_records(records)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="tdmq.client.sources.Source" href="#tdmq.client.sources.Source">Source</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.client.sources.ScalarSource.edge_id"><code class="name">var <span class="ident">edge_id</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def edge_id(self):
+    return self._get_info().get(&#39;edge_id&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.ScalarSource.sensor_id"><code class="name">var <span class="ident">sensor_id</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sensor_id(self):
+    return self._get_info().get(&#39;sensor_id&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.ScalarSource.station_id"><code class="name">var <span class="ident">station_id</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def station_id(self):
+    return self._get_info().get(&#39;station_id&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.ScalarSource.station_model"><code class="name">var <span class="ident">station_model</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def station_model(self):
+    return self._get_info().get(&#39;station_model&#39;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.sources.ScalarSource.timeseries"><code class="name flex">
+<span>def <span class="ident">timeseries</span></span>(<span>self, after=None, before=None, bucket=None, op=None, properties=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeseries(self, after=None, before=None, bucket=None, op=None, properties=None):
+    return ScalarTimeSeries(self, after, before, bucket, op, properties)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="tdmq.client.sources.Source" href="#tdmq.client.sources.Source">Source</a></b></code>:
+<ul class="hlist">
+<li><code><a title="tdmq.client.sources.Source.get_latest_activity" href="#tdmq.client.sources.Source.get_latest_activity">get_latest_activity</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest" href="#tdmq.client.sources.Source.ingest">ingest</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest_many" href="#tdmq.client.sources.Source.ingest_many">ingest_many</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest_one" href="#tdmq.client.sources.Source.ingest_one">ingest_one</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="tdmq.client.sources.Source"><code class="flex name class">
+<span>class <span class="ident">Source</span></span>
+<span>(</span><span>client, tdmq_id, desc)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Source(abc.ABC):
+    def __init__(self, client, tdmq_id, desc):
+        self.client = client
+        self.tdmq_id = tdmq_id
+        self._full_body = desc
+
+    def _get_info(self):
+        return self._full_body[&#39;description&#39;]
+
+    @property
+    def id(self):
+        return self._full_body.get(&#39;external_id&#39;)
+
+    @property
+    def external_id(self):
+        return self.id
+
+    @property
+    def default_footprint(self):
+        return self._full_body[&#39;default_footprint&#39;]
+
+    @property
+    def is_stationary(self):
+        return self._full_body[&#39;stationary&#39;]
+
+    @property
+    def entity_category(self):
+        return self._full_body[&#39;entity_category&#39;]
+
+    @property
+    def entity_type(self):
+        return self._full_body[&#39;entity_type&#39;]
+
+    @property
+    def registration_time(self):
+        return self._full_body[&#39;registration_time&#39;]
+
+    @property
+    def public(self):
+        return self._full_body.get(&#39;public&#39;, False)
+
+    @property
+    def alias(self):
+        return self._get_info().get(&#39;alias&#39;)
+
+    @property
+    def shape(self):
+        return tuple(self._get_info().get(&#39;shape&#39;, ()))
+
+    @property
+    def controlled_properties(self):
+        return self._get_info()[&#39;controlledProperties&#39;]
+
+    @property
+    def comments(self):
+        return self._get_info().get(&#39;comments&#39;)
+
+    @property
+    def reference(self):
+        return self._get_info().get(&#39;reference&#39;)
+
+    @property
+    def brand_name(self):
+        return self._get_info().get(&#39;brand_name&#39;)
+
+    @property
+    def model_name(self):
+        return self._get_info().get(&#39;model_name&#39;)
+
+    @property
+    def operated_by(self):
+        return self._get_info().get(&#39;operated_by&#39;)
+
+    def __repr__(self):
+        return repr({
+            &#39;tdmq_id &#39;: self.tdmq_id,
+            &#39;id &#39;: self.id,
+            &#39;entity_category &#39;: self.entity_category,
+            &#39;entity_type &#39;: self.entity_type,
+            &#39;default_footprint &#39;: self.default_footprint,
+            &#39;is_stationary &#39;: self.is_stationary,
+            &#39;shape &#39;: self.shape,
+            &#39;controlled_properties &#39;: self.controlled_properties,
+            &#39;brand_name &#39;: self.brand_name,
+            &#39;model_name &#39;: self.model_name,
+            &#39;operated_by &#39;: self.operated_by,
+            &#39;reference &#39;: self.reference,
+            &#39;comments &#39;: self.comments,
+            })
+
+    def get_timeseries(self, args, sparse: bool = None):
+        return self.client.get_timeseries(self.tdmq_id, args, sparse)
+
+    @abc.abstractmethod
+    def timeseries(self, after, before, bucket=None, op=None, properties=None):
+        pass
+
+    def get_latest_activity(self):
+        &#34;&#34;&#34;
+        Get Timeseries starting at latest registered record&#39;s timestamp.
+        &#34;&#34;&#34;
+        s = self.client.get_latest_source_activity(self.tdmq_id)
+        return self.timeseries(after=s[&#39;time&#39;], before=None)
+
+    # # Ingestion ###
+    # # Requires authentication
+    # #
+    @abc.abstractmethod
+    def ingest_one(self, t, data, slot=None, footprint=None):
+        &#34;&#34;&#34;
+        :param t: datetime object.  Assumed to be in UTC time.
+        &#34;&#34;&#34;
+
+    def ingest(self, t, data, slot=None):
+        &#34;&#34;&#34;
+        :param t: datetime object.  Assumed to be in UTC time.
+        &#34;&#34;&#34;
+        self.ingest_one(t, data, slot)
+
+    @abc.abstractmethod
+    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+        &#34;&#34;&#34;
+        :param times: Sequence of datetime objects.  Assumed to be in UTC time.
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="tdmq.client.sources.NonScalarSource" href="#tdmq.client.sources.NonScalarSource">NonScalarSource</a></li>
+<li><a title="tdmq.client.sources.ScalarSource" href="#tdmq.client.sources.ScalarSource">ScalarSource</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="tdmq.client.sources.Source.alias"><code class="name">var <span class="ident">alias</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def alias(self):
+    return self._get_info().get(&#39;alias&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.brand_name"><code class="name">var <span class="ident">brand_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def brand_name(self):
+    return self._get_info().get(&#39;brand_name&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.comments"><code class="name">var <span class="ident">comments</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def comments(self):
+    return self._get_info().get(&#39;comments&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.controlled_properties"><code class="name">var <span class="ident">controlled_properties</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def controlled_properties(self):
+    return self._get_info()[&#39;controlledProperties&#39;]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.default_footprint"><code class="name">var <span class="ident">default_footprint</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def default_footprint(self):
+    return self._full_body[&#39;default_footprint&#39;]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.entity_category"><code class="name">var <span class="ident">entity_category</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def entity_category(self):
+    return self._full_body[&#39;entity_category&#39;]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.entity_type"><code class="name">var <span class="ident">entity_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def entity_type(self):
+    return self._full_body[&#39;entity_type&#39;]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.external_id"><code class="name">var <span class="ident">external_id</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def external_id(self):
+    return self.id</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.id"><code class="name">var <span class="ident">id</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def id(self):
+    return self._full_body.get(&#39;external_id&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.is_stationary"><code class="name">var <span class="ident">is_stationary</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def is_stationary(self):
+    return self._full_body[&#39;stationary&#39;]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.model_name"><code class="name">var <span class="ident">model_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def model_name(self):
+    return self._get_info().get(&#39;model_name&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.operated_by"><code class="name">var <span class="ident">operated_by</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def operated_by(self):
+    return self._get_info().get(&#39;operated_by&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.public"><code class="name">var <span class="ident">public</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def public(self):
+    return self._full_body.get(&#39;public&#39;, False)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.reference"><code class="name">var <span class="ident">reference</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def reference(self):
+    return self._get_info().get(&#39;reference&#39;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.registration_time"><code class="name">var <span class="ident">registration_time</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def registration_time(self):
+    return self._full_body[&#39;registration_time&#39;]</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.shape"><code class="name">var <span class="ident">shape</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def shape(self):
+    return tuple(self._get_info().get(&#39;shape&#39;, ()))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="tdmq.client.sources.Source.get_latest_activity"><code class="name flex">
+<span>def <span class="ident">get_latest_activity</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get Timeseries starting at latest registered record's timestamp.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_latest_activity(self):
+    &#34;&#34;&#34;
+    Get Timeseries starting at latest registered record&#39;s timestamp.
+    &#34;&#34;&#34;
+    s = self.client.get_latest_source_activity(self.tdmq_id)
+    return self.timeseries(after=s[&#39;time&#39;], before=None)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.get_timeseries"><code class="name flex">
+<span>def <span class="ident">get_timeseries</span></span>(<span>self, args, sparse: bool = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_timeseries(self, args, sparse: bool = None):
+    return self.client.get_timeseries(self.tdmq_id, args, sparse)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.ingest"><code class="name flex">
+<span>def <span class="ident">ingest</span></span>(<span>self, t, data, slot=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>:param t: datetime object.
+Assumed to be in UTC time.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ingest(self, t, data, slot=None):
+    &#34;&#34;&#34;
+    :param t: datetime object.  Assumed to be in UTC time.
+    &#34;&#34;&#34;
+    self.ingest_one(t, data, slot)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.ingest_many"><code class="name flex">
+<span>def <span class="ident">ingest_many</span></span>(<span>self, times, data, initial_slot=None, footprint_iter=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>:param times: Sequence of datetime objects.
+Assumed to be in UTC time.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+    &#34;&#34;&#34;
+    :param times: Sequence of datetime objects.  Assumed to be in UTC time.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.ingest_one"><code class="name flex">
+<span>def <span class="ident">ingest_one</span></span>(<span>self, t, data, slot=None, footprint=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>:param t: datetime object.
+Assumed to be in UTC time.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def ingest_one(self, t, data, slot=None, footprint=None):
+    &#34;&#34;&#34;
+    :param t: datetime object.  Assumed to be in UTC time.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="tdmq.client.sources.Source.timeseries"><code class="name flex">
+<span>def <span class="ident">timeseries</span></span>(<span>self, after, before, bucket=None, op=None, properties=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def timeseries(self, after, before, bucket=None, op=None, properties=None):
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="tdmq.client" href="index.html">tdmq.client</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="tdmq.client.sources.NonScalarSource" href="#tdmq.client.sources.NonScalarSource">NonScalarSource</a></code></h4>
+<ul class="two-column">
+<li><code><a title="tdmq.client.sources.NonScalarSource.array_context" href="#tdmq.client.sources.NonScalarSource.array_context">array_context</a></code></li>
+<li><code><a title="tdmq.client.sources.NonScalarSource.close_array" href="#tdmq.client.sources.NonScalarSource.close_array">close_array</a></code></li>
+<li><code><a title="tdmq.client.sources.NonScalarSource.consolidate" href="#tdmq.client.sources.NonScalarSource.consolidate">consolidate</a></code></li>
+<li><code><a title="tdmq.client.sources.NonScalarSource.get_array" href="#tdmq.client.sources.NonScalarSource.get_array">get_array</a></code></li>
+<li><code><a title="tdmq.client.sources.NonScalarSource.ingest_one" href="#tdmq.client.sources.NonScalarSource.ingest_one">ingest_one</a></code></li>
+<li><code><a title="tdmq.client.sources.NonScalarSource.open_array" href="#tdmq.client.sources.NonScalarSource.open_array">open_array</a></code></li>
+<li><code><a title="tdmq.client.sources.NonScalarSource.timeseries" href="#tdmq.client.sources.NonScalarSource.timeseries">timeseries</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.client.sources.ScalarSource" href="#tdmq.client.sources.ScalarSource">ScalarSource</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.client.sources.ScalarSource.edge_id" href="#tdmq.client.sources.ScalarSource.edge_id">edge_id</a></code></li>
+<li><code><a title="tdmq.client.sources.ScalarSource.sensor_id" href="#tdmq.client.sources.ScalarSource.sensor_id">sensor_id</a></code></li>
+<li><code><a title="tdmq.client.sources.ScalarSource.station_id" href="#tdmq.client.sources.ScalarSource.station_id">station_id</a></code></li>
+<li><code><a title="tdmq.client.sources.ScalarSource.station_model" href="#tdmq.client.sources.ScalarSource.station_model">station_model</a></code></li>
+<li><code><a title="tdmq.client.sources.ScalarSource.timeseries" href="#tdmq.client.sources.ScalarSource.timeseries">timeseries</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.client.sources.Source" href="#tdmq.client.sources.Source">Source</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.client.sources.Source.alias" href="#tdmq.client.sources.Source.alias">alias</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.brand_name" href="#tdmq.client.sources.Source.brand_name">brand_name</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.comments" href="#tdmq.client.sources.Source.comments">comments</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.controlled_properties" href="#tdmq.client.sources.Source.controlled_properties">controlled_properties</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.default_footprint" href="#tdmq.client.sources.Source.default_footprint">default_footprint</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.entity_category" href="#tdmq.client.sources.Source.entity_category">entity_category</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.entity_type" href="#tdmq.client.sources.Source.entity_type">entity_type</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.external_id" href="#tdmq.client.sources.Source.external_id">external_id</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.get_latest_activity" href="#tdmq.client.sources.Source.get_latest_activity">get_latest_activity</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.get_timeseries" href="#tdmq.client.sources.Source.get_timeseries">get_timeseries</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.id" href="#tdmq.client.sources.Source.id">id</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest" href="#tdmq.client.sources.Source.ingest">ingest</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest_many" href="#tdmq.client.sources.Source.ingest_many">ingest_many</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.ingest_one" href="#tdmq.client.sources.Source.ingest_one">ingest_one</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.is_stationary" href="#tdmq.client.sources.Source.is_stationary">is_stationary</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.model_name" href="#tdmq.client.sources.Source.model_name">model_name</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.operated_by" href="#tdmq.client.sources.Source.operated_by">operated_by</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.public" href="#tdmq.client.sources.Source.public">public</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.reference" href="#tdmq.client.sources.Source.reference">reference</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.registration_time" href="#tdmq.client.sources.Source.registration_time">registration_time</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.shape" href="#tdmq.client.sources.Source.shape">shape</a></code></li>
+<li><code><a title="tdmq.client.sources.Source.timeseries" href="#tdmq.client.sources.Source.timeseries">timeseries</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

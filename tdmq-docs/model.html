@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tdmq.model API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tdmq.model</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from __future__ import annotations
+
+import logging
+from typing import Any, Dict, Generator, Iterable, List
+
+import pyproj
+import shapely.geometry as sg
+from shapely.ops import transform as shapely_transform
+
+import tdmq.db as db
+from .loc_anonymizer import loc_anonymizer
+
+logger = logging.getLogger(__name__)
+
+
+class EntityType:
+    @staticmethod
+    def get_entity_types() -&gt; List[str]:
+        return db.list_entity_types()
+
+
+class EntityCategory:
+    @staticmethod
+    def get_entity_categories() -&gt; List[str]:
+        return db.list_entity_categories()
+
+
+class Source:
+    ROI_CENTER_DIGITS = 3
+    ROI_RADIUS_INCREMENT = 500
+
+    # Property required by Source structure, as specified in the API spec.
+    RequiredKeys = frozenset({
+        &#39;default_footprint&#39;,
+        &#39;entity_category&#39;,
+        &#39;entity_type&#39;,
+        &#39;external_id&#39;,
+        &#39;description&#39;,
+        &#39;public&#39;,
+        &#39;registration_time&#39;,
+        &#39;stationary&#39;,
+        &#39;tdmq_id&#39;,
+        })
+
+    # Keys in Source structure that do not require anonymization
+    SafeKeys = frozenset({
+        &#39;entity_category&#39;,
+        &#39;entity_type&#39;,
+        &#39;public&#39;,
+        &#39;registration_time&#39;,
+        &#39;stationary&#39;,
+        &#39;tdmq_id&#39;})
+
+    # Keys in Source.description structure that do not require anonymization
+    SafeDescriptionKeys = frozenset({
+        &#39;brand_name&#39;,
+        &#39;controlledProperties&#39;,
+        &#39;edge_id&#39;,
+        &#39;model_name&#39;,
+        &#39;operated_by&#39;,
+        &#39;sensor_id&#39;,
+        &#39;shape&#39;,
+        &#39;station_id&#39;,
+        &#39;station_model&#39;,
+        &#39;type&#39;,
+        })
+
+    @staticmethod
+    def store_new(data: Iterable[dict]) -&gt; List[str]:
+        return db.load_sources(data)
+
+    @classmethod
+    def _in_place_form_api_source(cls, db_source: dict) -&gt; None:
+        # Take the `description.description` and move its contents to the top level dict
+        db_source[&#39;description&#39;].update(db_source[&#39;description&#39;].pop(&#39;description&#39;))
+
+    @classmethod
+    def get_one(cls, tdmq_id: str, anonymize_private: bool = True) -&gt; dict:
+        srcs = db.get_sources([tdmq_id])
+        if not srcs:
+            return None
+
+        if len(srcs) == 1:
+            source = srcs[0]
+            cls._in_place_form_api_source(source)
+            if anonymize_private and not source.get(&#39;public&#39;):
+                source = cls._anonymize_source(source)
+            return source
+        # Somehow we got more than one results from the query
+        raise RuntimeError(f&#34;Got more than one source for tdmq_id {tdmq_id}&#34;)
+
+    @classmethod
+    def get_latest_activity(cls, tdmq_id: str) -&gt; Dict[str, Any]:
+        # ensure the tdmq_id is valid
+        srcs = db.get_sources([tdmq_id])
+        if not srcs:
+            return None
+
+        retval = dict.fromkeys((&#39;tdmq_id&#39;, &#39;time&#39;, &#39;data&#39;))
+        retval[&#39;tdmq_id&#39;] = tdmq_id
+
+        activity = db.get_latest_activity(tdmq_id)
+        # activity is None or a dict { &#39;time&#39;: timestamp, &#39;data&#39;: [ record data objects ] }
+        if activity is not None:
+            retval[&#39;time&#39;] = activity[&#39;time&#39;]
+            if len(activity[&#39;data&#39;]) == 1:
+                retval[&#39;data&#39;] = activity[&#39;data&#39;][0]
+            elif len(activity[&#39;data&#39;]) &gt; 1:
+                logger.debug(&#34;get_latest_activity: merging %s data rows from source %s with timestamp %s&#34;,
+                             len(activity[&#39;data&#39;]), tdmq_id, activity[&#39;time&#39;])
+                retval[&#39;data&#39;] = dict()
+                for d in activity[&#39;data&#39;]:
+                    retval[&#39;data&#39;].update(d)
+            else:
+                raise RuntimeError(f&#34;Internal error.  For source {tdmq_id} got latest &#34;
+                                   &#34;activity time {activity[&#39;time&#39;]} with no activity data&#34;)
+        return retval
+
+    @staticmethod
+    def delete_one(tdmq_id: str) -&gt; None:
+        db.delete_sources([tdmq_id])
+
+    # AcceptedSearchKeys: set of search parameters accepted for source search.
+    AcceptedSearchKeys = frozenset({
+        &#39;after&#39;,
+        &#39;before&#39;,
+        &#39;entity_category&#39;,
+        &#39;entity_type&#39;,
+        &#39;external_id&#39;,
+        &#39;id&#39;,
+        &#39;public&#39;,
+        &#39;roi&#39;,
+        &#39;stationary&#39;,
+        })
+
+    @classmethod
+    def _anonymize_source(cls, src_dict: dict) -&gt; dict:
+        sanitized_desc = dict()
+        for k in cls.SafeDescriptionKeys:
+            if k in src_dict[&#39;description&#39;]:
+                sanitized_desc[k] = src_dict[&#39;description&#39;][k]
+
+        sanitized = dict.fromkeys(cls.RequiredKeys)
+        sanitized[&#39;description&#39;] = sanitized_desc
+        for k in cls.SafeKeys:
+            if k in src_dict:
+                sanitized[k] = src_dict[k]
+
+        geo = sg.shape(src_dict[&#39;default_footprint&#39;])
+        anon_zone = loc_anonymizer.anonymize_location(geo)
+        sanitized[&#39;default_footprint&#39;] = anon_zone.centroid.__geo_interface__
+
+        return sanitized
+
+    @classmethod
+    def _anonymizing_iter(cls, sources: Iterable[dict]) -&gt; Generator[dict, None, None]:
+        for s in sources:
+            yield cls._anonymize_source(s)
+
+    @classmethod
+    def _quantize_roi(cls, roi: dict) -&gt; None:
+        # Round the coordinates and radius of the ROI to limit precision
+        roi[&#39;center&#39;][&#39;coordinates&#39;] = [ round(c, cls.ROI_CENTER_DIGITS) for c in roi[&#39;center&#39;][&#39;coordinates&#39;] ]
+        roi[&#39;radius&#39;] = cls.ROI_RADIUS_INCREMENT * round(roi[&#39;radius&#39;] / cls.ROI_RADIUS_INCREMENT)
+
+    @classmethod
+    def _roi_intersection_filter(cls, roi: dict, sources: Iterable[dict]) -&gt; Generator[dict, None, None]:
+        # filter sources that end up outside ROI because of anonymization
+        # Geom specify wgs84 coordinates.
+        wgs84 = pyproj.CRS(&#39;EPSG:4326&#39;)
+        mm = pyproj.CRS(&#39;EPSG:3003&#39;)  # Monte Mario
+        mm_projection = pyproj.Transformer.from_crs(wgs84, mm, always_xy=True).transform
+
+        # project both ROI and geometry to Monte Mario coordinates
+        # then we can use shapely&#39;s distance functions
+        mm_roi_center = shapely_transform(mm_projection, sg.Point(roi[&#39;center&#39;][&#39;coordinates&#39;]))
+        mm_roi = mm_roi_center.buffer(roi[&#39;radius&#39;])
+
+        for s in sources:
+            mm_geom = shapely_transform(mm_projection, sg.shape(s[&#39;default_footprint&#39;]))
+            if mm_geom.intersects(mm_roi):
+                yield s
+
+    @classmethod
+    def search(cls, search_args: Dict[str, Any], match_attr: Dict[str, Any] = None, anonymize_private: bool = True,
+               limit: int = None, offset: int = None) -&gt; list:
+        &#34;&#34;&#34;
+        search_args: any from AcceptedSearchKeys
+        match_attr:  general attribute matching in the
+        Source.description.description structure.
+        &#34;&#34;&#34;
+        if limit or offset:
+            raise NotImplementedError(&#34;Limit and offset are not implemented&#34;)
+
+        query_args = search_args.copy()  # copy so we can modify the dictionary
+
+        e_id = query_args.pop(&#39;external_id&#39;, None)
+        if e_id:
+            query_args[&#39;id&#39;] = e_id
+
+        public = query_args.get(&#39;public&#39;, None)
+        # unless the request is exclusively for public sources, tweak the ROI to limit precision
+        if not public and &#39;roi&#39; in query_args:
+            cls._quantize_roi(query_args[&#39;roi&#39;])
+
+        # Generally, queries that container &#34;unsafe&#34; search keys will be limited to
+        # private sources.  However, we allow querying private sources by specific
+        # external source id.
+        if not ((cls.SafeKeys | {&#39;id&#39;, &#39;external_id&#39;}) &gt;= query_args.keys() and
+                cls.SafeDescriptionKeys &gt;= match_attr.keys()):
+            # can&#39;t do query on private sources because it uses unsafe attributes
+            query_args[&#39;public&#39;] = True
+
+        if match_attr:
+            # Dump both &#34;query&#34; and &#34;match&#34; arguments into the same dict for the DB query
+            query_args.update(match_attr)
+
+        raw = db.list_sources(query_args)
+        for source in raw:
+            cls._in_place_form_api_source(source)
+
+        resultset = [ r for r in raw if r[&#39;public&#39;] ]
+        private_it = (r for r in raw if not r[&#39;public&#39;])
+        if anonymize_private:
+            private_it = cls._anonymizing_iter(private_it)
+        if &#39;roi&#39; in query_args:
+            private_it = cls._roi_intersection_filter(query_args[&#39;roi&#39;], private_it)
+        resultset.extend(private_it)
+
+        return resultset
+
+
+class Timeseries:
+    @staticmethod
+    def store_new_records(data: Iterable[dict]) -&gt; int:
+        return db.load_records(data)
+
+    @staticmethod
+    def _restructure_timeseries(rows: List[list], properties: List[str]) -&gt; Dict[str, Any]:
+        # The arrays time and footprint define the scaffolding on which
+        # the actual data (properties) are defined.
+        result = {&#39;coords&#39;: None, &#39;data&#39;: None}
+        transpose = zip(*rows) if len(rows) &gt; 0 else iter([[]] * (2 + len(properties)))
+        result[&#39;coords&#39;] = dict((p, next(transpose)) for p in [&#39;time&#39;, &#39;footprint&#39;])
+        result[&#39;data&#39;] = dict((p, next(transpose)) for p in properties)
+
+        # remove the arrays that are all None values
+        if len(result[&#39;coords&#39;][&#39;time&#39;]) &gt; 0:
+            if all(x is None for x in result[&#39;coords&#39;][&#39;footprint&#39;]):
+                result[&#39;coords&#39;][&#39;footprint&#39;] = None
+            for k in [ k for k in result[&#39;data&#39;].keys() ]:  # materialize it since we need to change the dict
+                if all(x is None for x in result[&#39;data&#39;][k]):
+                    result[&#39;data&#39;][k] = None
+
+        return result
+
+    @classmethod
+    def get_one(cls, tdmq_id: str, anonymize_private: bool = True, args: Dict[str, Any] = None) -&gt; Dict[str, Any]:
+        if not args:
+            args = dict()
+
+        db_result = db.get_timeseries(tdmq_id, args)
+
+        struct = cls._restructure_timeseries(db_result[&#39;rows&#39;], db_result[&#39;properties&#39;])
+        struct[&#34;tdmq_id&#34;] = tdmq_id
+        struct[&#34;shape&#34;] = db_result[&#39;source_info&#39;][&#39;shape&#39;]
+        if args[&#39;bucket&#39;]:
+            struct[&#34;bucket&#34;] = {
+                &#34;interval&#34;: args[&#39;bucket&#39;].total_seconds(), &#34;op&#34;: args.get(&#34;op&#34;)}
+        else:
+            struct[&#39;bucket&#39;] = None
+
+        # If private data is not to be returned, we erase the mobile footprint
+        # from the result by replacing it with nulls.  Otherwise, we leave
+        # location data in the result: i.e., # the default_footprint and the
+        # timestamped footprint.
+        if anonymize_private and not db_result.get(&#39;public&#39;):
+            # pylint: disable=unsubscriptable-object,unsupported-assignment-operation
+            struct[&#34;coords&#34;][&#34;footprint&#34;] = None
+        else:
+            struct[&#34;default_footprint&#34;] = db_result[&#39;source_info&#39;][&#39;default_footprint&#39;]
+
+        return struct
+
+    class QueryResult:
+        def __init__(self,
+                     tdmq_id: str, shape: Dict, bucket: Dict,
+                     default_footprint: Dict,
+                     db_query_result, anonymize_private: bool = True):
+            self._tdmq_id = tdmq_id
+            self._anonymize_private = anonymize_private
+            self._shape = shape
+            self._bucket = bucket
+            self._default_footprint = default_footprint
+            self._db_query_result = db_query_result
+
+        @property
+        def tdmq_id(self):
+            return self._tdmq_id
+
+        @property
+        def anonymize_private(self):
+            return self._anonymize_private
+
+        @property
+        def shape(self):
+            return self._shape
+
+        @property
+        def bucket(self):
+            return self._bucket
+
+        @property
+        def default_footprint(self):
+            return self._default_footprint
+
+        @property
+        def fields(self):
+            return self._db_query_result.fields
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            row_batch = next(self._db_query_result)
+
+            # If private data is not to be returned, we erase the mobile footprint
+            # from the result by replacing it with nulls.  Otherwise, we leave
+            # location data in the result
+            if self._anonymize_private and not self._db_query_result.is_public:
+                # The rows in the batch are tuples, so not modifyable.
+                # We create a new row_batch sequencing mapping row[1] to None for all rows.
+                row_batch = [ (row[0], None, *row[2:]) for row in row_batch ]
+            return row_batch
+
+    @classmethod
+    def get_one_by_batch(cls, tdmq_id: str, anonymize_private: bool = True,
+                         batch_size: int = None, args: Dict[str, Any] = None) -&gt; Generator[Dict[str, Any]]:
+        if not args:
+            args = dict()
+
+        ts_result = db.get_timeseries_result(tdmq_id, batch_size, **args)
+
+        if args[&#39;bucket&#39;]:
+            bucket = {
+                &#34;interval&#34;: args[&#39;bucket&#39;].total_seconds(), &#34;op&#34;: args.get(&#34;op&#34;)}
+        else:
+            bucket = None
+
+        # If private data is not to be returned, we don&#39;t provide the footprint
+        if not anonymize_private or ts_result.is_public:
+            default_footprint = ts_result.source_info[&#39;default_footprint&#39;]
+        else:
+            default_footprint = None
+
+        result = cls.QueryResult(tdmq_id=tdmq_id,
+                                 shape=ts_result.source_info[&#39;shape&#39;],
+                                 bucket=bucket,
+                                 default_footprint=default_footprint,
+                                 db_query_result=ts_result,
+                                 anonymize_private=anonymize_private)
+        return result</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="tdmq.model.EntityCategory"><code class="flex name class">
+<span>class <span class="ident">EntityCategory</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EntityCategory:
+    @staticmethod
+    def get_entity_categories() -&gt; List[str]:
+        return db.list_entity_categories()</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="tdmq.model.EntityCategory.get_entity_categories"><code class="name flex">
+<span>def <span class="ident">get_entity_categories</span></span>(<span>) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_entity_categories() -&gt; List[str]:
+    return db.list_entity_categories()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="tdmq.model.EntityType"><code class="flex name class">
+<span>class <span class="ident">EntityType</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EntityType:
+    @staticmethod
+    def get_entity_types() -&gt; List[str]:
+        return db.list_entity_types()</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="tdmq.model.EntityType.get_entity_types"><code class="name flex">
+<span>def <span class="ident">get_entity_types</span></span>(<span>) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_entity_types() -&gt; List[str]:
+    return db.list_entity_types()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="tdmq.model.Source"><code class="flex name class">
+<span>class <span class="ident">Source</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Source:
+    ROI_CENTER_DIGITS = 3
+    ROI_RADIUS_INCREMENT = 500
+
+    # Property required by Source structure, as specified in the API spec.
+    RequiredKeys = frozenset({
+        &#39;default_footprint&#39;,
+        &#39;entity_category&#39;,
+        &#39;entity_type&#39;,
+        &#39;external_id&#39;,
+        &#39;description&#39;,
+        &#39;public&#39;,
+        &#39;registration_time&#39;,
+        &#39;stationary&#39;,
+        &#39;tdmq_id&#39;,
+        })
+
+    # Keys in Source structure that do not require anonymization
+    SafeKeys = frozenset({
+        &#39;entity_category&#39;,
+        &#39;entity_type&#39;,
+        &#39;public&#39;,
+        &#39;registration_time&#39;,
+        &#39;stationary&#39;,
+        &#39;tdmq_id&#39;})
+
+    # Keys in Source.description structure that do not require anonymization
+    SafeDescriptionKeys = frozenset({
+        &#39;brand_name&#39;,
+        &#39;controlledProperties&#39;,
+        &#39;edge_id&#39;,
+        &#39;model_name&#39;,
+        &#39;operated_by&#39;,
+        &#39;sensor_id&#39;,
+        &#39;shape&#39;,
+        &#39;station_id&#39;,
+        &#39;station_model&#39;,
+        &#39;type&#39;,
+        })
+
+    @staticmethod
+    def store_new(data: Iterable[dict]) -&gt; List[str]:
+        return db.load_sources(data)
+
+    @classmethod
+    def _in_place_form_api_source(cls, db_source: dict) -&gt; None:
+        # Take the `description.description` and move its contents to the top level dict
+        db_source[&#39;description&#39;].update(db_source[&#39;description&#39;].pop(&#39;description&#39;))
+
+    @classmethod
+    def get_one(cls, tdmq_id: str, anonymize_private: bool = True) -&gt; dict:
+        srcs = db.get_sources([tdmq_id])
+        if not srcs:
+            return None
+
+        if len(srcs) == 1:
+            source = srcs[0]
+            cls._in_place_form_api_source(source)
+            if anonymize_private and not source.get(&#39;public&#39;):
+                source = cls._anonymize_source(source)
+            return source
+        # Somehow we got more than one results from the query
+        raise RuntimeError(f&#34;Got more than one source for tdmq_id {tdmq_id}&#34;)
+
+    @classmethod
+    def get_latest_activity(cls, tdmq_id: str) -&gt; Dict[str, Any]:
+        # ensure the tdmq_id is valid
+        srcs = db.get_sources([tdmq_id])
+        if not srcs:
+            return None
+
+        retval = dict.fromkeys((&#39;tdmq_id&#39;, &#39;time&#39;, &#39;data&#39;))
+        retval[&#39;tdmq_id&#39;] = tdmq_id
+
+        activity = db.get_latest_activity(tdmq_id)
+        # activity is None or a dict { &#39;time&#39;: timestamp, &#39;data&#39;: [ record data objects ] }
+        if activity is not None:
+            retval[&#39;time&#39;] = activity[&#39;time&#39;]
+            if len(activity[&#39;data&#39;]) == 1:
+                retval[&#39;data&#39;] = activity[&#39;data&#39;][0]
+            elif len(activity[&#39;data&#39;]) &gt; 1:
+                logger.debug(&#34;get_latest_activity: merging %s data rows from source %s with timestamp %s&#34;,
+                             len(activity[&#39;data&#39;]), tdmq_id, activity[&#39;time&#39;])
+                retval[&#39;data&#39;] = dict()
+                for d in activity[&#39;data&#39;]:
+                    retval[&#39;data&#39;].update(d)
+            else:
+                raise RuntimeError(f&#34;Internal error.  For source {tdmq_id} got latest &#34;
+                                   &#34;activity time {activity[&#39;time&#39;]} with no activity data&#34;)
+        return retval
+
+    @staticmethod
+    def delete_one(tdmq_id: str) -&gt; None:
+        db.delete_sources([tdmq_id])
+
+    # AcceptedSearchKeys: set of search parameters accepted for source search.
+    AcceptedSearchKeys = frozenset({
+        &#39;after&#39;,
+        &#39;before&#39;,
+        &#39;entity_category&#39;,
+        &#39;entity_type&#39;,
+        &#39;external_id&#39;,
+        &#39;id&#39;,
+        &#39;public&#39;,
+        &#39;roi&#39;,
+        &#39;stationary&#39;,
+        })
+
+    @classmethod
+    def _anonymize_source(cls, src_dict: dict) -&gt; dict:
+        sanitized_desc = dict()
+        for k in cls.SafeDescriptionKeys:
+            if k in src_dict[&#39;description&#39;]:
+                sanitized_desc[k] = src_dict[&#39;description&#39;][k]
+
+        sanitized = dict.fromkeys(cls.RequiredKeys)
+        sanitized[&#39;description&#39;] = sanitized_desc
+        for k in cls.SafeKeys:
+            if k in src_dict:
+                sanitized[k] = src_dict[k]
+
+        geo = sg.shape(src_dict[&#39;default_footprint&#39;])
+        anon_zone = loc_anonymizer.anonymize_location(geo)
+        sanitized[&#39;default_footprint&#39;] = anon_zone.centroid.__geo_interface__
+
+        return sanitized
+
+    @classmethod
+    def _anonymizing_iter(cls, sources: Iterable[dict]) -&gt; Generator[dict, None, None]:
+        for s in sources:
+            yield cls._anonymize_source(s)
+
+    @classmethod
+    def _quantize_roi(cls, roi: dict) -&gt; None:
+        # Round the coordinates and radius of the ROI to limit precision
+        roi[&#39;center&#39;][&#39;coordinates&#39;] = [ round(c, cls.ROI_CENTER_DIGITS) for c in roi[&#39;center&#39;][&#39;coordinates&#39;] ]
+        roi[&#39;radius&#39;] = cls.ROI_RADIUS_INCREMENT * round(roi[&#39;radius&#39;] / cls.ROI_RADIUS_INCREMENT)
+
+    @classmethod
+    def _roi_intersection_filter(cls, roi: dict, sources: Iterable[dict]) -&gt; Generator[dict, None, None]:
+        # filter sources that end up outside ROI because of anonymization
+        # Geom specify wgs84 coordinates.
+        wgs84 = pyproj.CRS(&#39;EPSG:4326&#39;)
+        mm = pyproj.CRS(&#39;EPSG:3003&#39;)  # Monte Mario
+        mm_projection = pyproj.Transformer.from_crs(wgs84, mm, always_xy=True).transform
+
+        # project both ROI and geometry to Monte Mario coordinates
+        # then we can use shapely&#39;s distance functions
+        mm_roi_center = shapely_transform(mm_projection, sg.Point(roi[&#39;center&#39;][&#39;coordinates&#39;]))
+        mm_roi = mm_roi_center.buffer(roi[&#39;radius&#39;])
+
+        for s in sources:
+            mm_geom = shapely_transform(mm_projection, sg.shape(s[&#39;default_footprint&#39;]))
+            if mm_geom.intersects(mm_roi):
+                yield s
+
+    @classmethod
+    def search(cls, search_args: Dict[str, Any], match_attr: Dict[str, Any] = None, anonymize_private: bool = True,
+               limit: int = None, offset: int = None) -&gt; list:
+        &#34;&#34;&#34;
+        search_args: any from AcceptedSearchKeys
+        match_attr:  general attribute matching in the
+        Source.description.description structure.
+        &#34;&#34;&#34;
+        if limit or offset:
+            raise NotImplementedError(&#34;Limit and offset are not implemented&#34;)
+
+        query_args = search_args.copy()  # copy so we can modify the dictionary
+
+        e_id = query_args.pop(&#39;external_id&#39;, None)
+        if e_id:
+            query_args[&#39;id&#39;] = e_id
+
+        public = query_args.get(&#39;public&#39;, None)
+        # unless the request is exclusively for public sources, tweak the ROI to limit precision
+        if not public and &#39;roi&#39; in query_args:
+            cls._quantize_roi(query_args[&#39;roi&#39;])
+
+        # Generally, queries that container &#34;unsafe&#34; search keys will be limited to
+        # private sources.  However, we allow querying private sources by specific
+        # external source id.
+        if not ((cls.SafeKeys | {&#39;id&#39;, &#39;external_id&#39;}) &gt;= query_args.keys() and
+                cls.SafeDescriptionKeys &gt;= match_attr.keys()):
+            # can&#39;t do query on private sources because it uses unsafe attributes
+            query_args[&#39;public&#39;] = True
+
+        if match_attr:
+            # Dump both &#34;query&#34; and &#34;match&#34; arguments into the same dict for the DB query
+            query_args.update(match_attr)
+
+        raw = db.list_sources(query_args)
+        for source in raw:
+            cls._in_place_form_api_source(source)
+
+        resultset = [ r for r in raw if r[&#39;public&#39;] ]
+        private_it = (r for r in raw if not r[&#39;public&#39;])
+        if anonymize_private:
+            private_it = cls._anonymizing_iter(private_it)
+        if &#39;roi&#39; in query_args:
+            private_it = cls._roi_intersection_filter(query_args[&#39;roi&#39;], private_it)
+        resultset.extend(private_it)
+
+        return resultset</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="tdmq.model.Source.AcceptedSearchKeys"><code class="name">var <span class="ident">AcceptedSearchKeys</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tdmq.model.Source.ROI_CENTER_DIGITS"><code class="name">var <span class="ident">ROI_CENTER_DIGITS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tdmq.model.Source.ROI_RADIUS_INCREMENT"><code class="name">var <span class="ident">ROI_RADIUS_INCREMENT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tdmq.model.Source.RequiredKeys"><code class="name">var <span class="ident">RequiredKeys</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tdmq.model.Source.SafeDescriptionKeys"><code class="name">var <span class="ident">SafeDescriptionKeys</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tdmq.model.Source.SafeKeys"><code class="name">var <span class="ident">SafeKeys</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="tdmq.model.Source.delete_one"><code class="name flex">
+<span>def <span class="ident">delete_one</span></span>(<span>tdmq_id: str) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def delete_one(tdmq_id: str) -&gt; None:
+    db.delete_sources([tdmq_id])</code></pre>
+</details>
+</dd>
+<dt id="tdmq.model.Source.get_latest_activity"><code class="name flex">
+<span>def <span class="ident">get_latest_activity</span></span>(<span>tdmq_id: str) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_latest_activity(cls, tdmq_id: str) -&gt; Dict[str, Any]:
+    # ensure the tdmq_id is valid
+    srcs = db.get_sources([tdmq_id])
+    if not srcs:
+        return None
+
+    retval = dict.fromkeys((&#39;tdmq_id&#39;, &#39;time&#39;, &#39;data&#39;))
+    retval[&#39;tdmq_id&#39;] = tdmq_id
+
+    activity = db.get_latest_activity(tdmq_id)
+    # activity is None or a dict { &#39;time&#39;: timestamp, &#39;data&#39;: [ record data objects ] }
+    if activity is not None:
+        retval[&#39;time&#39;] = activity[&#39;time&#39;]
+        if len(activity[&#39;data&#39;]) == 1:
+            retval[&#39;data&#39;] = activity[&#39;data&#39;][0]
+        elif len(activity[&#39;data&#39;]) &gt; 1:
+            logger.debug(&#34;get_latest_activity: merging %s data rows from source %s with timestamp %s&#34;,
+                         len(activity[&#39;data&#39;]), tdmq_id, activity[&#39;time&#39;])
+            retval[&#39;data&#39;] = dict()
+            for d in activity[&#39;data&#39;]:
+                retval[&#39;data&#39;].update(d)
+        else:
+            raise RuntimeError(f&#34;Internal error.  For source {tdmq_id} got latest &#34;
+                               &#34;activity time {activity[&#39;time&#39;]} with no activity data&#34;)
+    return retval</code></pre>
+</details>
+</dd>
+<dt id="tdmq.model.Source.get_one"><code class="name flex">
+<span>def <span class="ident">get_one</span></span>(<span>tdmq_id: str, anonymize_private: bool = True) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_one(cls, tdmq_id: str, anonymize_private: bool = True) -&gt; dict:
+    srcs = db.get_sources([tdmq_id])
+    if not srcs:
+        return None
+
+    if len(srcs) == 1:
+        source = srcs[0]
+        cls._in_place_form_api_source(source)
+        if anonymize_private and not source.get(&#39;public&#39;):
+            source = cls._anonymize_source(source)
+        return source
+    # Somehow we got more than one results from the query
+    raise RuntimeError(f&#34;Got more than one source for tdmq_id {tdmq_id}&#34;)</code></pre>
+</details>
+</dd>
+<dt id="tdmq.model.Source.search"><code class="name flex">
+<span>def <span class="ident">search</span></span>(<span>search_args: Dict[str, Any], match_attr: Dict[str, Any] = None, anonymize_private: bool = True, limit: int = None, offset: int = None) ‑> list</span>
+</code></dt>
+<dd>
+<div class="desc"><p>search_args: any from AcceptedSearchKeys
+match_attr:
+general attribute matching in the
+Source.description.description structure.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def search(cls, search_args: Dict[str, Any], match_attr: Dict[str, Any] = None, anonymize_private: bool = True,
+           limit: int = None, offset: int = None) -&gt; list:
+    &#34;&#34;&#34;
+    search_args: any from AcceptedSearchKeys
+    match_attr:  general attribute matching in the
+    Source.description.description structure.
+    &#34;&#34;&#34;
+    if limit or offset:
+        raise NotImplementedError(&#34;Limit and offset are not implemented&#34;)
+
+    query_args = search_args.copy()  # copy so we can modify the dictionary
+
+    e_id = query_args.pop(&#39;external_id&#39;, None)
+    if e_id:
+        query_args[&#39;id&#39;] = e_id
+
+    public = query_args.get(&#39;public&#39;, None)
+    # unless the request is exclusively for public sources, tweak the ROI to limit precision
+    if not public and &#39;roi&#39; in query_args:
+        cls._quantize_roi(query_args[&#39;roi&#39;])
+
+    # Generally, queries that container &#34;unsafe&#34; search keys will be limited to
+    # private sources.  However, we allow querying private sources by specific
+    # external source id.
+    if not ((cls.SafeKeys | {&#39;id&#39;, &#39;external_id&#39;}) &gt;= query_args.keys() and
+            cls.SafeDescriptionKeys &gt;= match_attr.keys()):
+        # can&#39;t do query on private sources because it uses unsafe attributes
+        query_args[&#39;public&#39;] = True
+
+    if match_attr:
+        # Dump both &#34;query&#34; and &#34;match&#34; arguments into the same dict for the DB query
+        query_args.update(match_attr)
+
+    raw = db.list_sources(query_args)
+    for source in raw:
+        cls._in_place_form_api_source(source)
+
+    resultset = [ r for r in raw if r[&#39;public&#39;] ]
+    private_it = (r for r in raw if not r[&#39;public&#39;])
+    if anonymize_private:
+        private_it = cls._anonymizing_iter(private_it)
+    if &#39;roi&#39; in query_args:
+        private_it = cls._roi_intersection_filter(query_args[&#39;roi&#39;], private_it)
+    resultset.extend(private_it)
+
+    return resultset</code></pre>
+</details>
+</dd>
+<dt id="tdmq.model.Source.store_new"><code class="name flex">
+<span>def <span class="ident">store_new</span></span>(<span>data: Iterable[dict]) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def store_new(data: Iterable[dict]) -&gt; List[str]:
+    return db.load_sources(data)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="tdmq.model.Timeseries"><code class="flex name class">
+<span>class <span class="ident">Timeseries</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Timeseries:
+    @staticmethod
+    def store_new_records(data: Iterable[dict]) -&gt; int:
+        return db.load_records(data)
+
+    @staticmethod
+    def _restructure_timeseries(rows: List[list], properties: List[str]) -&gt; Dict[str, Any]:
+        # The arrays time and footprint define the scaffolding on which
+        # the actual data (properties) are defined.
+        result = {&#39;coords&#39;: None, &#39;data&#39;: None}
+        transpose = zip(*rows) if len(rows) &gt; 0 else iter([[]] * (2 + len(properties)))
+        result[&#39;coords&#39;] = dict((p, next(transpose)) for p in [&#39;time&#39;, &#39;footprint&#39;])
+        result[&#39;data&#39;] = dict((p, next(transpose)) for p in properties)
+
+        # remove the arrays that are all None values
+        if len(result[&#39;coords&#39;][&#39;time&#39;]) &gt; 0:
+            if all(x is None for x in result[&#39;coords&#39;][&#39;footprint&#39;]):
+                result[&#39;coords&#39;][&#39;footprint&#39;] = None
+            for k in [ k for k in result[&#39;data&#39;].keys() ]:  # materialize it since we need to change the dict
+                if all(x is None for x in result[&#39;data&#39;][k]):
+                    result[&#39;data&#39;][k] = None
+
+        return result
+
+    @classmethod
+    def get_one(cls, tdmq_id: str, anonymize_private: bool = True, args: Dict[str, Any] = None) -&gt; Dict[str, Any]:
+        if not args:
+            args = dict()
+
+        db_result = db.get_timeseries(tdmq_id, args)
+
+        struct = cls._restructure_timeseries(db_result[&#39;rows&#39;], db_result[&#39;properties&#39;])
+        struct[&#34;tdmq_id&#34;] = tdmq_id
+        struct[&#34;shape&#34;] = db_result[&#39;source_info&#39;][&#39;shape&#39;]
+        if args[&#39;bucket&#39;]:
+            struct[&#34;bucket&#34;] = {
+                &#34;interval&#34;: args[&#39;bucket&#39;].total_seconds(), &#34;op&#34;: args.get(&#34;op&#34;)}
+        else:
+            struct[&#39;bucket&#39;] = None
+
+        # If private data is not to be returned, we erase the mobile footprint
+        # from the result by replacing it with nulls.  Otherwise, we leave
+        # location data in the result: i.e., # the default_footprint and the
+        # timestamped footprint.
+        if anonymize_private and not db_result.get(&#39;public&#39;):
+            # pylint: disable=unsubscriptable-object,unsupported-assignment-operation
+            struct[&#34;coords&#34;][&#34;footprint&#34;] = None
+        else:
+            struct[&#34;default_footprint&#34;] = db_result[&#39;source_info&#39;][&#39;default_footprint&#39;]
+
+        return struct
+
+    class QueryResult:
+        def __init__(self,
+                     tdmq_id: str, shape: Dict, bucket: Dict,
+                     default_footprint: Dict,
+                     db_query_result, anonymize_private: bool = True):
+            self._tdmq_id = tdmq_id
+            self._anonymize_private = anonymize_private
+            self._shape = shape
+            self._bucket = bucket
+            self._default_footprint = default_footprint
+            self._db_query_result = db_query_result
+
+        @property
+        def tdmq_id(self):
+            return self._tdmq_id
+
+        @property
+        def anonymize_private(self):
+            return self._anonymize_private
+
+        @property
+        def shape(self):
+            return self._shape
+
+        @property
+        def bucket(self):
+            return self._bucket
+
+        @property
+        def default_footprint(self):
+            return self._default_footprint
+
+        @property
+        def fields(self):
+            return self._db_query_result.fields
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            row_batch = next(self._db_query_result)
+
+            # If private data is not to be returned, we erase the mobile footprint
+            # from the result by replacing it with nulls.  Otherwise, we leave
+            # location data in the result
+            if self._anonymize_private and not self._db_query_result.is_public:
+                # The rows in the batch are tuples, so not modifyable.
+                # We create a new row_batch sequencing mapping row[1] to None for all rows.
+                row_batch = [ (row[0], None, *row[2:]) for row in row_batch ]
+            return row_batch
+
+    @classmethod
+    def get_one_by_batch(cls, tdmq_id: str, anonymize_private: bool = True,
+                         batch_size: int = None, args: Dict[str, Any] = None) -&gt; Generator[Dict[str, Any]]:
+        if not args:
+            args = dict()
+
+        ts_result = db.get_timeseries_result(tdmq_id, batch_size, **args)
+
+        if args[&#39;bucket&#39;]:
+            bucket = {
+                &#34;interval&#34;: args[&#39;bucket&#39;].total_seconds(), &#34;op&#34;: args.get(&#34;op&#34;)}
+        else:
+            bucket = None
+
+        # If private data is not to be returned, we don&#39;t provide the footprint
+        if not anonymize_private or ts_result.is_public:
+            default_footprint = ts_result.source_info[&#39;default_footprint&#39;]
+        else:
+            default_footprint = None
+
+        result = cls.QueryResult(tdmq_id=tdmq_id,
+                                 shape=ts_result.source_info[&#39;shape&#39;],
+                                 bucket=bucket,
+                                 default_footprint=default_footprint,
+                                 db_query_result=ts_result,
+                                 anonymize_private=anonymize_private)
+        return result</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="tdmq.model.Timeseries.QueryResult"><code class="name">var <span class="ident">QueryResult</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="tdmq.model.Timeseries.get_one"><code class="name flex">
+<span>def <span class="ident">get_one</span></span>(<span>tdmq_id: str, anonymize_private: bool = True, args: Dict[str, Any] = None) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_one(cls, tdmq_id: str, anonymize_private: bool = True, args: Dict[str, Any] = None) -&gt; Dict[str, Any]:
+    if not args:
+        args = dict()
+
+    db_result = db.get_timeseries(tdmq_id, args)
+
+    struct = cls._restructure_timeseries(db_result[&#39;rows&#39;], db_result[&#39;properties&#39;])
+    struct[&#34;tdmq_id&#34;] = tdmq_id
+    struct[&#34;shape&#34;] = db_result[&#39;source_info&#39;][&#39;shape&#39;]
+    if args[&#39;bucket&#39;]:
+        struct[&#34;bucket&#34;] = {
+            &#34;interval&#34;: args[&#39;bucket&#39;].total_seconds(), &#34;op&#34;: args.get(&#34;op&#34;)}
+    else:
+        struct[&#39;bucket&#39;] = None
+
+    # If private data is not to be returned, we erase the mobile footprint
+    # from the result by replacing it with nulls.  Otherwise, we leave
+    # location data in the result: i.e., # the default_footprint and the
+    # timestamped footprint.
+    if anonymize_private and not db_result.get(&#39;public&#39;):
+        # pylint: disable=unsubscriptable-object,unsupported-assignment-operation
+        struct[&#34;coords&#34;][&#34;footprint&#34;] = None
+    else:
+        struct[&#34;default_footprint&#34;] = db_result[&#39;source_info&#39;][&#39;default_footprint&#39;]
+
+    return struct</code></pre>
+</details>
+</dd>
+<dt id="tdmq.model.Timeseries.get_one_by_batch"><code class="name flex">
+<span>def <span class="ident">get_one_by_batch</span></span>(<span>tdmq_id: str, anonymize_private: bool = True, batch_size: int = None, args: Dict[str, Any] = None) ‑> Generator[Dict[str, Any]]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_one_by_batch(cls, tdmq_id: str, anonymize_private: bool = True,
+                     batch_size: int = None, args: Dict[str, Any] = None) -&gt; Generator[Dict[str, Any]]:
+    if not args:
+        args = dict()
+
+    ts_result = db.get_timeseries_result(tdmq_id, batch_size, **args)
+
+    if args[&#39;bucket&#39;]:
+        bucket = {
+            &#34;interval&#34;: args[&#39;bucket&#39;].total_seconds(), &#34;op&#34;: args.get(&#34;op&#34;)}
+    else:
+        bucket = None
+
+    # If private data is not to be returned, we don&#39;t provide the footprint
+    if not anonymize_private or ts_result.is_public:
+        default_footprint = ts_result.source_info[&#39;default_footprint&#39;]
+    else:
+        default_footprint = None
+
+    result = cls.QueryResult(tdmq_id=tdmq_id,
+                             shape=ts_result.source_info[&#39;shape&#39;],
+                             bucket=bucket,
+                             default_footprint=default_footprint,
+                             db_query_result=ts_result,
+                             anonymize_private=anonymize_private)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="tdmq.model.Timeseries.store_new_records"><code class="name flex">
+<span>def <span class="ident">store_new_records</span></span>(<span>data: Iterable[dict]) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def store_new_records(data: Iterable[dict]) -&gt; int:
+    return db.load_records(data)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="tdmq" href="index.html">tdmq</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="tdmq.model.EntityCategory" href="#tdmq.model.EntityCategory">EntityCategory</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.model.EntityCategory.get_entity_categories" href="#tdmq.model.EntityCategory.get_entity_categories">get_entity_categories</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.model.EntityType" href="#tdmq.model.EntityType">EntityType</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.model.EntityType.get_entity_types" href="#tdmq.model.EntityType.get_entity_types">get_entity_types</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.model.Source" href="#tdmq.model.Source">Source</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.model.Source.AcceptedSearchKeys" href="#tdmq.model.Source.AcceptedSearchKeys">AcceptedSearchKeys</a></code></li>
+<li><code><a title="tdmq.model.Source.ROI_CENTER_DIGITS" href="#tdmq.model.Source.ROI_CENTER_DIGITS">ROI_CENTER_DIGITS</a></code></li>
+<li><code><a title="tdmq.model.Source.ROI_RADIUS_INCREMENT" href="#tdmq.model.Source.ROI_RADIUS_INCREMENT">ROI_RADIUS_INCREMENT</a></code></li>
+<li><code><a title="tdmq.model.Source.RequiredKeys" href="#tdmq.model.Source.RequiredKeys">RequiredKeys</a></code></li>
+<li><code><a title="tdmq.model.Source.SafeDescriptionKeys" href="#tdmq.model.Source.SafeDescriptionKeys">SafeDescriptionKeys</a></code></li>
+<li><code><a title="tdmq.model.Source.SafeKeys" href="#tdmq.model.Source.SafeKeys">SafeKeys</a></code></li>
+<li><code><a title="tdmq.model.Source.delete_one" href="#tdmq.model.Source.delete_one">delete_one</a></code></li>
+<li><code><a title="tdmq.model.Source.get_latest_activity" href="#tdmq.model.Source.get_latest_activity">get_latest_activity</a></code></li>
+<li><code><a title="tdmq.model.Source.get_one" href="#tdmq.model.Source.get_one">get_one</a></code></li>
+<li><code><a title="tdmq.model.Source.search" href="#tdmq.model.Source.search">search</a></code></li>
+<li><code><a title="tdmq.model.Source.store_new" href="#tdmq.model.Source.store_new">store_new</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="tdmq.model.Timeseries" href="#tdmq.model.Timeseries">Timeseries</a></code></h4>
+<ul class="">
+<li><code><a title="tdmq.model.Timeseries.QueryResult" href="#tdmq.model.Timeseries.QueryResult">QueryResult</a></code></li>
+<li><code><a title="tdmq.model.Timeseries.get_one" href="#tdmq.model.Timeseries.get_one">get_one</a></code></li>
+<li><code><a title="tdmq.model.Timeseries.get_one_by_batch" href="#tdmq.model.Timeseries.get_one_by_batch">get_one_by_batch</a></code></li>
+<li><code><a title="tdmq.model.Timeseries.store_new_records" href="#tdmq.model.Timeseries.store_new_records">store_new_records</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
