@@ -4,18 +4,20 @@ import itertools
 import logging
 from collections.abc import Sequence
 from contextlib import contextmanager
+from datetime import datetime
+from typing import Any, Dict, Iterable, Tuple, Union
 
 import numpy as np
 import tiledb
-from tdmq.client.timeseries import ScalarTimeSeries
-from tdmq.client.timeseries import NonScalarTimeSeries
+
+from tdmq.client.timeseries import NonScalarTimeSeries, ScalarTimeSeries, TimeSeries
 from tdmq.utils import timeit
 
 _logger = logging.getLogger(__name__)
 
 
 class Source(abc.ABC):
-    def __init__(self, client, tdmq_id, desc):
+    def __init__(self, client, tdmq_id: str, desc: Dict[str, Any]):
         self.client = client
         self.tdmq_id = tdmq_id
         self._full_body = desc
@@ -24,11 +26,11 @@ class Source(abc.ABC):
         return self._full_body['description']
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self._full_body.get('external_id')
 
     @property
-    def external_id(self):
+    def external_id(self) -> str:
         return self.id
 
     @property
@@ -36,7 +38,7 @@ class Source(abc.ABC):
         return self._full_body['default_footprint']
 
     @property
-    def is_stationary(self):
+    def is_stationary(self) -> bool:
         return self._full_body['stationary']
 
     @property
@@ -52,42 +54,42 @@ class Source(abc.ABC):
         return self._full_body['registration_time']
 
     @property
-    def public(self):
+    def public(self) -> bool:
         return self._full_body.get('public', False)
 
     @property
-    def alias(self):
+    def alias(self) -> str:
         return self._get_info().get('alias')
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple:
         return tuple(self._get_info().get('shape', ()))
 
     @property
-    def controlled_properties(self):
+    def controlled_properties(self) -> Iterable:
         return self._get_info()['controlledProperties']
 
     @property
-    def comments(self):
+    def comments(self) -> str:
         return self._get_info().get('comments')
 
     @property
-    def reference(self):
+    def reference(self) -> str:
         return self._get_info().get('reference')
 
     @property
-    def brand_name(self):
+    def brand_name(self) -> str:
         return self._get_info().get('brand_name')
 
     @property
-    def model_name(self):
+    def model_name(self) -> str:
         return self._get_info().get('model_name')
 
     @property
-    def operated_by(self):
+    def operated_by(self) -> str:
         return self._get_info().get('operated_by')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr({
             'tdmq_id ': self.tdmq_id,
             'id ': self.id,
@@ -104,14 +106,15 @@ class Source(abc.ABC):
             'comments ': self.comments,
             })
 
-    def get_timeseries(self, args, sparse: bool = None):
+    def get_timeseries(self, args, sparse: bool = None) -> TimeSeries:
         return self.client.get_timeseries(self.tdmq_id, args, sparse)
 
     @abc.abstractmethod
-    def timeseries(self, after, before, bucket=None, op=None, properties=None):
+    def timeseries(self, after: datetime = None, before: datetime = None,
+                   bucket: int = None, op: str = None, properties: Union[str, Iterable[str]] = None) -> TimeSeries:
         pass
 
-    def get_latest_activity(self):
+    def get_latest_activity(self) -> TimeSeries:
         """
         Get Timeseries starting at latest registered record's timestamp.
         """
@@ -122,19 +125,20 @@ class Source(abc.ABC):
     # # Requires authentication
     # #
     @abc.abstractmethod
-    def ingest_one(self, t, data, slot=None, footprint=None):
+    def ingest_one(self, t: datetime, data: Dict[str, Any], slot: int = None, footprint=None) -> None:
         """
         :param t: datetime object.  Assumed to be in UTC time.
         """
 
-    def ingest(self, t, data, slot=None):
+    def ingest(self, t: datetime, data: Dict[str, Any], slot: int = None) -> None:
         """
         :param t: datetime object.  Assumed to be in UTC time.
         """
         self.ingest_one(t, data, slot)
 
     @abc.abstractmethod
-    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+    def ingest_many(self, times: Iterable[datetime], data: Iterable[Dict[str, Any]],
+                    initial_slot: int = None, footprint_iter: Iterable = None) -> None:
         """
         :param times: Sequence of datetime objects.  Assumed to be in UTC time.
         """
@@ -143,22 +147,22 @@ class Source(abc.ABC):
 class ScalarSource(Source):
 
     @property
-    def sensor_id(self):
+    def sensor_id(self) -> str:
         return self._get_info().get('sensor_id')
 
     @property
-    def station_id(self):
+    def station_id(self) -> str:
         return self._get_info().get('station_id')
 
     @property
-    def station_model(self):
+    def station_model(self) -> str:
         return self._get_info().get('station_model')
 
     @property
-    def edge_id(self):
+    def edge_id(self) -> str:
         return self._get_info().get('edge_id')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr({
             'tdmq_id ':               self.tdmq_id,
             'id ':                    self.id,
@@ -213,7 +217,7 @@ class NonScalarSource(Source):
         _logger.debug("NonScalarSource destructor")
         self.close_array()
 
-    def close_array(self):
+    def close_array(self) -> None:
         if self._tiledb_array:
             _logger.debug("NonScalarSource: closing array")
             try:
@@ -344,7 +348,7 @@ class NonScalarSource(Source):
         _logger.debug("Registering %s records with tdmq", len(records))
         self.client.add_records(records)
 
-    def consolidate(self, mode=None, config_dict=None, vacuum=True):
+    def consolidate(self, mode: str = None, config_dict: Dict[str, str] = None, vacuum: bool = True):
         """
         The keys "sm.consolidation.mode" and "sm.vacuum.mode" in the
         configuration (both `config_dict` and in the Context) are ignored.
