@@ -524,7 +524,23 @@ def test_create_timeseries(flask_client, db_data):
 
 
 @pytest.mark.timeseries
-def test_create_timeseries_unauthorized(flask_client, app, db_data):
+def test_post_bad_timeseries_no_timestamp(flask_client, clean_db):
+    _create_source(flask_client)
+    timeseries_data = [{
+        "time": "",
+        "source": "st1",
+        "data": {"temperature": 20}
+    }]
+    headers = _create_auth_header(flask_client.auth_token)
+    response = flask_client.post(
+        '/records', json=timeseries_data, headers=headers)
+    assert response.status_code == 400
+    obj = response.get_json()
+    assert obj['description']
+
+
+@pytest.mark.timeseries
+def test_create_timeseries_unauthorized(flask_client):
     _create_source(flask_client)
     timeseries_data = [{
         "source": "s1",

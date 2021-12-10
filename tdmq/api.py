@@ -302,11 +302,12 @@ def source_activity_latest(tdmq_id):
 @auth_required
 def records_post():
     def validate_record(record):
-        if not all(k in record for k in ('time', 'data')) or \
-           not any(k in record for k in ('tdmq_id', 'source')):
+        if not all(record.get(k) for k in ('time', 'data')) or \
+           not any(record.get(k) for k in ('tdmq_id', 'source')):
             raise wex.BadRequest(
-                "Missing fields in request.  "
-                "Mandatory fields: 'time', 'data', ('tdmq_id' or 'source')")
+                "Missing fields in POSTed timeseries record.  "
+                "Mandatory fields: 'time', 'data', ('tdmq_id' or 'source').  "
+                f"Received keys: {record.keys()}")
 
     data = request.json
     for record in data:
