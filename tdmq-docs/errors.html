@@ -60,7 +60,7 @@ class TdmqBadRequestException(TdmqError):
 
 
 class DuplicateItemException(TdmqError):
-    def __init__(self, msg: str = None, status: int = 400):
+    def __init__(self, msg: str = None, status: int = 409):
         super().__init__(&#34;Duplicate entity&#34;, status, msg)
 
 
@@ -130,7 +130,7 @@ class DBOperationalError(InternalServerError):
 </dd>
 <dt id="tdmq.errors.DuplicateItemException"><code class="flex name class">
 <span>class <span class="ident">DuplicateItemException</span></span>
-<span>(</span><span>msg: str = None, status: int = 400)</span>
+<span>(</span><span>msg: str = None, status: int = 409)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
@@ -139,7 +139,7 @@ class DBOperationalError(InternalServerError):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DuplicateItemException(TdmqError):
-    def __init__(self, msg: str = None, status: int = 400):
+    def __init__(self, msg: str = None, status: int = 409):
         super().__init__(&#34;Duplicate entity&#34;, status, msg)</code></pre>
 </details>
 <h3>Ancestors</h3>

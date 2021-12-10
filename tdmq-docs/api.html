@@ -61,7 +61,10 @@ ERROR_CODES = {
 @tdmq_bp.app_errorhandler(wex.HTTPException)
 def handle_http_exception(e):
     response_logger = logging.getLogger(&#34;response&#34;)
-    response_logger.exception(e)
+    if e.code &gt;= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         &#34;error&#34;: ERROR_CODES.get(e.code),
         &#34;description&#34;: e.description
@@ -72,7 +75,10 @@ def handle_http_exception(e):
 @tdmq_bp.app_errorhandler(tdmq.errors.TdmqError)
 def handle_tdmq_error(e):
     response_logger = logging.getLogger(&#34;response&#34;)
-    response_logger.exception(e)
+    if e.status &gt;= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         &#34;error&#34;: e.title,
         &#34;code&#34;: e.status,
@@ -181,10 +187,7 @@ def sources_get():
 @auth_required
 def sources_post():
     data = request.json
-    try:
-        tdmq_ids = Source.store_new(data)
-    except tdmq.errors.DuplicateItemException:
-        raise wex.Conflict()
+    tdmq_ids = Source.store_new(data)
     return jsonify(tdmq_ids)
 
 
@@ -330,11 +333,12 @@ def source_activity_latest(tdmq_id):
 @auth_required
 def records_post():
     def validate_record(record):
-        if not all(k in record for k in (&#39;time&#39;, &#39;data&#39;)) or \
-           not any(k in record for k in (&#39;tdmq_id&#39;, &#39;source&#39;)):
+        if not all(record.get(k) for k in (&#39;time&#39;, &#39;data&#39;)) or \
+           not any(record.get(k) for k in (&#39;tdmq_id&#39;, &#39;source&#39;)):
             raise wex.BadRequest(
-                &#34;Missing fields in request.  &#34;
-                &#34;Mandatory fields: &#39;time&#39;, &#39;data&#39;, (&#39;tdmq_id&#39; or &#39;source&#39;)&#34;)
+                &#34;Missing fields in POSTed timeseries record.  &#34;
+                &#34;Mandatory fields: &#39;time&#39;, &#39;data&#39;, (&#39;tdmq_id&#39; or &#39;source&#39;).  &#34;
+                f&#34;Received keys: {record.keys()}&#34;)
 
     data = request.json
     for record in data:
@@ -532,7 +536,10 @@ def entity_types_get():
 <pre><code class="python">@tdmq_bp.app_errorhandler(wex.HTTPException)
 def handle_http_exception(e):
     response_logger = logging.getLogger(&#34;response&#34;)
-    response_logger.exception(e)
+    if e.code &gt;= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         &#34;error&#34;: ERROR_CODES.get(e.code),
         &#34;description&#34;: e.description
@@ -552,7 +559,10 @@ def handle_http_exception(e):
 <pre><code class="python">@tdmq_bp.app_errorhandler(tdmq.errors.TdmqError)
 def handle_tdmq_error(e):
     response_logger = logging.getLogger(&#34;response&#34;)
-    response_logger.exception(e)
+    if e.status &gt;= 500:
+        response_logger.exception(e)
+    elif response_logger.isEnabledFor(logging.DEBUG):
+        response_logger.exception(e)
     struct = {
         &#34;error&#34;: e.title,
         &#34;code&#34;: e.status,
@@ -574,11 +584,12 @@ def handle_tdmq_error(e):
 @auth_required
 def records_post():
     def validate_record(record):
-        if not all(k in record for k in (&#39;time&#39;, &#39;data&#39;)) or \
-           not any(k in record for k in (&#39;tdmq_id&#39;, &#39;source&#39;)):
+        if not all(record.get(k) for k in (&#39;time&#39;, &#39;data&#39;)) or \
+           not any(record.get(k) for k in (&#39;tdmq_id&#39;, &#39;source&#39;)):
             raise wex.BadRequest(
-                &#34;Missing fields in request.  &#34;
-                &#34;Mandatory fields: &#39;time&#39;, &#39;data&#39;, (&#39;tdmq_id&#39; or &#39;source&#39;)&#34;)
+                &#34;Missing fields in POSTed timeseries record.  &#34;
+                &#34;Mandatory fields: &#39;time&#39;, &#39;data&#39;, (&#39;tdmq_id&#39; or &#39;source&#39;).  &#34;
+                f&#34;Received keys: {record.keys()}&#34;)
 
     data = request.json
     for record in data:
@@ -781,10 +792,7 @@ def sources_get_one(tdmq_id):
 @auth_required
 def sources_post():
     data = request.json
-    try:
-        tdmq_ids = Source.store_new(data)
-    except tdmq.errors.DuplicateItemException:
-        raise wex.Conflict()
+    tdmq_ids = Source.store_new(data)
     return jsonify(tdmq_ids)</code></pre>
 </details>
 </dd>

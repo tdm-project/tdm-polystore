@@ -31,18 +31,20 @@ import itertools
 import logging
 from collections.abc import Sequence
 from contextlib import contextmanager
+from datetime import datetime
+from typing import Any, Dict, Iterable, Tuple, Union
 
 import numpy as np
 import tiledb
-from tdmq.client.timeseries import ScalarTimeSeries
-from tdmq.client.timeseries import NonScalarTimeSeries
+
+from tdmq.client.timeseries import NonScalarTimeSeries, ScalarTimeSeries, TimeSeries
 from tdmq.utils import timeit
 
 _logger = logging.getLogger(__name__)
 
 
 class Source(abc.ABC):
-    def __init__(self, client, tdmq_id, desc):
+    def __init__(self, client, tdmq_id: str, desc: Dict[str, Any]):
         self.client = client
         self.tdmq_id = tdmq_id
         self._full_body = desc
@@ -51,11 +53,11 @@ class Source(abc.ABC):
         return self._full_body[&#39;description&#39;]
 
     @property
-    def id(self):
+    def id(self) -&gt; str:
         return self._full_body.get(&#39;external_id&#39;)
 
     @property
-    def external_id(self):
+    def external_id(self) -&gt; str:
         return self.id
 
     @property
@@ -63,7 +65,7 @@ class Source(abc.ABC):
         return self._full_body[&#39;default_footprint&#39;]
 
     @property
-    def is_stationary(self):
+    def is_stationary(self) -&gt; bool:
         return self._full_body[&#39;stationary&#39;]
 
     @property
@@ -79,42 +81,42 @@ class Source(abc.ABC):
         return self._full_body[&#39;registration_time&#39;]
 
     @property
-    def public(self):
+    def public(self) -&gt; bool:
         return self._full_body.get(&#39;public&#39;, False)
 
     @property
-    def alias(self):
+    def alias(self) -&gt; str:
         return self._get_info().get(&#39;alias&#39;)
 
     @property
-    def shape(self):
+    def shape(self) -&gt; Tuple:
         return tuple(self._get_info().get(&#39;shape&#39;, ()))
 
     @property
-    def controlled_properties(self):
+    def controlled_properties(self) -&gt; Iterable:
         return self._get_info()[&#39;controlledProperties&#39;]
 
     @property
-    def comments(self):
+    def comments(self) -&gt; str:
         return self._get_info().get(&#39;comments&#39;)
 
     @property
-    def reference(self):
+    def reference(self) -&gt; str:
         return self._get_info().get(&#39;reference&#39;)
 
     @property
-    def brand_name(self):
+    def brand_name(self) -&gt; str:
         return self._get_info().get(&#39;brand_name&#39;)
 
     @property
-    def model_name(self):
+    def model_name(self) -&gt; str:
         return self._get_info().get(&#39;model_name&#39;)
 
     @property
-    def operated_by(self):
+    def operated_by(self) -&gt; str:
         return self._get_info().get(&#39;operated_by&#39;)
 
-    def __repr__(self):
+    def __repr__(self) -&gt; str:
         return repr({
             &#39;tdmq_id &#39;: self.tdmq_id,
             &#39;id &#39;: self.id,
@@ -131,14 +133,15 @@ class Source(abc.ABC):
             &#39;comments &#39;: self.comments,
             })
 
-    def get_timeseries(self, args, sparse: bool = None):
+    def get_timeseries(self, args, sparse: bool = None) -&gt; TimeSeries:
         return self.client.get_timeseries(self.tdmq_id, args, sparse)
 
     @abc.abstractmethod
-    def timeseries(self, after, before, bucket=None, op=None, properties=None):
+    def timeseries(self, after: datetime = None, before: datetime = None,
+                   bucket: int = None, op: str = None, properties: Union[str, Iterable[str]] = None) -&gt; TimeSeries:
         pass
 
-    def get_latest_activity(self):
+    def get_latest_activity(self) -&gt; TimeSeries:
         &#34;&#34;&#34;
         Get Timeseries starting at latest registered record&#39;s timestamp.
         &#34;&#34;&#34;
@@ -149,19 +152,20 @@ class Source(abc.ABC):
     # # Requires authentication
     # #
     @abc.abstractmethod
-    def ingest_one(self, t, data, slot=None, footprint=None):
+    def ingest_one(self, t: datetime, data: Dict[str, Any], slot: int = None, footprint=None) -&gt; None:
         &#34;&#34;&#34;
         :param t: datetime object.  Assumed to be in UTC time.
         &#34;&#34;&#34;
 
-    def ingest(self, t, data, slot=None):
+    def ingest(self, t: datetime, data: Dict[str, Any], slot: int = None) -&gt; None:
         &#34;&#34;&#34;
         :param t: datetime object.  Assumed to be in UTC time.
         &#34;&#34;&#34;
         self.ingest_one(t, data, slot)
 
     @abc.abstractmethod
-    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+    def ingest_many(self, times: Iterable[datetime], data: Iterable[Dict[str, Any]],
+                    initial_slot: int = None, footprint_iter: Iterable = None) -&gt; None:
         &#34;&#34;&#34;
         :param times: Sequence of datetime objects.  Assumed to be in UTC time.
         &#34;&#34;&#34;
@@ -170,22 +174,22 @@ class Source(abc.ABC):
 class ScalarSource(Source):
 
     @property
-    def sensor_id(self):
+    def sensor_id(self) -&gt; str:
         return self._get_info().get(&#39;sensor_id&#39;)
 
     @property
-    def station_id(self):
+    def station_id(self) -&gt; str:
         return self._get_info().get(&#39;station_id&#39;)
 
     @property
-    def station_model(self):
+    def station_model(self) -&gt; str:
         return self._get_info().get(&#39;station_model&#39;)
 
     @property
-    def edge_id(self):
+    def edge_id(self) -&gt; str:
         return self._get_info().get(&#39;edge_id&#39;)
 
-    def __repr__(self):
+    def __repr__(self) -&gt; str:
         return repr({
             &#39;tdmq_id &#39;:               self.tdmq_id,
             &#39;id &#39;:                    self.id,
@@ -240,7 +244,7 @@ class NonScalarSource(Source):
         _logger.debug(&#34;NonScalarSource destructor&#34;)
         self.close_array()
 
-    def close_array(self):
+    def close_array(self) -&gt; None:
         if self._tiledb_array:
             _logger.debug(&#34;NonScalarSource: closing array&#34;)
             try:
@@ -371,7 +375,7 @@ class NonScalarSource(Source):
         _logger.debug(&#34;Registering %s records with tdmq&#34;, len(records))
         self.client.add_records(records)
 
-    def consolidate(self, mode=None, config_dict=None, vacuum=True):
+    def consolidate(self, mode: str = None, config_dict: Dict[str, str] = None, vacuum: bool = True):
         &#34;&#34;&#34;
         The keys &#34;sm.consolidation.mode&#34; and &#34;sm.vacuum.mode&#34; in the
         configuration (both `config_dict` and in the Context) are ignored.
@@ -463,7 +467,7 @@ inheritance.</p></div>
         _logger.debug(&#34;NonScalarSource destructor&#34;)
         self.close_array()
 
-    def close_array(self):
+    def close_array(self) -&gt; None:
         if self._tiledb_array:
             _logger.debug(&#34;NonScalarSource: closing array&#34;)
             try:
@@ -594,7 +598,7 @@ inheritance.</p></div>
         _logger.debug(&#34;Registering %s records with tdmq&#34;, len(records))
         self.client.add_records(records)
 
-    def consolidate(self, mode=None, config_dict=None, vacuum=True):
+    def consolidate(self, mode: str = None, config_dict: Dict[str, str] = None, vacuum: bool = True):
         &#34;&#34;&#34;
         The keys &#34;sm.consolidation.mode&#34; and &#34;sm.vacuum.mode&#34; in the
         configuration (both `config_dict` and in the Context) are ignored.
@@ -682,7 +686,7 @@ def array_context(self, mode=&#39;r&#39;):
 </details>
 </dd>
 <dt id="tdmq.client.sources.NonScalarSource.close_array"><code class="name flex">
-<span>def <span class="ident">close_array</span></span>(<span>self)</span>
+<span>def <span class="ident">close_array</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -690,7 +694,7 @@ def array_context(self, mode=&#39;r&#39;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def close_array(self):
+<pre><code class="python">def close_array(self) -&gt; None:
     if self._tiledb_array:
         _logger.debug(&#34;NonScalarSource: closing array&#34;)
         try:
@@ -700,7 +704,7 @@ def array_context(self, mode=&#39;r&#39;):
 </details>
 </dd>
 <dt id="tdmq.client.sources.NonScalarSource.consolidate"><code class="name flex">
-<span>def <span class="ident">consolidate</span></span>(<span>self, mode=None, config_dict=None, vacuum=True)</span>
+<span>def <span class="ident">consolidate</span></span>(<span>self, mode: str = None, config_dict: Dict[str, str] = None, vacuum: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The keys "sm.consolidation.mode" and "sm.vacuum.mode" in the
@@ -713,7 +717,7 @@ it with the <code>mode</code> parameter.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def consolidate(self, mode=None, config_dict=None, vacuum=True):
+<pre><code class="python">def consolidate(self, mode: str = None, config_dict: Dict[str, str] = None, vacuum: bool = True):
     &#34;&#34;&#34;
     The keys &#34;sm.consolidation.mode&#34; and &#34;sm.vacuum.mode&#34; in the
     configuration (both `config_dict` and in the Context) are ignored.
@@ -883,7 +887,7 @@ end up overwriting data in the tiledb array.</p></div>
 </dd>
 <dt id="tdmq.client.sources.ScalarSource"><code class="flex name class">
 <span>class <span class="ident">ScalarSource</span></span>
-<span>(</span><span>client, tdmq_id, desc)</span>
+<span>(</span><span>client, tdmq_id: str, desc: Dict[str, Any])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -895,22 +899,22 @@ inheritance.</p></div>
 <pre><code class="python">class ScalarSource(Source):
 
     @property
-    def sensor_id(self):
+    def sensor_id(self) -&gt; str:
         return self._get_info().get(&#39;sensor_id&#39;)
 
     @property
-    def station_id(self):
+    def station_id(self) -&gt; str:
         return self._get_info().get(&#39;station_id&#39;)
 
     @property
-    def station_model(self):
+    def station_model(self) -&gt; str:
         return self._get_info().get(&#39;station_model&#39;)
 
     @property
-    def edge_id(self):
+    def edge_id(self) -&gt; str:
         return self._get_info().get(&#39;edge_id&#39;)
 
-    def __repr__(self):
+    def __repr__(self) -&gt; str:
         return repr({
             &#39;tdmq_id &#39;:               self.tdmq_id,
             &#39;id &#39;:                    self.id,
@@ -962,7 +966,7 @@ inheritance.</p></div>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="tdmq.client.sources.ScalarSource.edge_id"><code class="name">var <span class="ident">edge_id</span></code></dt>
+<dt id="tdmq.client.sources.ScalarSource.edge_id"><code class="name">var <span class="ident">edge_id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -970,11 +974,11 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def edge_id(self):
+def edge_id(self) -&gt; str:
     return self._get_info().get(&#39;edge_id&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.ScalarSource.sensor_id"><code class="name">var <span class="ident">sensor_id</span></code></dt>
+<dt id="tdmq.client.sources.ScalarSource.sensor_id"><code class="name">var <span class="ident">sensor_id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -982,11 +986,11 @@ def edge_id(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def sensor_id(self):
+def sensor_id(self) -&gt; str:
     return self._get_info().get(&#39;sensor_id&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.ScalarSource.station_id"><code class="name">var <span class="ident">station_id</span></code></dt>
+<dt id="tdmq.client.sources.ScalarSource.station_id"><code class="name">var <span class="ident">station_id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -994,11 +998,11 @@ def sensor_id(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def station_id(self):
+def station_id(self) -&gt; str:
     return self._get_info().get(&#39;station_id&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.ScalarSource.station_model"><code class="name">var <span class="ident">station_model</span></code></dt>
+<dt id="tdmq.client.sources.ScalarSource.station_model"><code class="name">var <span class="ident">station_model</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1006,7 +1010,7 @@ def station_id(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def station_model(self):
+def station_model(self) -&gt; str:
     return self._get_info().get(&#39;station_model&#39;)</code></pre>
 </details>
 </dd>
@@ -1041,7 +1045,7 @@ def station_model(self):
 </dd>
 <dt id="tdmq.client.sources.Source"><code class="flex name class">
 <span>class <span class="ident">Source</span></span>
-<span>(</span><span>client, tdmq_id, desc)</span>
+<span>(</span><span>client, tdmq_id: str, desc: Dict[str, Any])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1051,7 +1055,7 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Source(abc.ABC):
-    def __init__(self, client, tdmq_id, desc):
+    def __init__(self, client, tdmq_id: str, desc: Dict[str, Any]):
         self.client = client
         self.tdmq_id = tdmq_id
         self._full_body = desc
@@ -1060,11 +1064,11 @@ inheritance.</p></div>
         return self._full_body[&#39;description&#39;]
 
     @property
-    def id(self):
+    def id(self) -&gt; str:
         return self._full_body.get(&#39;external_id&#39;)
 
     @property
-    def external_id(self):
+    def external_id(self) -&gt; str:
         return self.id
 
     @property
@@ -1072,7 +1076,7 @@ inheritance.</p></div>
         return self._full_body[&#39;default_footprint&#39;]
 
     @property
-    def is_stationary(self):
+    def is_stationary(self) -&gt; bool:
         return self._full_body[&#39;stationary&#39;]
 
     @property
@@ -1088,42 +1092,42 @@ inheritance.</p></div>
         return self._full_body[&#39;registration_time&#39;]
 
     @property
-    def public(self):
+    def public(self) -&gt; bool:
         return self._full_body.get(&#39;public&#39;, False)
 
     @property
-    def alias(self):
+    def alias(self) -&gt; str:
         return self._get_info().get(&#39;alias&#39;)
 
     @property
-    def shape(self):
+    def shape(self) -&gt; Tuple:
         return tuple(self._get_info().get(&#39;shape&#39;, ()))
 
     @property
-    def controlled_properties(self):
+    def controlled_properties(self) -&gt; Iterable:
         return self._get_info()[&#39;controlledProperties&#39;]
 
     @property
-    def comments(self):
+    def comments(self) -&gt; str:
         return self._get_info().get(&#39;comments&#39;)
 
     @property
-    def reference(self):
+    def reference(self) -&gt; str:
         return self._get_info().get(&#39;reference&#39;)
 
     @property
-    def brand_name(self):
+    def brand_name(self) -&gt; str:
         return self._get_info().get(&#39;brand_name&#39;)
 
     @property
-    def model_name(self):
+    def model_name(self) -&gt; str:
         return self._get_info().get(&#39;model_name&#39;)
 
     @property
-    def operated_by(self):
+    def operated_by(self) -&gt; str:
         return self._get_info().get(&#39;operated_by&#39;)
 
-    def __repr__(self):
+    def __repr__(self) -&gt; str:
         return repr({
             &#39;tdmq_id &#39;: self.tdmq_id,
             &#39;id &#39;: self.id,
@@ -1140,14 +1144,15 @@ inheritance.</p></div>
             &#39;comments &#39;: self.comments,
             })
 
-    def get_timeseries(self, args, sparse: bool = None):
+    def get_timeseries(self, args, sparse: bool = None) -&gt; TimeSeries:
         return self.client.get_timeseries(self.tdmq_id, args, sparse)
 
     @abc.abstractmethod
-    def timeseries(self, after, before, bucket=None, op=None, properties=None):
+    def timeseries(self, after: datetime = None, before: datetime = None,
+                   bucket: int = None, op: str = None, properties: Union[str, Iterable[str]] = None) -&gt; TimeSeries:
         pass
 
-    def get_latest_activity(self):
+    def get_latest_activity(self) -&gt; TimeSeries:
         &#34;&#34;&#34;
         Get Timeseries starting at latest registered record&#39;s timestamp.
         &#34;&#34;&#34;
@@ -1158,19 +1163,20 @@ inheritance.</p></div>
     # # Requires authentication
     # #
     @abc.abstractmethod
-    def ingest_one(self, t, data, slot=None, footprint=None):
+    def ingest_one(self, t: datetime, data: Dict[str, Any], slot: int = None, footprint=None) -&gt; None:
         &#34;&#34;&#34;
         :param t: datetime object.  Assumed to be in UTC time.
         &#34;&#34;&#34;
 
-    def ingest(self, t, data, slot=None):
+    def ingest(self, t: datetime, data: Dict[str, Any], slot: int = None) -&gt; None:
         &#34;&#34;&#34;
         :param t: datetime object.  Assumed to be in UTC time.
         &#34;&#34;&#34;
         self.ingest_one(t, data, slot)
 
     @abc.abstractmethod
-    def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+    def ingest_many(self, times: Iterable[datetime], data: Iterable[Dict[str, Any]],
+                    initial_slot: int = None, footprint_iter: Iterable = None) -&gt; None:
         &#34;&#34;&#34;
         :param times: Sequence of datetime objects.  Assumed to be in UTC time.
         &#34;&#34;&#34;</code></pre>
@@ -1186,7 +1192,7 @@ inheritance.</p></div>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="tdmq.client.sources.Source.alias"><code class="name">var <span class="ident">alias</span></code></dt>
+<dt id="tdmq.client.sources.Source.alias"><code class="name">var <span class="ident">alias</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1194,11 +1200,11 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def alias(self):
+def alias(self) -&gt; str:
     return self._get_info().get(&#39;alias&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.brand_name"><code class="name">var <span class="ident">brand_name</span></code></dt>
+<dt id="tdmq.client.sources.Source.brand_name"><code class="name">var <span class="ident">brand_name</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1206,11 +1212,11 @@ def alias(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def brand_name(self):
+def brand_name(self) -&gt; str:
     return self._get_info().get(&#39;brand_name&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.comments"><code class="name">var <span class="ident">comments</span></code></dt>
+<dt id="tdmq.client.sources.Source.comments"><code class="name">var <span class="ident">comments</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1218,11 +1224,11 @@ def brand_name(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def comments(self):
+def comments(self) -&gt; str:
     return self._get_info().get(&#39;comments&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.controlled_properties"><code class="name">var <span class="ident">controlled_properties</span></code></dt>
+<dt id="tdmq.client.sources.Source.controlled_properties"><code class="name">var <span class="ident">controlled_properties</span> : Iterable[+T_co]</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1230,7 +1236,7 @@ def comments(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def controlled_properties(self):
+def controlled_properties(self) -&gt; Iterable:
     return self._get_info()[&#39;controlledProperties&#39;]</code></pre>
 </details>
 </dd>
@@ -1270,7 +1276,7 @@ def entity_type(self):
     return self._full_body[&#39;entity_type&#39;]</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.external_id"><code class="name">var <span class="ident">external_id</span></code></dt>
+<dt id="tdmq.client.sources.Source.external_id"><code class="name">var <span class="ident">external_id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1278,11 +1284,11 @@ def entity_type(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def external_id(self):
+def external_id(self) -&gt; str:
     return self.id</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.id"><code class="name">var <span class="ident">id</span></code></dt>
+<dt id="tdmq.client.sources.Source.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1290,11 +1296,11 @@ def external_id(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def id(self):
+def id(self) -&gt; str:
     return self._full_body.get(&#39;external_id&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.is_stationary"><code class="name">var <span class="ident">is_stationary</span></code></dt>
+<dt id="tdmq.client.sources.Source.is_stationary"><code class="name">var <span class="ident">is_stationary</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1302,11 +1308,11 @@ def id(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def is_stationary(self):
+def is_stationary(self) -&gt; bool:
     return self._full_body[&#39;stationary&#39;]</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.model_name"><code class="name">var <span class="ident">model_name</span></code></dt>
+<dt id="tdmq.client.sources.Source.model_name"><code class="name">var <span class="ident">model_name</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1314,11 +1320,11 @@ def is_stationary(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def model_name(self):
+def model_name(self) -&gt; str:
     return self._get_info().get(&#39;model_name&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.operated_by"><code class="name">var <span class="ident">operated_by</span></code></dt>
+<dt id="tdmq.client.sources.Source.operated_by"><code class="name">var <span class="ident">operated_by</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1326,11 +1332,11 @@ def model_name(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def operated_by(self):
+def operated_by(self) -&gt; str:
     return self._get_info().get(&#39;operated_by&#39;)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.public"><code class="name">var <span class="ident">public</span></code></dt>
+<dt id="tdmq.client.sources.Source.public"><code class="name">var <span class="ident">public</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1338,11 +1344,11 @@ def operated_by(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def public(self):
+def public(self) -&gt; bool:
     return self._full_body.get(&#39;public&#39;, False)</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.reference"><code class="name">var <span class="ident">reference</span></code></dt>
+<dt id="tdmq.client.sources.Source.reference"><code class="name">var <span class="ident">reference</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1350,7 +1356,7 @@ def public(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def reference(self):
+def reference(self) -&gt; str:
     return self._get_info().get(&#39;reference&#39;)</code></pre>
 </details>
 </dd>
@@ -1366,7 +1372,7 @@ def registration_time(self):
     return self._full_body[&#39;registration_time&#39;]</code></pre>
 </details>
 </dd>
-<dt id="tdmq.client.sources.Source.shape"><code class="name">var <span class="ident">shape</span></code></dt>
+<dt id="tdmq.client.sources.Source.shape"><code class="name">var <span class="ident">shape</span> : Tuple[]</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1374,7 +1380,7 @@ def registration_time(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def shape(self):
+def shape(self) -&gt; Tuple:
     return tuple(self._get_info().get(&#39;shape&#39;, ()))</code></pre>
 </details>
 </dd>
@@ -1382,7 +1388,7 @@ def shape(self):
 <h3>Methods</h3>
 <dl>
 <dt id="tdmq.client.sources.Source.get_latest_activity"><code class="name flex">
-<span>def <span class="ident">get_latest_activity</span></span>(<span>self)</span>
+<span>def <span class="ident">get_latest_activity</span></span>(<span>self) ‑> <a title="tdmq.client.timeseries.TimeSeries" href="timeseries.html#tdmq.client.timeseries.TimeSeries">TimeSeries</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get Timeseries starting at latest registered record's timestamp.</p></div>
@@ -1390,7 +1396,7 @@ def shape(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_latest_activity(self):
+<pre><code class="python">def get_latest_activity(self) -&gt; TimeSeries:
     &#34;&#34;&#34;
     Get Timeseries starting at latest registered record&#39;s timestamp.
     &#34;&#34;&#34;
@@ -1399,7 +1405,7 @@ def shape(self):
 </details>
 </dd>
 <dt id="tdmq.client.sources.Source.get_timeseries"><code class="name flex">
-<span>def <span class="ident">get_timeseries</span></span>(<span>self, args, sparse: bool = None)</span>
+<span>def <span class="ident">get_timeseries</span></span>(<span>self, args, sparse: bool = None) ‑> <a title="tdmq.client.timeseries.TimeSeries" href="timeseries.html#tdmq.client.timeseries.TimeSeries">TimeSeries</a></span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1407,12 +1413,12 @@ def shape(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_timeseries(self, args, sparse: bool = None):
+<pre><code class="python">def get_timeseries(self, args, sparse: bool = None) -&gt; TimeSeries:
     return self.client.get_timeseries(self.tdmq_id, args, sparse)</code></pre>
 </details>
 </dd>
 <dt id="tdmq.client.sources.Source.ingest"><code class="name flex">
-<span>def <span class="ident">ingest</span></span>(<span>self, t, data, slot=None)</span>
+<span>def <span class="ident">ingest</span></span>(<span>self, t: datetime.datetime, data: Dict[str, Any], slot: int = None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>:param t: datetime object.
@@ -1421,7 +1427,7 @@ Assumed to be in UTC time.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def ingest(self, t, data, slot=None):
+<pre><code class="python">def ingest(self, t: datetime, data: Dict[str, Any], slot: int = None) -&gt; None:
     &#34;&#34;&#34;
     :param t: datetime object.  Assumed to be in UTC time.
     &#34;&#34;&#34;
@@ -1429,7 +1435,7 @@ Assumed to be in UTC time.</p></div>
 </details>
 </dd>
 <dt id="tdmq.client.sources.Source.ingest_many"><code class="name flex">
-<span>def <span class="ident">ingest_many</span></span>(<span>self, times, data, initial_slot=None, footprint_iter=None)</span>
+<span>def <span class="ident">ingest_many</span></span>(<span>self, times: Iterable[datetime.datetime], data: Iterable[Dict[str, Any]], initial_slot: int = None, footprint_iter: Iterable[+T_co] = None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>:param times: Sequence of datetime objects.
@@ -1439,14 +1445,15 @@ Assumed to be in UTC time.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
-def ingest_many(self, times, data, initial_slot=None, footprint_iter=None):
+def ingest_many(self, times: Iterable[datetime], data: Iterable[Dict[str, Any]],
+                initial_slot: int = None, footprint_iter: Iterable = None) -&gt; None:
     &#34;&#34;&#34;
     :param times: Sequence of datetime objects.  Assumed to be in UTC time.
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="tdmq.client.sources.Source.ingest_one"><code class="name flex">
-<span>def <span class="ident">ingest_one</span></span>(<span>self, t, data, slot=None, footprint=None)</span>
+<span>def <span class="ident">ingest_one</span></span>(<span>self, t: datetime.datetime, data: Dict[str, Any], slot: int = None, footprint=None) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>:param t: datetime object.
@@ -1456,14 +1463,14 @@ Assumed to be in UTC time.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
-def ingest_one(self, t, data, slot=None, footprint=None):
+def ingest_one(self, t: datetime, data: Dict[str, Any], slot: int = None, footprint=None) -&gt; None:
     &#34;&#34;&#34;
     :param t: datetime object.  Assumed to be in UTC time.
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="tdmq.client.sources.Source.timeseries"><code class="name flex">
-<span>def <span class="ident">timeseries</span></span>(<span>self, after, before, bucket=None, op=None, properties=None)</span>
+<span>def <span class="ident">timeseries</span></span>(<span>self, after: datetime.datetime = None, before: datetime.datetime = None, bucket: int = None, op: str = None, properties: Union[str, Iterable[str]] = None) ‑> <a title="tdmq.client.timeseries.TimeSeries" href="timeseries.html#tdmq.client.timeseries.TimeSeries">TimeSeries</a></span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1472,7 +1479,8 @@ def ingest_one(self, t, data, slot=None, footprint=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
-def timeseries(self, after, before, bucket=None, op=None, properties=None):
+def timeseries(self, after: datetime = None, before: datetime = None,
+               bucket: int = None, op: str = None, properties: Union[str, Iterable[str]] = None) -&gt; TimeSeries:
     pass</code></pre>
 </details>
 </dd>
