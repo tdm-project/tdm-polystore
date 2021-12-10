@@ -27,7 +27,6 @@ jobs:
       run:
         shell: bash
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       - name: check the value of github.workspace and runner.temp
         run: |
@@ -43,21 +42,21 @@ jobs:
           make -j 2 tdmqc
       - name: Create html
         run: |
-          rm -rf "${GITHUB_WORKSPACE}/tdmq-docs"
-          mkdir -p "${GITHUB_WORKSPACE}/tdmq-docs"
+          rm -rf ./tdmq-docs
+          mkdir -p ./tdmq-docs"
           docker run --rm --user $(id -u) \
-            -v "${GITHUB_WORKSPACE}/tdmq-docs:/tdmq-docs" \
+            -v $PWD/tdmq-docs:/tdmq-docs \
             "${TDMQC_IMAGE}" \
             pdoc3 --html --output-dir "/tdmq-docs" tdmq
       - name: Setup assets
         run: |
-          mkdir -p "${GITHUB_WORKSPACE}/public"
-          mv "${GITHUB_WORKSPACE}/tdmq-docs/tdmq" "${GITHUB_WORKSPACE}/public/tdmq-docs"
+          mkdir -p ./public"
+          mv ./tdmq-docs/tdmq ./public/tdmq-docs
       - name: Publish docs
         uses: peaceiris/actions-gh-pages@v3
         with:
           # https://github.com/marketplace/actions/github-pages-action
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: "${GITHUB_WORKSPACE}/public"
+          publish_dir: ./public
           keep_files: true # keep existing files in gh-pages branch
           enable_jekyll: true # Make sure this is enabled or the action will be default turn off Jekyll
