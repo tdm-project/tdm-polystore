@@ -15,7 +15,6 @@ on:
 
 env:
   TERM: xterm
-  TDMQC_IMAGE: "tdmproject/tdmqc"
 jobs:
   pdoc:
     name: Generate and publish html documentation
@@ -43,14 +42,14 @@ jobs:
       - name: Create html
         run: |
           rm -rf ./tdmq-docs
-          mkdir -p ./tdmq-docs"
+          mkdir -p ./tdmq-docs
           docker run --rm --user $(id -u) \
             -v $PWD/tdmq-docs:/tdmq-docs \
-            "${TDMQC_IMAGE}" \
-            pdoc3 --html --output-dir "/tdmq-docs" tdmq
+            tdmproject/tdmqc \
+            pdoc3 --html --output-dir /tdmq-docs tdmq
       - name: Setup assets
         run: |
-          mkdir -p ./public"
+          mkdir -p ./public
           mv ./tdmq-docs/tdmq ./public/tdmq-docs
       - name: Publish docs
         uses: peaceiris/actions-gh-pages@v3
