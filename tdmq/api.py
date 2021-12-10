@@ -159,10 +159,7 @@ def sources_get():
 @auth_required
 def sources_post():
     data = request.json
-    try:
-        tdmq_ids = Source.store_new(data)
-    except tdmq.errors.DuplicateItemException:
-        raise wex.Conflict()
+    tdmq_ids = Source.store_new(data)
     return jsonify(tdmq_ids)
 
 

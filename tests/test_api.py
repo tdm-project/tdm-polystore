@@ -176,7 +176,9 @@ def test_source_create_duplicate(flask_client, db_data):
     _checkresp(response)
     response = flask_client.post('/sources', json=source_data, headers=headers)
     assert response.status == '409 CONFLICT'
-    assert ("error", "duplicated_resource") in response.get_json().items()
+    obj = response.get_json()
+    for k in ("error", "code", "description"):
+        assert obj.get(k), f"missing key {k}"
 
 
 @pytest.mark.sources

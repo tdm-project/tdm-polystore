@@ -34,7 +34,7 @@ class TdmqBadRequestException(TdmqError):
 
 
 class DuplicateItemException(TdmqError):
-    def __init__(self, msg: str = None, status: int = 400):
+    def __init__(self, msg: str = None, status: int = 409):
         super().__init__("Duplicate entity", status, msg)
 
 
