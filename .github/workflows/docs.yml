@@ -8,10 +8,6 @@ on:
     branches: ["master"]
     types:
       - completed
-  push:  # FIXME: temporary
-    branches:
-      - master
-      - develop
 
 env:
   TERM: xterm
