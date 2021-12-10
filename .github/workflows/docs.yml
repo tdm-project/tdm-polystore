@@ -3,13 +3,19 @@ name: Publish docs
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  push:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    branches: ["master"]
+    types:
+      - completed
+  push:  # FIXME: temporary
     branches:
       - master
-      - develop  # FIXME: temporary
+      - develop
 
 env:
   TERM: xterm
+  TDMQC_IMAGE: "tdmproject/tdmqc"
 jobs:
   pdoc:
     name: Generate and publish html documentation
@@ -17,32 +23,41 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7]
+    defaults:
+      run:
+        shell: bash
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
       - name: check the value of github.workspace and runner.temp
         run: |
           echo "github.workspace = ${{ github.workspace }}"
-          echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
+          echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
           echo "runner.temp = ${{ runner.temp }}"
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout source code
-        uses: actions/checkout@v2
-      - name: Set up Python v${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install pdoc
-        run: pip install pdoc3
+      - name: Docker Layer Caching
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+      - name: Build tdmqc Docker image
+        run: |
+          make -j 2 tdmqc
       - name: Create html
-        run: pdoc --html --output-dir "${GITHUB_WORKSPACE}/code-docs" tdmq
+        run: |
+          rm -rf "${GITHUB_WORKSPACE}/tdmq-docs"
+          mkdir -p "${GITHUB_WORKSPACE}/tdmq-docs"
+          docker run --rm --user $(id -u) \
+            -v "${GITHUB_WORKSPACE}/tdmq-docs:/tdmq-docs" \
+            "${TDMQC_IMAGE}" \
+            pdoc3 --html --output-dir "/tdmq-docs" tdmq
       - name: Setup assets
         run: |
-          mkdir public
-          mv code-docs public/
+          mkdir -p "${GITHUB_WORKSPACE}/public"
+          mv "${GITHUB_WORKSPACE}/tdmq-docs/tdmq" "${GITHUB_WORKSPACE}/public/tdmq-docs"
       - name: Publish docs
         uses: peaceiris/actions-gh-pages@v3
         with:
           # https://github.com/marketplace/actions/github-pages-action
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: "${GITHUB_WORKSPACE}/public"
           keep_files: true # keep existing files in gh-pages branch
           enable_jekyll: true # Make sure this is enabled or the action will be default turn off Jekyll
