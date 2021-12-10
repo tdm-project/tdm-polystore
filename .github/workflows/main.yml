@@ -102,13 +102,16 @@ jobs:
             # docker build command in the Makefile
             ImageSlug="${ImageOwner}/${image}"
 
-            echo "=== Tagging ${ImageSlug} as ${ImageTag} and latest ==="
+            echo "=== Tagging ${ImageSlug} as ${ImageTag} and pushing to DockerHub ==="
             docker tag "${ImageSlug}" "${ImageSlug}:${ImageTag}"
-            docker tag "${ImageSlug}" "${ImageSlug}:latest"
-
-            echo "=== Pushing ${ImageSlug}:${ImageTag} and ${ImageSlug}:latest to DockerHub ==="
             docker push "${ImageSlug}:${ImageTag}"
-            docker push "${ImageSlug}:latest"
+
+            # push ':latest' tag only if we're on the master branch
+            if [[ "${GITHUB_REF_NAME}" == master ]]; then
+              echo "=== Tagging ${ImageSlug} as latest and pushing to DockerHub ==="
+              docker tag "${ImageSlug}" "${ImageSlug}:latest"
+              docker push "${ImageSlug}:latest"
+            fi
           done
       - name: Login to CRS4 Harbor
         uses: docker/login-action@v1
@@ -128,17 +131,18 @@ jobs:
             ImageSlug="${ImageOwner}/${image}"
             FullImageSlug="${CRS4_REGISTRY}/${ImageSlug}"
 
-            echo "=== Tagging ${ImageSlug} as ${ImageTag} and latest ==="
+            echo "=== Tagging ${ImageSlug} as ${FullImageSlug}:${ImageTag} and pushing ==="
             docker tag "${ImageSlug}" "${FullImageSlug}:${ImageTag}"
-            docker tag "${ImageSlug}" "${FullImageSlug}:latest"
-
-            echo "=== Pushing ${FullImageSlug}:${ImageTag} and ${FullImageSlug}:latest to CRS4 Harbor ==="
             # Don't let the build fail bacause pushing to CRS4 fails.
             # Take this out once the problems with the repository are fixed.
             docker push "${FullImageSlug}:${ImageTag}" || { echo "Failed to push image to CRS4"; push_error=true; }
-            sleep 3  #  Delaying pushing the next image a bit, just to see if it helps with the repository timeout problems
-            docker push "${FullImageSlug}:latest" || { echo "Failed to push image to CRS4";  push_error=true; }
-            sleep 3  #  Delaying pushing the next image a bit, just to see if it helps with the repository timeout problems
+
+            # push ':latest' tag only if we're on the master branch
+            if [[ "${GITHUB_REF_NAME}" == master ]]; then
+              echo "=== Tagging ${ImageSlug} as ${FullImageSlug}:latest and pushing ==="
+              docker tag "${ImageSlug}" "${FullImageSlug}:latest"
+              docker push "${FullImageSlug}:latest" || { echo "Failed to push image to CRS4";  push_error=true; }
+            fi
           done
           if [[ "${push_error}" == 'false' ]]; then
             echo "<<<<<< Successfully pushed all images to CRS4!! >>>>>>"
