@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.8
 
 ARG PIP_BIN=pip3
 ENV PIP=$PIP_BIN
