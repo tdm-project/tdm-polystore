@@ -26,6 +26,12 @@ ComuniShapeFile = "/home/ubuntu/shapes_comuni_istat_2020-01-01/Com01012020_g_WGS
 QuartieriGeoJsonFile = "/home/ubuntu/quartieri_cagliari_4326.geojson"
 
 
+sys.exit("This script is broken. Do not use.\n"
+         "The two data sources we merge to create the zone file use different coordinate\n"
+         "systems (in particular, the geojson uses EPSG4326 while the data from ISTAT uses\n"
+         "WGS84 UTM32N. This script currently does not implement the transformation of this\n"
+         "second dataset's coordinates so its result is broken.")
+
 def write_shapefile(writer, path):
     with shapefile.Reader(path) as f:
         for shaperec in f.iterShapeRecords():
