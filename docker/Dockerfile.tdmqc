@@ -98,7 +98,8 @@ RUN $PIP install --no-cache-dir \
         pytest==6.1 \
         pytest-flask==1.1 \
         s3cmd==2.1 \
-        pdoc3
+        pdoc3 \
+        markupsafe==2.0.1
 
 # FIXME: This section is copied and pasted from the image build process for
 # tdmq-client.
