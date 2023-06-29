@@ -11,7 +11,7 @@ EXPOSE 8000
 CMD /web-entrypoint.sh
 
 COPY --chown=root ./tdmq-dist/tdmq/requirements-server.txt "${TDMQ_DIST}/tdmq/"
-RUN $PIP install -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
+RUN $PIP install --no-cache-dir -r "${TDMQ_DIST}/tdmq/requirements-server.txt"
 
 COPY --chown=root ./tdmq-dist "${TDMQ_DIST}"
 COPY --chown=root web-entrypoint.sh /
